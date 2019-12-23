@@ -9,16 +9,17 @@ from pre_processing.utility import get_image_info, world2voxel_coord
 
 def argument():
 
-    path_info = 1
+    default_path_info = os.path.join(os.getcwd(), 'data', 'info', 'info_luna16.csv')
+    default_dir_image = os.path.join(os.getcwd(), 'data', 'image')
+    default_path_image_colored = os.path.join(
+        os.path.dirname(__file__), 'test', 'image_colored.{format_image}'.format(format_image='png'))
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path-info', default=path_info)
-    parser.add_argument('--dir-image', type=str)
+    parser.add_argument('--path-info', default=default_path_info, type=str)
+    parser.add_argument('--dir-image', default=default_dir_image, type=str)
     parser.add_argument('--size-cutting', default=32)
 
-    parser.add_argument('--visdom', action='store_true')
-    parser.add_argument('--random-seed', default=None, type=int)
-    parser.add_argument('--out-csv', type=str, default='test')
+    parser.add_argument('--path-image-colored', default=default_path_image_colored, type=str)
 
     args = parser.parse_args()
     return args
@@ -45,3 +46,4 @@ def get_coordinate(list_image):
 
 if __name__ == '__main__':
     args = argument()
+    print('test')

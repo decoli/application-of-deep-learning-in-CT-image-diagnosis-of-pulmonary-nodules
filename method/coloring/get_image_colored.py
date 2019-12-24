@@ -5,6 +5,7 @@ import sys
 import pandas as pd
 import random
 import cv2
+import numpy as np
 
 sys.path.append(os.getcwd())
 from pre_processing.utility import get_image_info, get_coordinate
@@ -70,6 +71,11 @@ def read_image(args, image_current):
 
     return list_image
 
+def coloring_image(args, image_stacked):
+    image_colored = np.array(image_stacked)
+    cv2.imwrite(args.path_image_colored, image_colored) # test
+    return image_colored
+
 if __name__ == '__main__':
     args = argument()
 
@@ -79,7 +85,10 @@ if __name__ == '__main__':
 
     # read image, cut image
     image_current = random.choice(list_info_image)
-    image = read_image(args, image_current) 
+    image_stacked = read_image(args, image_current) 
+
+    # coloring the image
+    coloring_image(args, image_stacked)
 
     # test
     print('test')

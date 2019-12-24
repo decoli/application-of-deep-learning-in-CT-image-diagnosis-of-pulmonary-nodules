@@ -29,28 +29,43 @@ def argument():
     args = parser.parse_args()
     return args
 
-def read_image(dir_image, image_current):
+def read_image(args, image_current):
     image_coordinate = get_coordinate(image_current)
 
     list_image = []
 
     # get name of subset
-    name_subset = os.path.basename(os.path.dirname(image_current['path_seriesuid_folder'])).split('_')[0] + '_tiff'
+    name_subset = os.path.basename(
+        os.path.dirname(image_current['path_seriesuid_folder'])
+        ).split('_')[0] + '_tiff'
 
     # read image
     image_index = image_coordinate[2]
     path_image = os.path.join(
-        dir_image,
+        args.dir_image,
         name_subset,
         image_current['seriesuid'],
         'whole_image',
         'whole_{image_index}.tiff'.format(image_index=int(image_index))
         )
 
-    image = cv2.imread(path_image)
+    image = cv2.imread(path_image, flags=2)
     cv2.imwrite(args.path_image_colored, image)
-    # cut the image
 
+    # cut the image
+    x_start = int(image_coordinate[1] - args.size_cutting / 2)
+    x_end = int(image_coordinate[1] + args.size_cutting / 2)
+    y_start = int(image_coordinate[0] - args.size_cutting / 2)
+    y_end = int(image_coordinate[0] + args.size_cutting / 2)
+
+    image = image[x_start: x_end, y_start: y_end]
+
+    cv2.imwrite(args.path_image_colored, image)
+
+    # append to the list
+    list_image.append(image)
+
+    return list_image
 
 if __name__ == '__main__':
     args = argument()
@@ -61,7 +76,7 @@ if __name__ == '__main__':
 
     # read image, cut image
     image_current = random.choice(list_info_image)
-    image = read_image(args.dir_image, image_current) 
+    image = read_image(args, image_current) 
 
     # test
     print('test')

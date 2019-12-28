@@ -2,3 +2,4 @@
 .vscode/settings.json
 *.pyc
 method/coloring/test/
+method/vae_bc_learning/results/

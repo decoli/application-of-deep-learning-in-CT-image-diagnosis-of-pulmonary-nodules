@@ -1,17 +1,17 @@
+'''
+This is an improved implementation of the paper Auto-Encoding Variational Bayes by Kingma and Welling.
+It uses ReLUs and the adam optimizer, instead of sigmoids and adagrad.
+These changes make the network converge much faster.
+'''
+
 from __future__ import print_function
-
 import argparse
-import os
-import sys
-
 import torch
 import torch.utils.data
 from torch import nn, optim
 from torch.nn import functional as F
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
-
-sys.path.append(os.getcwd())
 
 
 parser = argparse.ArgumentParser(description='VAE MNIST Example')
@@ -122,7 +122,7 @@ def test(epoch):
                 comparison = torch.cat([data[:n],
                                       recon_batch.view(args.batch_size, 1, 28, 28)[:n]])
                 save_image(comparison.cpu(),
-                         'results/reconstruction_' + str(epoch) + '.png', nrow=n)
+                         'method/vae_bc_learning/results/reconstruction_' + str(epoch) + '.png', nrow=n)
 
     test_loss /= len(test_loader.dataset)
     print('====> Test set loss: {:.4f}'.format(test_loss))
@@ -135,4 +135,4 @@ if __name__ == "__main__":
             sample = torch.randn(64, 20).to(device)
             sample = model.decode(sample).cpu()
             save_image(sample.view(64, 1, 28, 28),
-                       'results/sample_' + str(epoch) + '.png')
+                       'method/vae_bc_learning/results/sample_' + str(epoch) + '.png')

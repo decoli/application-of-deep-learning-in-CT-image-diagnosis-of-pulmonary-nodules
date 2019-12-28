@@ -2,6 +2,8 @@
 This is an improved implementation of the paper Auto-Encoding Variational Bayes by Kingma and Welling.
 It uses ReLUs and the adam optimizer, instead of sigmoids and adagrad.
 These changes make the network converge much faster.
+https://github.com/pytorch/examples/tree/master/vae
+https://arxiv.org/abs/1312.6114
 '''
 
 from __future__ import print_function

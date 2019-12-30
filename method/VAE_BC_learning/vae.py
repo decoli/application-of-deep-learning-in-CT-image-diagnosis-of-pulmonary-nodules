@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 
+import pandas as pd
 import torch
 import torch.utils.data
 from torch import nn, optim
@@ -11,37 +12,64 @@ from torch.nn import functional as F
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
 
+#d append sys.path
 sys.path.append(os.getcwd())
+from pre_processing.utility import get_image_info, get_coordinate
 
+# define argument
+def argument():
+    parser = argparse.ArgumentParser(description='VAE MNIST Example')
+    parser.add_argument('--path-input', default=None)
+    parser.add_argument('--dir-image', type=str)
+    parser.add_argument('--size-cutting', default=32)
 
-parser = argparse.ArgumentParser(description='VAE MNIST Example')
-parser.add_argument('--batch-size', type=int, default=128, metavar='N',
-                    help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=10, metavar='N',
-                    help='number of epochs to train (default: 10)')
-parser.add_argument('--no-cuda', action='store_true', default=False,
-                    help='enables CUDA training')
-parser.add_argument('--seed', type=int, default=1, metavar='S',
-                    help='random seed (default: 1)')
-parser.add_argument('--log-interval', type=int, default=10, metavar='N',
-                    help='how many batches to wait before logging training status')
-args = parser.parse_args()
-args.cuda = not args.no_cuda and torch.cuda.is_available()
+    parser.add_argument('--rate-train', default=0.9, type=float)
+    parser.add_argument('--size-batch', type=int, default=128, metavar='N',
+                        help='input batch size for train (default: 128)')
+    parser.add_argument('--epoch', type=int, default=10, metavar='N',
+                        help='number of epoch to train (default: 10)')
 
-torch.manual_seed(args.seed)
+    parser.add_argument('--no-cuda', action='store_true', default=False,
+                        help='enables CUDA train')
+    parser.add_argument('--seed', type=int, default=1, metavar='S',
+                        help='random seed (default: 1)')
+    parser.add_argument('--log-interval', type=int, default=10, metavar='N',
+                        help='how many batches to wait before logging train status')
 
-device = torch.device("cuda" if args.cuda else "cpu")
+    parser.add_argument('--num-cross', default=None, type=int)
+    parser.add_argument('--use-cross', default=None, type=int)
 
-kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
-train_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('../data', train=True, download=True,
-                   transform=transforms.ToTensor()),
-    batch_size=args.batch_size, shuffle=True, **kwargs)
-test_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
-    batch_size=args.batch_size, shuffle=True, **kwargs)
+    args = parser.parse_args()
+    args.cuda = not args.no_cuda and torch.cuda.is_available()
 
+    torch.manual_seed(args.seed)
+    device = torch.device("cuda" if args.cuda else "cpu")
+    kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
+    return args, device, kwargs
+
+# define data set
+class DatasetTrain():
+    def __init__(self):
+        pass
+
+    def __len__(self):
+        pass
+
+    def __getitem__(self):
+        pass
+
+class DatasetTest():
+    def __init__(self):
+        pass
+
+    def __len__(self):
+        pass
+
+    def __getitem__(self):
+        pass
+
+# define class 
 class VAE(nn.Module):
     def __init__(self):
         super(VAE, self).__init__()
@@ -70,11 +98,6 @@ class VAE(nn.Module):
         z = self.reparameterize(mu, logvar)
         return self.decode(z), mu, logvar
 
-
-model = VAE().to(device)
-optimizer = optim.Adam(model.parameters(), lr=1e-3)
-
-
 # Reconstruction + KL divergence losses summed over all elements and batch
 def loss_function(recon_x, x, mu, logvar):
     BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
@@ -86,7 +109,6 @@ def loss_function(recon_x, x, mu, logvar):
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
     return BCE + KLD
-
 
 def train(epoch):
     model.train()
@@ -108,7 +130,6 @@ def train(epoch):
     print('====> Epoch: {} Average loss: {:.4f}'.format(
           epoch, train_loss / len(train_loader.dataset)))
 
-
 def test(epoch):
     model.eval()
     test_loss = 0
@@ -128,9 +149,30 @@ def test(epoch):
     print('====> Test set loss: {:.4f}'.format(test_loss))
 
 if __name__ == "__main__":
-    for epoch in range(1, args.epochs + 1):
-        train(epoch)
-        test(epoch)
+    # get argument
+    args, device, kwargs = argument()
+
+    # get image info
+    info_luna16 = pd.read_csv(args.path_info, index_col=0)
+    list_info_image = get_image_info(info_luna16)
+
+    len_list_info_image = len(list_info_image)
+    list_train = list_info_image[: int(len_list_info_image * args.rate_train)]
+    list_test = list_info_image[int(len_list_info_image * args.rate_train): ]
+
+    # define date loader
+    data_set_train = DatasetTrain(list_train)
+    data_set_test = DatasetTest(list_test)
+    train_loader = torch.utils.data.DataLoader(data_set_train)
+    test_loader = torch.utils.data.DataLoader(data_set_test)
+
+    # model instance
+    model = VAE().to(device)
+    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+
+    for epoch in range(1, args.epoch + 1):
+        train(train_loader, epoch)
+        test(test_loader, epoch)
         with torch.no_grad():
             sample = torch.randn(64, 20).to(device)
             sample = model.decode(sample).cpu()

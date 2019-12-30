@@ -78,6 +78,7 @@ class DatasetTrain():
             'whole_{image_index}.tiff'.format(image_index=image_index)
             )
         image = cv2.imread(path_image, flags=2)
+        image = image / 255
 
         # cut the image
         x_start = int(image_coordinate['coordinate_x'] - args.size_cutting / 2)
@@ -98,13 +99,13 @@ class DatasetTest():
 
     def __getitem__(self, idx):
         image_current = self.list_data_set[idx]
-        coordinate = get_coordinate(image_current)
+        image_coordinate = get_coordinate(image_current)
 
         # get image path
         name_subset = os.path.basename(
             os.path.dirname(image_current['path_seriesuid_folder'])
             ).split('_')[0] + '_tiff'
-        image_index = int(image_coordinate['coord_z'])
+        image_index = int(image_coordinate['coordinate_z'])
 
         path_image = os.path.join(
             args.dir_image,
@@ -114,14 +115,16 @@ class DatasetTest():
             'whole_{image_index}.tiff'.format(image_index=image_index)
             )
         image = cv2.imread(path_image, flags=2)
+        image = image / 255
 
         # cut the image
-        x_start = int(image_coordinate['coord_x'] - args.size_cutting / 2)
-        x_end = int(image_coordinate['coord_x'] + args.size_cutting / 2)
-        y_start = int(image_coordinate['coord_y'] - args.size_cutting / 2)
-        y_end = int(image_coordinate['coord_y'] + args.size_cutting / 2)
+        x_start = int(image_coordinate['coordinate_x'] - args.size_cutting / 2)
+        x_end = int(image_coordinate['coordinate_x'] + args.size_cutting / 2)
+        y_start = int(image_coordinate['coordinate_y'] - args.size_cutting / 2)
+        y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
 
         image = image[x_start: x_end, y_start: y_end]
+        image = np.expand_dims(image, 0)
         return image
 
 # define class 
@@ -197,9 +200,14 @@ def test(model, test_loader, epoch, device, args):
             if i == 0:
                 n = min(data.size(0), 8)
                 comparison = torch.cat([data[:n],
-                                      recon_batch.view(args.batch_size, 1, args.size_cutting, args.size_cutting)[:n]])
-                save_image(comparison.cpu(),
-                         'results/reconstruction_' + str(epoch) + '.png', nrow=n)
+                                      recon_batch.view(data.shape[0], 1, args.size_cutting, args.size_cutting)[:n]])
+
+                sub_path_reconstruction = 'method/vae_bc_learning/results/reconstruction_' + str(epoch) + '.png'
+                path_reconstruction = os.path.join(os.getcwd(), sub_path_reconstruction)
+                save_image(
+                    comparison.cpu(),
+                    path_reconstruction,
+                    nrow=n)
 
     test_loss /= len(test_loader.dataset)
     print('====> Test set loss: {:.4f}'.format(test_loss))
@@ -243,5 +251,9 @@ if __name__ == "__main__":
         with torch.no_grad():
             sample = torch.randn(64, 20).to(device)
             sample = model.decode(sample).cpu()
-            save_image(sample.view(64, 1, int(args.size_cutting), int(args.size_cutting)),
-                       'results/sample_' + str(epoch) + '.png')
+            
+            sub_path_sample = 'method/vae_bc_learning/results/sample_' + str(epoch) + '.png'
+            path_sample = os.path.join(os.getcwd(), sub_path_sample)
+            save_image(
+                sample.view(64, 1, int(args.size_cutting), int(args.size_cutting)),
+                path_sample)

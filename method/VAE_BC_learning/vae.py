@@ -21,7 +21,7 @@ def argument():
     parser = argparse.ArgumentParser(description='VAE MNIST Example')
     parser.add_argument('--path-input', default=None)
     parser.add_argument('--dir-image', type=str)
-    parser.add_argument('--size-cutting', default=32)
+    parser.add_argument('--size-cutting', default=28)
 
     parser.add_argument('--rate-train', default=0.9, type=float)
     parser.add_argument('--size-batch', type=int, default=128, metavar='N',
@@ -50,14 +50,18 @@ def argument():
 
 # define data set
 class DatasetTrain():
-    def __init__(self):
-        pass
+    def __init__(self, list_data_set):
+        self.list_data_set
 
     def __len__(self):
-        pass
+        return self.list_data_set
 
-    def __getitem__(self):
-        pass
+    def __getitem__(self, idx):
+        current_item = self.list_data[idx]
+        coordinate = get_coordinate(current_item)
+
+        # get image path
+        path_image = 
 
 class DatasetTest():
     def __init__(self):
@@ -71,14 +75,14 @@ class DatasetTest():
 
 # define class 
 class VAE(nn.Module):
-    def __init__(self):
+    def __init__(self, args):
         super(VAE, self).__init__()
 
-        self.fc1 = nn.Linear(784, 400)
+        self.fc1 = nn.Linear(int(args.size_cutting * args.size_cutting), 400)
         self.fc21 = nn.Linear(400, 20)
         self.fc22 = nn.Linear(400, 20)
         self.fc3 = nn.Linear(20, 400)
-        self.fc4 = nn.Linear(400, 784)
+        self.fc4 = nn.Linear(400, int(args.size_cutting * args.size_cutting))
 
     def encode(self, x):
         h1 = F.relu(self.fc1(x))
@@ -110,7 +114,7 @@ def loss_function(recon_x, x, mu, logvar):
 
     return BCE + KLD
 
-def train(epoch):
+def train(model, train_loader, epoch, device):
     model.train()
     train_loss = 0
     for batch_idx, (data, _) in enumerate(train_loader):
@@ -121,6 +125,7 @@ def train(epoch):
         loss.backward()
         train_loss += loss.item()
         optimizer.step()
+
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
@@ -130,7 +135,7 @@ def train(epoch):
     print('====> Epoch: {} Average loss: {:.4f}'.format(
           epoch, train_loss / len(train_loader.dataset)))
 
-def test(epoch):
+def test(model, test_loader, epoch, device):
     model.eval()
     test_loss = 0
     with torch.no_grad():
@@ -141,7 +146,7 @@ def test(epoch):
             if i == 0:
                 n = min(data.size(0), 8)
                 comparison = torch.cat([data[:n],
-                                      recon_batch.view(args.batch_size, 1, 28, 28)[:n]])
+                                      recon_batch.view(args.batch_size, 1, args.size_cutting, args.size_cutting)[:n]])
                 save_image(comparison.cpu(),
                          'results/reconstruction_' + str(epoch) + '.png', nrow=n)
 
@@ -163,18 +168,18 @@ if __name__ == "__main__":
     # define date loader
     data_set_train = DatasetTrain(list_train)
     data_set_test = DatasetTest(list_test)
-    train_loader = torch.utils.data.DataLoader(data_set_train)
-    test_loader = torch.utils.data.DataLoader(data_set_test)
+    train_loader = torch.utils.data.DataLoader(data_set_train, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(data_set_test, shuffle=True)
 
     # model instance
-    model = VAE().to(device)
+    model = VAE(args).to(device)
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
     for epoch in range(1, args.epoch + 1):
-        train(train_loader, epoch)
-        test(test_loader, epoch)
+        train(model, train_loader, epoch, device)
+        test(model, test_loader, epoch, device)
         with torch.no_grad():
             sample = torch.randn(64, 20).to(device)
             sample = model.decode(sample).cpu()
-            save_image(sample.view(64, 1, 28, 28),
+            save_image(sample.view(64, 1, int(args.size_cutting), int(args.size_cutting)),
                        'results/sample_' + str(epoch) + '.png')

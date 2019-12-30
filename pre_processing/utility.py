@@ -30,7 +30,12 @@ def get_coordinate(current_item):
     voxel_coord_y = round(voxel_coord_y)
     voxel_coord_z = round(voxel_coord_z)
 
-    return voxel_coord_x, voxel_coord_y, voxel_coord_z
+    coordinate = {
+        'coordinate_x': voxel_coord_y, # .csvのxとyが逆になっている
+        'coordinate_y': voxel_coord_x,
+        'coordinate_z': voxel_coord_z:,
+    }
+    return coordinate
 
 def get_image_info(input_pd):
     list_data = []

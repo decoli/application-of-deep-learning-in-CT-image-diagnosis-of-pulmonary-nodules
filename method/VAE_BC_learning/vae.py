@@ -14,7 +14,8 @@ from torchvision.utils import save_image
 
 #d append sys.path
 sys.path.append(os.getcwd())
-from pre_processing.utility import get_image_info, get_coordinate
+from pre_processing.utility import get_coordinate, get_image_info
+
 
 # define argument
 def argument():

@@ -252,7 +252,7 @@ if __name__ == "__main__":
         train(model, train_loader, epoch, device, args)
         test(model, test_loader, epoch, device, args)
         with torch.no_grad():
-            sample = torch.randn(64, 20).to(device)
+            sample = torch.randn(64, args.dimension_latent).to(device)
             sample = model.decode(sample).cpu()
             
             sub_path_sample = 'method/vae_bc_learning/results/sample_' + str(epoch) + '.png'

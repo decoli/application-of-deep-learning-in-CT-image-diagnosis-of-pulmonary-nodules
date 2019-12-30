@@ -26,6 +26,7 @@ def argument():
     parser.add_argument('--path-input', default=None)
     parser.add_argument('--dir-image', type=str)
     parser.add_argument('--size-cutting', default=28)
+    parser.add_argument('--dimension-latent', type=int, default=20)
 
     parser.add_argument('--rate-train', default=0.9, type=float)
     parser.add_argument('--size-batch', type=int, default=128, metavar='N',
@@ -133,10 +134,12 @@ class VAE(nn.Module):
         super(VAE, self).__init__()
 
         self.fc1 = nn.Linear(int(args.size_cutting * args.size_cutting), 400)
-        self.fc21 = nn.Linear(400, 20)
-        self.fc22 = nn.Linear(400, 20)
-        self.fc3 = nn.Linear(20, 400)
+        self.fc21 = nn.Linear(400, args.dimension_latent)
+        self.fc22 = nn.Linear(400, args.dimension_latent)
+        self.fc3 = nn.Linear(args.dimension_latent, 400)
         self.fc4 = nn.Linear(400, int(args.size_cutting * args.size_cutting))
+
+        self.args = args
 
     def encode(self, x):
         h1 = F.relu(self.fc1(x))
@@ -152,7 +155,7 @@ class VAE(nn.Module):
         return torch.sigmoid(self.fc4(h3))
 
     def forward(self, x):
-        mu, logvar = self.encode(x.view(-1, 784))
+        mu, logvar = self.encode(x.view(-1, self.args.size_cutting * self.args.size_cutting))
         z = self.reparameterize(mu, logvar)
         return self.decode(z), mu, logvar
 

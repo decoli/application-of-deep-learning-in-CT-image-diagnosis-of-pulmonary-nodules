@@ -134,9 +134,9 @@ class VAE(nn.Module):
         super(VAE, self).__init__()
 
         self.fc1 = nn.Linear(int(args.size_cutting * args.size_cutting), 400)
-        self.fc21 = nn.Linear(400, args.dimension_latent)
-        self.fc22 = nn.Linear(400, args.dimension_latent)
-        self.fc3 = nn.Linear(args.dimension_latent, 400)
+        self.fc21 = nn.Linear(400, int(args.dimension_latent))
+        self.fc22 = nn.Linear(400, int(args.dimension_latent))
+        self.fc3 = nn.Linear(int(args.dimension_latent), 400)
         self.fc4 = nn.Linear(400, int(args.size_cutting * args.size_cutting))
 
         self.args = args

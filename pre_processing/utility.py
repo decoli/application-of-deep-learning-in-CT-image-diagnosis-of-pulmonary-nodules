@@ -33,7 +33,7 @@ def get_coordinate(current_item):
     coordinate = {
         'coordinate_x': voxel_coord_y, # .csvのxとyが逆になっている
         'coordinate_y': voxel_coord_x,
-        'coordinate_z': voxel_coord_z:,
+        'coordinate_z': voxel_coord_z,
     }
     return coordinate
 

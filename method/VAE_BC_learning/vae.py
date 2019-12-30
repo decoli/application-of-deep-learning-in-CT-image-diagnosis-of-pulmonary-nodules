@@ -4,6 +4,8 @@ import argparse
 import os
 import sys
 
+import cv2
+import numpy as np
 import pandas as pd
 import torch
 import torch.utils.data
@@ -11,6 +13,7 @@ from torch import nn, optim
 from torch.nn import functional as F
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
+
 
 #d append sys.path
 sys.path.append(os.getcwd())
@@ -52,27 +55,74 @@ def argument():
 # define data set
 class DatasetTrain():
     def __init__(self, list_data_set):
-        self.list_data_set
+        self.list_data_set = list_data_set
 
     def __len__(self):
-        return self.list_data_set
+        return len(self.list_data_set)
 
     def __getitem__(self, idx):
-        current_item = self.list_data[idx]
-        coordinate = get_coordinate(current_item)
+        image_current = self.list_data_set[idx]
+        image_coordinate = get_coordinate(image_current)
 
         # get image path
-        path_image = 
+        name_subset = os.path.basename(
+            os.path.dirname(image_current['path_seriesuid_folder'])
+            ).split('_')[0] + '_tiff'
+        image_index = int(image_coordinate['coordinate_z'])
+
+        path_image = os.path.join(
+            args.dir_image,
+            name_subset,
+            image_current['seriesuid'],
+            'whole_image',
+            'whole_{image_index}.tiff'.format(image_index=image_index)
+            )
+        image = cv2.imread(path_image, flags=2)
+
+        # cut the image
+        x_start = int(image_coordinate['coordinate_x'] - args.size_cutting / 2)
+        x_end = int(image_coordinate['coordinate_x'] + args.size_cutting / 2)
+        y_start = int(image_coordinate['coordinate_y'] - args.size_cutting / 2)
+        y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
+
+        image = image[x_start: x_end, y_start: y_end]
+        image = np.expand_dims(image, 0)
+        return image
 
 class DatasetTest():
-    def __init__(self):
-        pass
+    def __init__(self, list_data_set):
+        self.list_data_set = list_data_set
 
     def __len__(self):
-        pass
+        return len(self.list_data_set)
 
-    def __getitem__(self):
-        pass
+    def __getitem__(self, idx):
+        image_current = self.list_data_set[idx]
+        coordinate = get_coordinate(image_current)
+
+        # get image path
+        name_subset = os.path.basename(
+            os.path.dirname(image_current['path_seriesuid_folder'])
+            ).split('_')[0] + '_tiff'
+        image_index = int(image_coordinate['coord_z'])
+
+        path_image = os.path.join(
+            args.dir_image,
+            name_subset,
+            image_current['seriesuid'],
+            'whole_image',
+            'whole_{image_index}.tiff'.format(image_index=image_index)
+            )
+        image = cv2.imread(path_image, flags=2)
+
+        # cut the image
+        x_start = int(image_coordinate['coord_x'] - args.size_cutting / 2)
+        x_end = int(image_coordinate['coord_x'] + args.size_cutting / 2)
+        y_start = int(image_coordinate['coord_y'] - args.size_cutting / 2)
+        y_end = int(image_coordinate['coord_y'] + args.size_cutting / 2)
+
+        image = image[x_start: x_end, y_start: y_end]
+        return image
 
 # define class 
 class VAE(nn.Module):
@@ -104,8 +154,8 @@ class VAE(nn.Module):
         return self.decode(z), mu, logvar
 
 # Reconstruction + KL divergence losses summed over all elements and batch
-def loss_function(recon_x, x, mu, logvar):
-    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
+def loss_function(recon_x, x, mu, logvar, args):
+    BCE = F.binary_cross_entropy(recon_x, x.view(-1, args.size_cutting * args.size_cutting), reduction='sum')
 
     # see Appendix B from VAE paper:
     # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
@@ -115,14 +165,14 @@ def loss_function(recon_x, x, mu, logvar):
 
     return BCE + KLD
 
-def train(model, train_loader, epoch, device):
+def train(model, train_loader, epoch, device, args):
     model.train()
     train_loss = 0
-    for batch_idx, (data, _) in enumerate(train_loader):
-        data = data.to(device)
+    for batch_idx, data in enumerate(train_loader):
+        data = data.to(device, dtype= torch.float)
         optimizer.zero_grad()
         recon_batch, mu, logvar = model(data)
-        loss = loss_function(recon_batch, data, mu, logvar)
+        loss = loss_function(recon_batch, data, mu, logvar, args)
         loss.backward()
         train_loss += loss.item()
         optimizer.step()
@@ -136,14 +186,14 @@ def train(model, train_loader, epoch, device):
     print('====> Epoch: {} Average loss: {:.4f}'.format(
           epoch, train_loss / len(train_loader.dataset)))
 
-def test(model, test_loader, epoch, device):
+def test(model, test_loader, epoch, device, args):
     model.eval()
     test_loss = 0
     with torch.no_grad():
-        for i, (data, _) in enumerate(test_loader):
-            data = data.to(device)
+        for i, data in enumerate(test_loader):
+            data = data.to(device, dtype= torch.float)
             recon_batch, mu, logvar = model(data)
-            test_loss += loss_function(recon_batch, data, mu, logvar).item()
+            test_loss += loss_function(recon_batch, data, mu, logvar, args).item()
             if i == 0:
                 n = min(data.size(0), 8)
                 comparison = torch.cat([data[:n],
@@ -159,7 +209,7 @@ if __name__ == "__main__":
     args, device, kwargs = argument()
 
     # get image info
-    info_luna16 = pd.read_csv(args.path_info, index_col=0)
+    info_luna16 = pd.read_csv(args.path_input, index_col=0)
     list_info_image = get_image_info(info_luna16)
 
     len_list_info_image = len(list_info_image)
@@ -169,16 +219,27 @@ if __name__ == "__main__":
     # define date loader
     data_set_train = DatasetTrain(list_train)
     data_set_test = DatasetTest(list_test)
-    train_loader = torch.utils.data.DataLoader(data_set_train, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(data_set_test, shuffle=True)
+
+    train_loader = torch.utils.data.DataLoader(
+        data_set_train,
+        batch_size=args.size_batch,
+        shuffle=True,
+        **kwargs,
+        )
+    test_loader = torch.utils.data.DataLoader(
+        data_set_test,
+        batch_size=args.size_batch,
+        shuffle=True,
+        **kwargs,
+        )
 
     # model instance
     model = VAE(args).to(device)
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
     for epoch in range(1, args.epoch + 1):
-        train(model, train_loader, epoch, device)
-        test(model, test_loader, epoch, device)
+        train(model, train_loader, epoch, device, args)
+        test(model, test_loader, epoch, device, args)
         with torch.no_grad():
             sample = torch.randn(64, 20).to(device)
             sample = model.decode(sample).cpu()

@@ -50,7 +50,7 @@ class TestModel(nn.Module):
 
         out_relu = F.relu(out)
 
-        out = F.dropout(out_relu)
+        # out = F.dropout(out_relu)
         out = self.conv_4(out) # 2 * 1 * 1
 
         return out, out_relu

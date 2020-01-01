@@ -31,6 +31,7 @@ def argument():
     parser.add_argument('--path-model-vae', default=None)
     parser.add_argument('--dir-image', type=str)
     parser.add_argument('--size-cutting', default=32)
+    parser.add_argument('--learning-rate', default=1e-3)
 
     parser.add_argument('--rate-train', default=0.9, type=float)
     parser.add_argument('--size-batch', type=int, default=128,
@@ -96,6 +97,11 @@ class DatasetTrain():
 
         # get the label
         label = int(image_current['class'])
+        if label == 0:
+            label = np.array([0])
+        elif label == 1:
+            label = np.array([1])
+
         return image, label
 
 class DatasetTest():
@@ -223,9 +229,9 @@ class CnnModel(nn.Module):
         out = self.conv_3(out) # 500 * 2 * 2
         out = self.pooling_3(out) # 500 * 1 * 1
 
-        out_relu = F.relu(out)
+        out = F.relu(out)
 
-        # out = F.dropout(out_relu)
+        # out = F.dropout(out)
         out = self.conv_4(out) # 2 * 1 * 1
 
         return out
@@ -233,10 +239,7 @@ class CnnModel(nn.Module):
 def get_data_attentioned(data, attention_area):
     return data + attention_area # 并列不同的维度， 不进行算数叠加
 
-def loss_function(prediction, label):
-    pass
-
-def train(model, optimizer, model_vae, train_loader, epoch, args):
+def train(model, optimizer, criterion, model_vae, train_loader, epoch, args):
 
     model.train()
     train_loss = 0
@@ -246,6 +249,7 @@ def train(model, optimizer, model_vae, train_loader, epoch, args):
         # train the model
         optimizer.zero_grad()
 
+        # get vae model
         if not args.no_attention_area:
 
             # get attention area
@@ -257,21 +261,28 @@ def train(model, optimizer, model_vae, train_loader, epoch, args):
         else:
             prediction = model(data)
 
-        loss = loss_function(prediction, label)
+        # get loss
+        prediction = torch.squeeze(prediction)
+        label = torch.squeeze(label)
+        loss = criterion(prediction, label)
+
+        # model step
         loss.backward()
-        train_loss += loss.item()
         optimizer.step()
 
+        # log for each batch
+        train_loss += loss.item() #
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader),
                 loss.item() / len(data)))
 
+    # log for each epoch
     print('====> Epoch: {} Average loss: {:.4f}'.format(
           epoch, train_loss / len(train_loader.dataset)))
 
-def test(model, optimizer, model_vae, test_loader, epoch, args):
+def test(model, model_vae, test_loader, epoch, args):
     model.eval()
     test_loss = 0
     with torch.no_grad():
@@ -346,11 +357,16 @@ if __name__ == "__main__":
 
     # model instance
     model = CnnModel(args).to(args.device)
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+
+    # optimizer
+    optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+
+    # criterion
+    criterion = nn.CrossEntropyLoss()
 
     for epoch in range(1, args.epoch + 1):
-        train(model, optimizer, model_vae, train_loader, epoch, args)
-        test(model, optimizer, model_vae, test_loader, epoch, args)
+        train(model, optimizer, criterion, model_vae, train_loader, epoch, args)
+        test(model, model_vae, test_loader, epoch, args)
         with torch.no_grad():
             sample = torch.randn(64, args.dimension_latent).to(args.device)
             sample = model.decode(sample).cpu()

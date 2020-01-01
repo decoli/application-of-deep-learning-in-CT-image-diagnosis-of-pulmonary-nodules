@@ -4,6 +4,7 @@
 '''
 import argparse
 import os
+import pprint
 import random
 import sys
 
@@ -29,7 +30,7 @@ def argument():
     parser.add_argument('--path-input', default=None)
     parser.add_argument('--path-model-vae', default=None)
     parser.add_argument('--dir-image', type=str)
-    parser.add_argument('--size-cutting', default=50)
+    parser.add_argument('--size-cutting', default=32)
 
     parser.add_argument('--rate-train', default=0.9, type=float)
     parser.add_argument('--size-batch', type=int, default=128,
@@ -44,6 +45,8 @@ def argument():
 
     parser.add_argument('--num-cross', default=None, type=int)
     parser.add_argument('--use-cross', default=None, type=int)
+
+    parser.add_argument('--no-attention-area', action='store_true', default=False)
 
     args = parser.parse_args()
     cuda = not args.no_cuda and torch.cuda.is_available()
@@ -88,8 +91,12 @@ class DatasetTrain():
         y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
 
         image = image[x_start: x_end, y_start: y_end]
+        image = cv2.resize(image, (50, 50))
         image = np.expand_dims(image, 0)
-        return image
+
+        # get the label
+        label = int(image_current['class'])
+        return image, label
 
 class DatasetTest():
     def __init__(self, list_data_set):
@@ -125,18 +132,25 @@ class DatasetTest():
         y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
 
         image = image[x_start: x_end, y_start: y_end]
+        image = cv2.resize(image, (50, 50))
         image = np.expand_dims(image, 0)
         return image
 
 class CnnModel(nn.Module):
-    def __init__(self):
+    def __init__(self, args):
         super().__init__()
 
-        # input 2 * 50 * 50
+        if args.no_attention_area:
+            # input 1 * 50 * 50
+            self.conv_1 = nn.Conv2d(
+                in_channels=1, out_channels=20, kernel_size=7, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
+            ) # 20 * 44 * 44
 
-        self.conv_1 = nn.Conv2d(
-            in_channels=2, out_channels=20, kernel_size=7, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
-        ) # 20 * 44 * 44
+        else:
+            # input 2 * 50 * 50
+            self.conv_1 = nn.Conv2d(
+                in_channels=2, out_channels=20, kernel_size=7, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
+            ) # 20 * 44 * 44
 
         self.pooling_1 = nn.MaxPool2d(
             kernel_size=2, stride=2, padding=0, dilation=1, return_indices=False, ceil_mode=False
@@ -214,25 +228,36 @@ class CnnModel(nn.Module):
         # out = F.dropout(out_relu)
         out = self.conv_4(out) # 2 * 1 * 1
 
-        return out, out_relu
+        return out
 
 def get_data_attentioned(data, attention_area):
     return data + attention_area # 并列不同的维度， 不进行算数叠加
 
+def loss_function(prediction, label):
+    pass
+
 def train(model, optimizer, model_vae, train_loader, epoch, args):
+
     model.train()
     train_loss = 0
-    for batch_idx, data in enumerate(train_loader):
+    for batch_idx, (data, label) in enumerate(train_loader):
         data = data.to(args.device, dtype= torch.float)
-
-        # get attention area
-        attention_area = model_vae(data)
 
         # train the model
         optimizer.zero_grad()
-        data_attentioned = get_data_attentioned(data, attention_area)
-        recon_batch, mu, logvar = model(data_attentioned)
-        loss = loss_function(recon_batch, data, mu, logvar, args)
+
+        if not args.no_attention_area:
+
+            # get attention area
+            attention_area = model_vae(data)
+            data_attentioned = get_data_attentioned(data, attention_area)
+
+            prediction = model(data_attentioned)
+
+        else:
+            prediction = model(data)
+
+        loss = loss_function(prediction, label)
         loss.backward()
         train_loss += loss.item()
         optimizer.step()
@@ -279,23 +304,30 @@ if __name__ == "__main__":
     # get argument
     args = argument()
 
-    ## get vae model
-    # get cnn-attention area
-    path_model_vae = os.path.join(os.getcwd(), args.path_model_vae)
+    # get vae model
+    if not args.no_attention_area:
+        # get path of model vae
+        path_model_vae = os.path.join(os.getcwd(), args.path_model_vae)
 
-    # load model
-    model_vae = VAE()
-    model_vae.load_state_dict(torch.load(path_model_vae))
+        # load model vae
+        model_vae = VAE()
+        model_vae.load_state_dict(torch.load(path_model_vae))
+    else:
+        model_vae = None
 
     # get image info
     info_luna16 = pd.read_csv(args.path_input, index_col=0)
     list_info_image = get_image_info(info_luna16)
     random.shuffle(list_info_image)
 
-    # get train part and test part by rate train
-    len_list_train = int(len(list_info_image) * args.rate_train)
-    list_train = list_info_image[: len_list_train]
-    list_test = list_info_image[len_list_train: ]
+    if not(args.num_cross is None) and not (args.use_cross is None):
+        # get train part and test part by cross number
+        pass
+    else:
+        # get train part and test part by train rate
+        len_list_train = int(len(list_info_image) * args.rate_train)
+        list_train = list_info_image[: len_list_train]
+        list_test = list_info_image[len_list_train: ]
 
     # define date loader
     data_set_train = DatasetTrain(list_train)

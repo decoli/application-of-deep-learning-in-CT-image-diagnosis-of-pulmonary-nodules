@@ -10,7 +10,7 @@ def world2voxel_coord(world_coord, origin, spacing):
     voxel_coord = stretched_voxel_coord / spacing
     return voxel_coord
 
-def get_coordinate(current_item):
+def get_coordinate(current_item): # get coordinate only
     voxel_coord_x = world2voxel_coord(
         current_item['coord_x'],
         current_item['origin_x'],

@@ -236,6 +236,12 @@ class CnnModel(nn.Module):
 
         return out
 
+def get_log_batch():
+    pass
+
+def get_log_epoch():
+    pass
+
 def get_data_attentioned(data, attention_area):
     return data + attention_area # 并列不同的维度， 不进行算数叠加
 
@@ -264,23 +270,17 @@ def train(model, optimizer, criterion, model_vae, train_loader, epoch, args):
         # get loss
         prediction = torch.squeeze(prediction)
         label = torch.squeeze(label)
-        loss = criterion(prediction, label)
+        loss = criterion(prediction, label) # https://pytorch.org/docs/stable/nn.html#crossentropyloss
 
         # model step
         loss.backward()
         optimizer.step()
 
-        # log for each batch
-        train_loss += loss.item() #
-        if batch_idx % args.log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader),
-                loss.item() / len(data)))
+        # get log for each batch
+        get_log_batch(prediction, label)
 
-    # log for each epoch
-    print('====> Epoch: {} Average loss: {:.4f}'.format(
-          epoch, train_loss / len(train_loader.dataset)))
+    # get log for each epoch
+    get_log_epoch(prediction, label)
 
 def test(model, model_vae, test_loader, epoch, args):
     model.eval()

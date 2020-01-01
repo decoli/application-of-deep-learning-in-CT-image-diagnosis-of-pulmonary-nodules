@@ -4,6 +4,7 @@
 '''
 import argparse
 import os
+import random
 import sys
 
 import cv2
@@ -18,7 +19,6 @@ from torchvision.utils import save_image
 
 # append sys.path
 sys.path.append(os.getcwd())
-
 from pre_processing.utility import get_coordinate, get_image_info
 from utility.auto_encoding_variational import VAE
 
@@ -48,7 +48,7 @@ def argument():
     args = parser.parse_args()
     cuda = not args.no_cuda and torch.cuda.is_available()
 
-    torch.manual_seed(args.seed)
+    random.seed(args.seed)
     device = torch.device("cuda" if cuda else "cpu")
     args.device = device
     return args
@@ -89,7 +89,6 @@ class DatasetTrain():
 
         image = image[x_start: x_end, y_start: y_end]
         image = np.expand_dims(image, 0)
-
         return image
 
 class DatasetTest():
@@ -217,18 +216,22 @@ class CnnModel(nn.Module):
 
         return out, out_relu
 
-def train(model, optimizer, model_vae, train_loader, epoch, device, args):
+def get_data_attentioned(data, attention_area):
+    return data + attention_area # 并列不同的维度， 不进行算数叠加
+
+def train(model, optimizer, model_vae, train_loader, epoch, args):
     model.train()
     train_loss = 0
     for batch_idx, data in enumerate(train_loader):
-        data = data.to(device, dtype= torch.float)
+        data = data.to(args.device, dtype= torch.float)
 
         # get attention area
         attention_area = model_vae(data)
 
         # train the model
         optimizer.zero_grad()
-        recon_batch, mu, logvar = model(data, attention_area)
+        data_attentioned = get_data_attentioned(data, attention_area)
+        recon_batch, mu, logvar = model(data_attentioned)
         loss = loss_function(recon_batch, data, mu, logvar, args)
         loss.backward()
         train_loss += loss.item()
@@ -243,12 +246,12 @@ def train(model, optimizer, model_vae, train_loader, epoch, device, args):
     print('====> Epoch: {} Average loss: {:.4f}'.format(
           epoch, train_loss / len(train_loader.dataset)))
 
-def test(model, optimizer, model_vae, test_loader, epoch, device, args):
+def test(model, optimizer, model_vae, test_loader, epoch, args):
     model.eval()
     test_loss = 0
     with torch.no_grad():
         for i, data in enumerate(test_loader):
-            data = data.to(device, dtype= torch.float)
+            data = data.to(args.device, dtype= torch.float)
 
             # get attention area
             attention_area = model_vae(data)
@@ -287,7 +290,9 @@ if __name__ == "__main__":
     # get image info
     info_luna16 = pd.read_csv(args.path_input, index_col=0)
     list_info_image = get_image_info(info_luna16)
+    random.shuffle(list_info_image)
 
+    # get train part and test part by rate train
     len_list_train = int(len(list_info_image) * args.rate_train)
     list_train = list_info_image[: len_list_train]
     list_test = list_info_image[len_list_train: ]
@@ -308,14 +313,14 @@ if __name__ == "__main__":
         )
 
     # model instance
-    model = CnnModel(args).to(device)
+    model = CnnModel(args).to(args.device)
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
     for epoch in range(1, args.epoch + 1):
-        train(model, optimizer, model_vae, train_loader, epoch, device, args)
-        test(model, optimizer, model_vae, test_loader, epoch, device, args)
+        train(model, optimizer, model_vae, train_loader, epoch, args)
+        test(model, optimizer, model_vae, test_loader, epoch, args)
         with torch.no_grad():
-            sample = torch.randn(64, args.dimension_latent).to(device)
+            sample = torch.randn(64, args.dimension_latent).to(args.device)
             sample = model.decode(sample).cpu()
             
             sub_path_sample = 'method/vae_bc_learning/results/sample_' + str(epoch) + '.png'

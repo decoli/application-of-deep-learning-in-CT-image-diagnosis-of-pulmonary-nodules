@@ -21,7 +21,7 @@ from visdom import Visdom
 
 # append sys.path
 sys.path.append(os.getcwd())
-from pre_processing.utility import get_coordinate, get_image_info
+from utility.pre_processing import get_coordinate, get_image_info
 from utility.auto_encoding_variational import VAE
 from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
                             visdom_sp)
@@ -275,7 +275,7 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args):
         visdom_se(
             args.visdom, win='test', name='test', epoch, se)
         visdom_sp(
-            args.visdom, win='test', namname='test'e, epoch, sp)
+            args.visdom, win='test', namname='test', epoch, sp)
         visdom_roc_auc(
             args.visdom, win='test', name='test', epoch)
 

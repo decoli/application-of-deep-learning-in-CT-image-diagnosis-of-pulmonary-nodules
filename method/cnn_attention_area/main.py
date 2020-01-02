@@ -236,25 +236,49 @@ class CnnModel(nn.Module):
 
         return out
 
-def get_log_batch(prediction, label):
+def log_batch(prediction, label, tp, fn, fp, tn, loss_append, batch_loss):
     prediction = nn.functional.softmax(prediction, dim=1)
+    prediction = torch.round(prediction) # https://pytorch.org/docs/master/torch.html#math-operations
 
-    # https://pytorch.org/docs/master/torch.html#math-operations
-    prediction = torch.round(prediction)
+    for (each_prediction, each_label) in zip(list(prediction), label):
+        if each_label == 1 and each_prediction[0] == 1:
+            tp += 1
+        if each_label == 1 and each_prediction[0] == 0:
+            fn += 1
+        if each_label == 0 and each_prediction[0] == 1:
+            fp += 1
+        if each_label == 0 and each_prediction[0] == 0:
+            tn += 1
 
-    print('test')
+    loss_append = loss_append + batch_loss
+    return loss_append, tp, fn, fp, tn
 
-
-def get_log_epoch():
-    pass
+def log_epoch(loss_append, tp, fn, fp, tn):
+    count_acc = tp + tn
+    acc = count_acc / (tp + fn + fp + tn)
+    se = tp / (tp + fn)
+    sp = tn / (tn + fp)
+    loss = loss_append / (tp + fn + fp + tn)
 
 def get_data_attentioned(data, attention_area):
     return data + attention_area # 并列不同的维度， 不进行算数叠加
 
+def make_visdom():
+    pass
+
+def make_roc():
+    pass
+
 def train(model, optimizer, criterion, model_vae, train_loader, epoch, args):
 
     model.train()
-    train_loss = 0
+
+    loss_append = 0
+    tp = 0
+    fn = 0
+    fp = 0
+    tn = 0
+
     for batch_idx, (data, label) in enumerate(train_loader):
         data = data.to(args.device, dtype= torch.float)
 
@@ -276,17 +300,18 @@ def train(model, optimizer, criterion, model_vae, train_loader, epoch, args):
         # get loss
         prediction = torch.squeeze(prediction)
         label = torch.squeeze(label)
-        loss = criterion(prediction, label) # https://pytorch.org/docs/stable/nn.html#crossentropyloss
+        batch_loss = criterion(prediction, label) # https://pytorch.org/docs/stable/nn.html#crossentropyloss
 
         # model step
         loss.backward()
         optimizer.step()
 
-        # get log for each batch
-        get_log_batch(prediction, label)
+        # log for each batch
+        loss_append, tp, fn, fp, tn = log_batch(
+            prediction, label, tp, fn, fp, tn, loss_append, batch_loss)
 
-    # get log for each epoch
-    get_log_epoch(prediction, label)
+    # log for each epoch
+    log_epoch(loss_append, tp, fn, fp, tn)
 
 def test(model, model_vae, test_loader, epoch, args):
     model.eval()

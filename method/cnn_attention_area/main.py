@@ -17,11 +17,14 @@ from torch import nn, optim
 from torch.nn import functional as F
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
+from visdom import Visdom
 
 # append sys.path
 sys.path.append(os.getcwd())
 from pre_processing.utility import get_coordinate, get_image_info
 from utility.auto_encoding_variational import VAE
+from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
+                            visdom_sp)
 
 
 # define argument
@@ -48,6 +51,7 @@ def argument():
     parser.add_argument('--use-cross', default=None, type=int)
 
     parser.add_argument('--no-attention-area', action='store_true', default=False)
+    parser.add_argument('--visdom', action='store_true', default=False)
 
     args = parser.parse_args()
     cuda = not args.no_cuda and torch.cuda.is_available()
@@ -253,21 +257,22 @@ def log_batch(prediction, label, tp, fn, fp, tn, loss_append, batch_loss):
     loss_append = loss_append + batch_loss
     return loss_append, tp, fn, fp, tn
 
-def log_epoch(loss_append, tp, fn, fp, tn):
+def log_epoch(epoch, args, loss_append, tp, fn, fp, tn, args):
     count_acc = tp + tn
     acc = count_acc / (tp + fn + fp + tn)
     se = tp / (tp + fn)
     sp = tn / (tn + fp)
     loss = loss_append / (tp + fn + fp + tn)
 
+    if args.visdom:
+        visdom_loss(epoch, loss)
+        visdom_acc(epoch, acc)
+        visdom_se(epoch, se)
+        visdom_sp(epoch, sp)
+        visdom_roc_auc(epoch)
+
 def get_data_attentioned(data, attention_area):
     return data + attention_area # 并列不同的维度， 不进行算数叠加
-
-def make_visdom():
-    pass
-
-def make_roc():
-    pass
 
 def train(model, optimizer, criterion, model_vae, train_loader, epoch, args):
 
@@ -311,7 +316,7 @@ def train(model, optimizer, criterion, model_vae, train_loader, epoch, args):
             prediction, label, tp, fn, fp, tn, loss_append, batch_loss)
 
     # log for each epoch
-    log_epoch(loss_append, tp, fn, fp, tn)
+    log_epoch(epoch, loss_append, tp, fn, fp, tn, args)
 
 def test(model, model_vae, test_loader, epoch, args):
     model.eval()

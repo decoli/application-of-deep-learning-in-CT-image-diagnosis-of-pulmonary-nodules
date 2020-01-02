@@ -1,12 +1,12 @@
 import numpy as np
 from visdom import Visdom
 
-def visdom_loss():
+def visdom_loss(vis, win, name, epoch, loss):
     vis.line(
         X=np.array([int(epoch)]),
-        Y=np.array([int(count_loss) / count_image]),
-        win=visdom_win_loss, #win要保持一致
-        name='validation_loss',
+        Y=np.array([int(loss)]),
+        win=win,
+        name=name,
         update='append',
         opts=dict(
             markers=True,
@@ -16,12 +16,12 @@ def visdom_loss():
         )
     )
 
-def visdom_acc():
+def visdom_acc(vis, win, name, epoch, acc):
     vis.line(
         X=np.array([int(epoch)]),
-        Y=np.array([int(count_acc) / count_image]),
-        win=visdom_win_acc, #win要保持一致
-        name='validation_acc',
+        Y=np.array([int(acc)]),
+        win=win,
+        name=name,
         update='append',
         opts=dict(
             markers=True,
@@ -31,12 +31,12 @@ def visdom_acc():
         )
     )
 
-def visdom_se():
+def visdom_se(vis, win, name, epoch, se):
     vis.line(
         X=np.array([int(epoch)]),
         Y=np.array([se]),
-        win=visdom_win_se_and_sp_validation,
-        name='validation_se',
+        win=win,
+        name=name,
         update='append',
         opts=dict(
             markers=True,
@@ -46,12 +46,12 @@ def visdom_se():
         )
     )
 
-def visdom_sp():
+def visdom_sp(vis, win, name, epoch, sp):
     vis.line(
         X=np.array([int(epoch)]),
         Y=np.array([sp]),
-        win=visdom_win_se_and_sp_validation,
-        name='validation_sp',
+        win=win,
+        name=name,
         update='append',
         opts=dict(
             markers=True,
@@ -61,12 +61,12 @@ def visdom_sp():
         )
     )
 
-def visdom_roc_auc():
+def visdom_roc_auc(vis, win, name, epoch):
     vis.line(
         X=np.array([int(epoch)]),
         Y=np.array([roc_auc]),
-        win=visdom_win_roc_auc,
-        name='validation_roc_auc',
+        win=win,
+        name=name,
         update='append',
         opts=dict(
             markers=True,

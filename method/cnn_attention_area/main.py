@@ -59,6 +59,8 @@ def argument():
     random.seed(args.seed)
     device = torch.device("cuda" if cuda else "cpu")
     args.device = device
+    args.visdom = Visdom(env='')
+
     return args
 
 # define data set
@@ -240,7 +242,7 @@ class CnnModel(nn.Module):
 
         return out
 
-def log_batch(prediction, label, tp, fn, fp, tn, loss_append, batch_loss):
+def log_batch(prediction, label, tp, fn, fp, tn, loss, loss_batch):
     prediction = nn.functional.softmax(prediction, dim=1)
     prediction = torch.round(prediction) # https://pytorch.org/docs/master/torch.html#math-operations
 
@@ -254,22 +256,28 @@ def log_batch(prediction, label, tp, fn, fp, tn, loss_append, batch_loss):
         if each_label == 0 and each_prediction[0] == 0:
             tn += 1
 
-    loss_append = loss_append + batch_loss
-    return loss_append, tp, fn, fp, tn
+    loss = loss + loss_batch
+    return loss, tp, fn, fp, tn
 
-def log_epoch(epoch, args, loss_append, tp, fn, fp, tn, args):
-    count_acc = tp + tn
-    acc = count_acc / (tp + fn + fp + tn)
+def log_epoch(epoch, loss, tp, fn, fp, tn, args):
+    count_sample = tp + fn + fp + tn
+
+    acc = (tp + tn) / count_sample
     se = tp / (tp + fn)
     sp = tn / (tn + fp)
-    loss = loss_append / (tp + fn + fp + tn)
+    loss = loss / count_sample
 
     if args.visdom:
-        visdom_loss(epoch, loss)
-        visdom_acc(epoch, acc)
-        visdom_se(epoch, se)
-        visdom_sp(epoch, sp)
-        visdom_roc_auc(epoch)
+        visdom_loss(
+            args.visdom, win='test', name='test', epoch, loss)
+        visdom_acc(
+            args.visdom, win='test', name='test', epoch, acc)
+        visdom_se(
+            args.visdom, win='test', name='test', epoch, se)
+        visdom_sp(
+            args.visdom, win='test', namname='test'e, epoch, sp)
+        visdom_roc_auc(
+            args.visdom, win='test', name='test', epoch)
 
 def get_data_attentioned(data, attention_area):
     return data + attention_area # 并列不同的维度， 不进行算数叠加
@@ -278,7 +286,7 @@ def train(model, optimizer, criterion, model_vae, train_loader, epoch, args):
 
     model.train()
 
-    loss_append = 0
+    loss = 0
     tp = 0
     fn = 0
     fp = 0
@@ -305,18 +313,18 @@ def train(model, optimizer, criterion, model_vae, train_loader, epoch, args):
         # get loss
         prediction = torch.squeeze(prediction)
         label = torch.squeeze(label)
-        batch_loss = criterion(prediction, label) # https://pytorch.org/docs/stable/nn.html#crossentropyloss
+        loss_batch = criterion(prediction, label) # https://pytorch.org/docs/stable/nn.html#crossentropyloss
 
         # model step
-        loss.backward()
+        loss_batch.backward()
         optimizer.step()
 
         # log for each batch
-        loss_append, tp, fn, fp, tn = log_batch(
-            prediction, label, tp, fn, fp, tn, loss_append, batch_loss)
+        loss, tp, fn, fp, tn = log_batch(
+            prediction, label, tp, fn, fp, tn, loss, loss_batch)
 
     # log for each epoch
-    log_epoch(epoch, loss_append, tp, fn, fp, tn, args)
+    log_epoch(epoch, loss, tp, fn, fp, tn, args)
 
 def test(model, model_vae, test_loader, epoch, args):
     model.eval()

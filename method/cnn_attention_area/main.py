@@ -269,15 +269,15 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args):
 
     if args.visdom:
         visdom_loss(
-            args.visdom, win='test', name='test', epoch, loss)
+            args.visdom, epoch, loss, win='test', name='test')
         visdom_acc(
-            args.visdom, win='test', name='test', epoch, acc)
+            args.visdom, epoch, acc, win='test', name='test')
         visdom_se(
-            args.visdom, win='test', name='test', epoch, se)
+            args.visdom, epoch, se, win='test', name='test')
         visdom_sp(
-            args.visdom, win='test', namname='test', epoch, sp)
+            args.visdom, epoch, sp, win='test', namname='test')
         visdom_roc_auc(
-            args.visdom, win='test', name='test', epoch)
+            args.visdom, epoch, win='test', name='test')
 
 def get_data_attentioned(data, attention_area):
     return data + attention_area # 并列不同的维度， 不进行算数叠加

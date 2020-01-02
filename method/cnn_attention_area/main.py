@@ -236,8 +236,14 @@ class CnnModel(nn.Module):
 
         return out
 
-def get_log_batch():
-    pass
+def get_log_batch(prediction, label):
+    prediction = nn.functional.softmax(prediction, dim=1)
+
+    # https://pytorch.org/docs/master/torch.html#math-operations
+    prediction = torch.round(prediction)
+
+    print('test')
+
 
 def get_log_epoch():
     pass

@@ -275,9 +275,10 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args):
         visdom_se(
             args.visdom, epoch, se, win='test', name='test')
         visdom_sp(
-            args.visdom, epoch, sp, win='test', namname='test')
+            args.visdom, epoch, sp, win='test', name='test')
+        roc_auc = 0
         visdom_roc_auc(
-            args.visdom, epoch, win='test', name='test')
+            args.visdom, epoch, roc_auc, win='test', name='test')
 
 def get_data_attentioned(data, attention_area):
     return data + attention_area # 并列不同的维度， 不进行算数叠加
@@ -294,6 +295,7 @@ def train(model, optimizer, criterion, model_vae, train_loader, epoch, args):
 
     for batch_idx, (data, label) in enumerate(train_loader):
         data = data.to(args.device, dtype= torch.float)
+        label = label.to(args.device, dtype= torch.long)
 
         # train the model
         optimizer.zero_grad()

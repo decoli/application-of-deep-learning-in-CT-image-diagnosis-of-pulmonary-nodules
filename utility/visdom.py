@@ -1,7 +1,7 @@
 import numpy as np
 from visdom import Visdom
 
-def visdom_loss(vis, win, name, epoch, loss):
+def visdom_loss(vis, epoch, loss, win, name):
     vis.line(
         X=np.array([int(epoch)]),
         Y=np.array([int(loss)]),
@@ -16,7 +16,7 @@ def visdom_loss(vis, win, name, epoch, loss):
         )
     )
 
-def visdom_acc(vis, win, name, epoch, acc):
+def visdom_acc(vis, epoch, acc, win, name):
     vis.line(
         X=np.array([int(epoch)]),
         Y=np.array([int(acc)]),
@@ -31,7 +31,7 @@ def visdom_acc(vis, win, name, epoch, acc):
         )
     )
 
-def visdom_se(vis, win, name, epoch, se):
+def visdom_se(vis, epoch, se, win, name):
     vis.line(
         X=np.array([int(epoch)]),
         Y=np.array([se]),
@@ -46,7 +46,7 @@ def visdom_se(vis, win, name, epoch, se):
         )
     )
 
-def visdom_sp(vis, win, name, epoch, sp):
+def visdom_sp(vis, epoch, sp, win, name):
     vis.line(
         X=np.array([int(epoch)]),
         Y=np.array([sp]),
@@ -61,7 +61,7 @@ def visdom_sp(vis, win, name, epoch, sp):
         )
     )
 
-def visdom_roc_auc(vis, win, name, epoch):
+def visdom_roc_auc(vis, epoch, roc_auc, win, name):
     vis.line(
         X=np.array([int(epoch)]),
         Y=np.array([roc_auc]),

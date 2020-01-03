@@ -82,3 +82,29 @@ def get_image_info(input_pd):
         }
         list_data.append(dict_append)
     return list_data
+
+def cross_validation(args, list_data):
+    size_each_cross = int(len(list_data) / args.num_cross)
+
+    # list_validation
+    list_validation_start = size_each_cross * (args.use_cross - 1)
+    list_validation_end = size_each_cross * (args.use_cross)
+    if not args.use_cross == args.num_cross:
+        list_data_validation = list_data[list_validation_start: list_validation_end]
+    else:
+        list_data_validation = list_data[list_validation_start: ]
+
+    # list_training
+    list_data_training = copy.deepcopy(list_data)
+    if not args.use_cross == args.num_cross:
+        del list_data_training[list_validation_start: list_validation_end]
+    else:
+        del list_data_training[list_validation_start: ]
+    
+    return list_data_training, list_data_validation
+
+def rate_validation(args, list_data):
+    len_list_train = int(len(list_data) * args.rate_train)
+    list_train = list_data[: len_list_train]
+    list_test = list_data[len_list_train: ]
+    return list_train, list_test

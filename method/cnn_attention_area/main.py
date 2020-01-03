@@ -23,9 +23,10 @@ from visdom import Visdom
 # append sys.path
 sys.path.append(os.getcwd())
 from utility.auto_encoding_variational import VAE
-from utility.pre_processing import get_coordinate, get_image_info
-from utility.visdom import (
-    visdom_acc, visdom_loss, visdom_roc_auc, visdom_se, visdom_sp)
+from utility.pre_processing import (cross_validation, get_coordinate,
+                                    get_image_info, rate_validation)
+from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
+                            visdom_sp)
 
 
 # define argument
@@ -451,14 +452,11 @@ if __name__ == "__main__":
     list_info_image = get_image_info(info_luna16)
     random.shuffle(list_info_image)
 
+    # how to validation
     if not(args.num_cross is None) and not (args.use_cross is None):
-        # get train part and test part by cross number
-        pass
+        list_train, list_test = cross_validation(args, list_info_image)
     else:
-        # get train part and test part by train rate
-        len_list_train = int(len(list_info_image) * args.rate_train)
-        list_train = list_info_image[: len_list_train]
-        list_test = list_info_image[len_list_train: ]
+        list_train, list_test = rate_validation(args, list_info_image)
 
     # define date loader
     data_set_train = DatasetTrain(args, list_train, model_vae)

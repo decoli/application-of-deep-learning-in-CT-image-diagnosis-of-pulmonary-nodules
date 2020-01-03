@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.utils.data
+from sklearn.metrics import roc_auc_score, roc_curve
 from torch import nn, optim
 from torch.nn import functional as F
 from torchvision import datasets, transforms
@@ -21,10 +22,11 @@ from visdom import Visdom
 
 # append sys.path
 sys.path.append(os.getcwd())
-from utility.pre_processing import get_coordinate, get_image_info
 from utility.auto_encoding_variational import VAE
-from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
-                            visdom_sp)
+from utility.pre_processing import get_coordinate, get_image_info
+from utility.visdom import (
+    visdom_acc, visdom_loss, visdom_roc_auc, visdom_se, visdom_sp)
+
 
 
 # define argument
@@ -249,8 +251,15 @@ class CnnModel(nn.Module):
 
         return out
 
-def log_batch(prediction, label, loss_batch, loss, tp, fn, fp, tn):
+def log_batch(prediction, label, loss_batch, loss, tp, fn, fp, tn, prediction_list, label_list):
     prediction = nn.functional.softmax(prediction, dim=1)
+
+    # append probability list
+    for (each_prediction, each_label) in zip(list(prediction), label):
+        prediction_list.append(each_prediction[0].detach().cpu().numpy())
+        label_list.append(each_label.detach().cpu().numpy())
+
+    # compute tp, fn, fp, tn
     prediction = torch.round(prediction) # https://pytorch.org/docs/master/torch.html#math-operations
 
     for (each_prediction, each_label) in zip(list(prediction), label):
@@ -264,9 +273,9 @@ def log_batch(prediction, label, loss_batch, loss, tp, fn, fp, tn):
             tn += 1
 
     loss = loss + loss_batch
-    return loss, tp, fn, fp, tn
+    return loss, tp, fn, fp, tn, prediction_list, label_list
 
-def log_epoch(epoch, loss, tp, fn, fp, tn, args, visdom, visdom_name):
+def log_epoch(epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, visdom, visdom_name):
     count_sample = tp + fn + fp + tn
 
     acc = (tp + tn) / count_sample
@@ -274,6 +283,10 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args, visdom, visdom_name):
     sp = tn / (tn + fp)
     loss = loss / count_sample
 
+    # compute roc auc
+    roc_auc = roc_auc_score(np.array(label_list), np.array(prediction_list))
+
+    # output visdom
     if args.visdom:
         visdom_acc(
             visdom, epoch, acc, win='acc', name=visdom_name)
@@ -283,8 +296,6 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args, visdom, visdom_name):
             visdom, epoch, se, win='se', name=visdom_name)
         visdom_sp(
             visdom, epoch, sp, win='sp', name=visdom_name)
-
-        roc_auc = 0 ###
         visdom_roc_auc(
             visdom, epoch, roc_auc, win='roc_auc', name=visdom_name)
 
@@ -300,6 +311,10 @@ def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, vis
     fn = 0
     fp = 0
     tn = 0
+
+    # for making roc
+    prediction_list = []
+    label_list = []
 
     for batch_idx, (data, label) in enumerate(train_loader):
         data = data.to(args.device, dtype= torch.float)
@@ -329,11 +344,11 @@ def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, vis
         optimizer.step()
 
         # log for each batch
-        loss, tp, fn, fp, tn = log_batch(
-            prediction, label, loss, loss_batch, tp, fn, fp, tn)
+        loss, tp, fn, fp, tn, prediction_list, label_list = log_batch(
+            prediction, label, loss, loss_batch, tp, fn, fp, tn, prediction_list, label_list)
 
     # log for each epoch
-    log_epoch(epoch, loss, tp, fn, fp, tn, args, visdom, visdom_name='train')
+    log_epoch(epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, visdom, visdom_name='train')
 
 def test(model, model_vae, test_loader, epoch, args, visdom):
 
@@ -344,6 +359,10 @@ def test(model, model_vae, test_loader, epoch, args, visdom):
     fn = 0
     fp = 0
     tn = 0
+
+    # for making roc
+    prediction_list = []
+    label_list = []
 
     # test the model
     with torch.no_grad():
@@ -367,11 +386,11 @@ def test(model, model_vae, test_loader, epoch, args, visdom):
             loss_batch = criterion(prediction, label) # https://pytorch.org/docs/stable/nn.html#crossentropyloss
 
             # log for each batch
-            loss, tp, fn, fp, tn = log_batch(
-                prediction, label, loss, loss_batch, tp, fn, fp, tn)
+            loss, tp, fn, fp, tn, prediction_list, label_list = log_batch(
+                prediction, label, loss, loss_batch, tp, fn, fp, tn, prediction_list, label_list)
 
     # log for each epoch
-    log_epoch(epoch, loss, tp, fn, fp, tn, args, visdom, visdom_name='test')
+    log_epoch(epoch, loss, tp, fn, fp, tn, args, visdom, prediction_list, label_list, visdom_name='test')
 
 if __name__ == "__main__":
     # get argument

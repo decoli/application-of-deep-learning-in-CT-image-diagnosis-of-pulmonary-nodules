@@ -12,7 +12,7 @@ def visdom_loss(vis, epoch, loss, win, name):
             markers=True,
             showlegend=True,
             xlabel='epoch',
-            ylabel='loss %',
+            ylabel='loss',
         )
     )
 

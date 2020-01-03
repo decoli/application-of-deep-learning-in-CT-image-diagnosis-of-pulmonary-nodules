@@ -28,7 +28,6 @@ from utility.visdom import (
     visdom_acc, visdom_loss, visdom_roc_auc, visdom_se, visdom_sp)
 
 
-
 # define argument
 def argument():
     parser = argparse.ArgumentParser()
@@ -66,8 +65,10 @@ def argument():
 
 # define data set
 class DatasetTrain():
-    def __init__(self, list_data_set):
+    def __init__(self, args, list_data_set, model_vae=None):
+        self.args = args
         self.list_data_set = list_data_set
+        self.model_vae = model_vae
 
     def __len__(self):
         return len(self.list_data_set)
@@ -97,8 +98,13 @@ class DatasetTrain():
         x_end = int(image_coordinate['coordinate_x'] + args.size_cutting / 2)
         y_start = int(image_coordinate['coordinate_y'] - args.size_cutting / 2)
         y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
-
         image = image[x_start: x_end, y_start: y_end]
+
+        # get image attentioned
+        if not args.no_attention_area:
+            image = get_data_attentioned(self.model_vae, image)
+
+        # resize the image
         image = cv2.resize(image, (50, 50))
         image = np.expand_dims(image, 0)
 
@@ -112,8 +118,10 @@ class DatasetTrain():
         return image, label
 
 class DatasetTest():
-    def __init__(self, list_data_set):
+    def __init__(self, args, list_data_set, model_vae=None):
+        self.args = args
         self.list_data_set = list_data_set
+        self.model_vae = model_vae
 
     def __len__(self):
         return len(self.list_data_set)
@@ -143,8 +151,13 @@ class DatasetTest():
         x_end = int(image_coordinate['coordinate_x'] + args.size_cutting / 2)
         y_start = int(image_coordinate['coordinate_y'] - args.size_cutting / 2)
         y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
-
         image = image[x_start: x_end, y_start: y_end]
+
+        # get image attentioned
+        if not args.no_attention_area:
+            image = get_data_attentioned(self.model_vae, image)
+
+        # resize the image
         image = cv2.resize(image, (50, 50))
         image = np.expand_dims(image, 0)
 
@@ -299,8 +312,15 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, vi
         visdom_roc_auc(
             visdom, epoch, roc_auc, win='roc_auc', name=visdom_name)
 
-def get_data_attentioned(data, attention_area):
-    return data + attention_area # 并列不同的维度， 不进行算数叠加
+def get_data_attentioned(model_vae, image):
+
+    # get attention area
+    attention_area = model_vae(image)
+
+    # get image attentioned
+    image_attentioned = image + attention_area
+
+    return image_attentioned
 
 def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, visdom):
 
@@ -323,16 +343,8 @@ def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, vis
         # train the model
         optimizer.zero_grad()
 
-        # get attention area
-        if not args.no_attention_area:
-
-            attention_area = model_vae(data)
-            data_attentioned = get_data_attentioned(data, attention_area)
-
-            prediction = model(data_attentioned)
-
-        else:
-            prediction = model(data)
+        # model predict
+        prediction = model(data)
 
         # get loss
         prediction = torch.squeeze(prediction)
@@ -371,15 +383,8 @@ def test(model, model_vae, test_loader, epoch, args, visdom):
             data = data.to(args.device, dtype= torch.float)
             label = label.to(args.device, dtype= torch.long)
 
-            # get attention area
-            if not args.no_attention_area:
-                attention_area = model_vae(data)
-                data_attentioned = get_data_attentioned(data, attention_area)
-
-                prediction = model(data_attentioned)
-
-            else:
-                prediction = model(data)
+            # model predict
+            prediction = model(data)
 
             # get loss
             prediction = torch.squeeze(prediction)
@@ -424,7 +429,7 @@ if __name__ == "__main__":
         list_test = list_info_image[len_list_train: ]
 
     # define date loader
-    data_set_train = DatasetTrain(list_train)
+    data_set_train = DatasetTrain(list_train, args, model_vae)
     data_set_test = DatasetTest(list_test)
 
     train_loader = torch.utils.data.DataLoader(

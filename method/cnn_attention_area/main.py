@@ -59,7 +59,6 @@ def argument():
     random.seed(args.seed)
     device = torch.device("cuda" if cuda else "cpu")
     args.device = device
-    args.visdom = Visdom(env='')
 
     return args
 
@@ -146,7 +145,15 @@ class DatasetTest():
         image = image[x_start: x_end, y_start: y_end]
         image = cv2.resize(image, (50, 50))
         image = np.expand_dims(image, 0)
-        return image
+
+        # get the label
+        label = int(image_current['class'])
+        if label == 0:
+            label = np.array([0])
+        elif label == 1:
+            label = np.array([1])
+
+        return image, label
 
 class CnnModel(nn.Module):
     def __init__(self, args):
@@ -242,7 +249,7 @@ class CnnModel(nn.Module):
 
         return out
 
-def log_batch(prediction, label, tp, fn, fp, tn, loss, loss_batch):
+def log_batch(prediction, label, loss_batch, loss, tp, fn, fp, tn):
     prediction = nn.functional.softmax(prediction, dim=1)
     prediction = torch.round(prediction) # https://pytorch.org/docs/master/torch.html#math-operations
 
@@ -259,7 +266,7 @@ def log_batch(prediction, label, tp, fn, fp, tn, loss, loss_batch):
     loss = loss + loss_batch
     return loss, tp, fn, fp, tn
 
-def log_epoch(epoch, loss, tp, fn, fp, tn, args):
+def log_epoch(epoch, loss, tp, fn, fp, tn, args, visdom, visdom_name):
     count_sample = tp + fn + fp + tn
 
     acc = (tp + tn) / count_sample
@@ -269,21 +276,22 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args):
 
     if args.visdom:
         visdom_loss(
-            args.visdom, epoch, loss, win='test', name='test')
+            visdom, epoch, loss, win='loss', name=visdom_name)
         visdom_acc(
-            args.visdom, epoch, acc, win='test', name='test')
+            visdom, epoch, acc, win='acc', name=visdom_name)
         visdom_se(
-            args.visdom, epoch, se, win='test', name='test')
+            visdom, epoch, se, win='se', name=visdom_name)
         visdom_sp(
-            args.visdom, epoch, sp, win='test', name='test')
-        roc_auc = 0
+            visdom, epoch, sp, win='sp', name=visdom_name)
+
+        roc_auc = 0 ###
         visdom_roc_auc(
-            args.visdom, epoch, roc_auc, win='test', name='test')
+            visdom, epoch, roc_auc, win='roc_auc', name=visdom_name)
 
 def get_data_attentioned(data, attention_area):
     return data + attention_area # 并列不同的维度， 不进行算数叠加
 
-def train(model, optimizer, criterion, model_vae, train_loader, epoch, args):
+def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, visdom):
 
     model.train()
 
@@ -300,10 +308,9 @@ def train(model, optimizer, criterion, model_vae, train_loader, epoch, args):
         # train the model
         optimizer.zero_grad()
 
-        # get vae model
+        # get attention area
         if not args.no_attention_area:
 
-            # get attention area
             attention_area = model_vae(data)
             data_attentioned = get_data_attentioned(data, attention_area)
 
@@ -323,39 +330,48 @@ def train(model, optimizer, criterion, model_vae, train_loader, epoch, args):
 
         # log for each batch
         loss, tp, fn, fp, tn = log_batch(
-            prediction, label, tp, fn, fp, tn, loss, loss_batch)
+            prediction, label, loss, loss_batch, tp, fn, fp, tn)
 
     # log for each epoch
-    log_epoch(epoch, loss, tp, fn, fp, tn, args)
+    log_epoch(epoch, loss, tp, fn, fp, tn, args, visdom, visdom_name='train')
 
-def test(model, model_vae, test_loader, epoch, args):
+def test(model, model_vae, test_loader, epoch, args, visdom):
+
     model.eval()
-    test_loss = 0
+
+    loss = 0
+    tp = 0
+    fn = 0
+    fp = 0
+    tn = 0
+
+    # test the model
     with torch.no_grad():
-        for i, data in enumerate(test_loader):
+        for batch_idx, (data, label) in enumerate(test_loader):
             data = data.to(args.device, dtype= torch.float)
+            label = label.to(args.device, dtype= torch.long)
 
             # get attention area
-            attention_area = model_vae(data)
+            if not args.no_attention_area:
+                attention_area = model_vae(data)
+                data_attentioned = get_data_attentioned(data, attention_area)
 
-            # test the model
-            recon_batch, mu, logvar = model(data)
-            test_loss += loss_function(recon_batch, data, mu, logvar, args).item()
+                prediction = model(data_attentioned)
 
-            if i == 0:
-                n = min(data.size(0), 8)
-                comparison = torch.cat([data[:n],
-                                      recon_batch.view(data.shape[0], 1, args.size_cutting, args.size_cutting)[:n]])
+            else:
+                prediction = model(data)
 
-                sub_path_reconstruction = 'method/vae_bc_learning/results/reconstruction_' + str(epoch) + '.png'
-                path_reconstruction = os.path.join(os.getcwd(), sub_path_reconstruction)
-                save_image(
-                    comparison.cpu(),
-                    path_reconstruction,
-                    nrow=n)
+            # get loss
+            prediction = torch.squeeze(prediction)
+            label = torch.squeeze(label)
+            loss_batch = criterion(prediction, label) # https://pytorch.org/docs/stable/nn.html#crossentropyloss
 
-    test_loss /= len(test_loader.dataset)
-    print('====> Test set loss: {:.4f}'.format(test_loss))
+            # log for each batch
+            loss, tp, fn, fp, tn = log_batch(
+                prediction, label, loss, loss_batch, tp, fn, fp, tn)
+
+    # log for each epoch
+    log_epoch(epoch, loss, tp, fn, fp, tn, args, visdom, visdom_name='test')
 
 if __name__ == "__main__":
     # get argument
@@ -410,15 +426,12 @@ if __name__ == "__main__":
     # criterion
     criterion = nn.CrossEntropyLoss()
 
+    # visdom instance
+    if args.visdom:
+        visdom = Visdom(
+            env='model performance')
+
+    # model train and test
     for epoch in range(1, args.epoch + 1):
-        train(model, optimizer, criterion, model_vae, train_loader, epoch, args)
-        test(model, model_vae, test_loader, epoch, args)
-        with torch.no_grad():
-            sample = torch.randn(64, args.dimension_latent).to(args.device)
-            sample = model.decode(sample).cpu()
-            
-            sub_path_sample = 'method/vae_bc_learning/results/sample_' + str(epoch) + '.png'
-            path_sample = os.path.join(os.getcwd(), sub_path_sample)
-            save_image(
-                sample.view(64, 1, int(args.size_cutting), int(args.size_cutting)),
-                path_sample)
+        train(model, model_vae, optimizer, criterion, train_loader, epoch, args, visdom)
+        test(model, model_vae, test_loader, epoch, args, visdom)

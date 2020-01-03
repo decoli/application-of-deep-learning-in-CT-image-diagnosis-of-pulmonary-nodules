@@ -4,7 +4,7 @@ from visdom import Visdom
 def visdom_loss(vis, epoch, loss, win, name):
     vis.line(
         X=np.array([int(epoch)]),
-        Y=np.array([int(loss)]),
+        Y=np.array([float(loss)]),
         win=win,
         name=name,
         update='append',
@@ -19,7 +19,7 @@ def visdom_loss(vis, epoch, loss, win, name):
 def visdom_acc(vis, epoch, acc, win, name):
     vis.line(
         X=np.array([int(epoch)]),
-        Y=np.array([int(acc)]),
+        Y=np.array([float(acc)]),
         win=win,
         name=name,
         update='append',
@@ -34,7 +34,7 @@ def visdom_acc(vis, epoch, acc, win, name):
 def visdom_se(vis, epoch, se, win, name):
     vis.line(
         X=np.array([int(epoch)]),
-        Y=np.array([se]),
+        Y=np.array([float(se)]),
         win=win,
         name=name,
         update='append',
@@ -42,14 +42,14 @@ def visdom_se(vis, epoch, se, win, name):
             markers=True,
             showlegend=True,
             xlabel='epoch',
-            ylabel='validation se and sp',
+            ylabel='se %',
         )
     )
 
 def visdom_sp(vis, epoch, sp, win, name):
     vis.line(
         X=np.array([int(epoch)]),
-        Y=np.array([sp]),
+        Y=np.array([float(sp)]),
         win=win,
         name=name,
         update='append',
@@ -57,14 +57,14 @@ def visdom_sp(vis, epoch, sp, win, name):
             markers=True,
             showlegend=True,
             xlabel='epoch',
-            ylabel='validation se and sp',
+            ylabel='sp %',
         )
     )
 
 def visdom_roc_auc(vis, epoch, roc_auc, win, name):
     vis.line(
         X=np.array([int(epoch)]),
-        Y=np.array([roc_auc]),
+        Y=np.array([float(roc_auc)]),
         win=win,
         name=name,
         update='append',

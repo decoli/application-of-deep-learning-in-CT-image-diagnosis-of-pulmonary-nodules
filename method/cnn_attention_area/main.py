@@ -32,7 +32,9 @@ from utility.visdom import (
 def argument():
     parser = argparse.ArgumentParser()
     parser.add_argument('--path-input', default=None)
-    parser.add_argument('--path-model-vae', default=None)
+    parser.add_argument('--path-model-vae',
+        default=os.path.join(os.getcwd(), 'utility', 'model', 'model_vae.pt'))
+    parser.add_argument('--dimension_latent', type=int, default=20)
     parser.add_argument('--dir-image', type=str)
     parser.add_argument('--size-cutting', default=32)
     parser.add_argument('--learning-rate', default=1e-3)
@@ -102,7 +104,7 @@ class DatasetTrain():
 
         # get image attentioned
         if not args.no_attention_area:
-            image = get_data_attentioned(self.model_vae, image)
+            image = get_data_attentioned(self.model_vae, image, args)
 
         # resize the image
         image = cv2.resize(image, (50, 50))
@@ -155,7 +157,7 @@ class DatasetTest():
 
         # get image attentioned
         if not args.no_attention_area:
-            image = get_data_attentioned(self.model_vae, image)
+            image = get_data_attentioned(self.model_vae, image, args)
 
         # resize the image
         image = cv2.resize(image, (50, 50))
@@ -312,13 +314,33 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, vi
         visdom_roc_auc(
             visdom, epoch, roc_auc, win='roc_auc', name=visdom_name)
 
-def get_data_attentioned(model_vae, image):
+def get_data_attentioned(model_vae, image, args):
+
+    image_original = image
+
+    # test part_1
+    path_save = os.path.join(
+        os.getcwd(),'method', 'cnn_attention_area', 'test',
+        'test_original_image{image_format}'.format(image_format='.png'))
+    cv2.imwrite(path_save, image * 255)
 
     # get attention area
-    attention_area = model_vae(image)
+    image = np.expand_dims(image, 0)
+    image = np.expand_dims(image, 0)
+    attention_area = model_vae(torch.Tensor(image))[0]
+
+    # view
+    area_view = attention_area.view(args.size_cutting, args.size_cutting).detach().numpy() * 255
+
+    # test part_2
+    path_save = os.path.join(
+        os.getcwd(),'method', 'cnn_attention_area', 'test',
+        'test_attention_area{image_format}'.format(image_format='.png'))
+    cv2.imwrite(path_save, area_view)
 
     # get image attentioned
-    image_attentioned = image + attention_area
+    # image_attentioned = image + attention_area
+    image_attentioned = image_original
 
     return image_attentioned
 
@@ -409,7 +431,7 @@ if __name__ == "__main__":
         path_model_vae = os.path.join(os.getcwd(), args.path_model_vae)
 
         # load model vae
-        model_vae = VAE()
+        model_vae = VAE(args)
         model_vae.load_state_dict(torch.load(path_model_vae))
     else:
         model_vae = None
@@ -429,8 +451,8 @@ if __name__ == "__main__":
         list_test = list_info_image[len_list_train: ]
 
     # define date loader
-    data_set_train = DatasetTrain(list_train, args, model_vae)
-    data_set_test = DatasetTest(list_test)
+    data_set_train = DatasetTrain(args, list_train, model_vae)
+    data_set_test = DatasetTest(args, list_test, model_vae)
 
     train_loader = torch.utils.data.DataLoader(
         data_set_train,
@@ -456,6 +478,8 @@ if __name__ == "__main__":
     if args.visdom:
         visdom = Visdom(
             env='model performance')
+    else:
+        visdom = None
 
     # model train and test
     for epoch in range(1, args.epoch + 1):

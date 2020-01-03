@@ -5,3 +5,4 @@ method/coloring/test/
 method/vae_bc_learning/results/
 utility/test/
 utility/model/
+method/cnn_attention_area/test/

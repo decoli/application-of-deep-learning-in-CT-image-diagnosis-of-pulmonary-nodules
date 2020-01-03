@@ -56,6 +56,8 @@ def argument():
     parser.add_argument('--no-attention-area', action='store_true', default=False)
     parser.add_argument('--visdom', action='store_true', default=False)
 
+    parser.add_argument('--get-attention-area', action='store_true', default=False)
+
     args = parser.parse_args()
     cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -318,11 +320,12 @@ def get_data_attentioned(model_vae, image, args):
 
     image_original = image
 
-    # test part_1
-    path_save = os.path.join(
-        os.getcwd(),'method', 'cnn_attention_area', 'test',
-        'test_original_image{image_format}'.format(image_format='.png'))
-    cv2.imwrite(path_save, image * 255)
+    if args.get_attention_area:
+        # test part_1
+        path_save = os.path.join(
+            os.getcwd(),'method', 'cnn_attention_area', 'test',
+            'test_original_image{image_format}'.format(image_format='.png'))
+        cv2.imwrite(path_save, image * 255)
 
     # get attention area
     image = np.expand_dims(image, 0)
@@ -332,11 +335,12 @@ def get_data_attentioned(model_vae, image, args):
     # view
     area_view = attention_area.view(args.size_cutting, args.size_cutting).detach().numpy() * 255
 
-    # test part_2
-    path_save = os.path.join(
-        os.getcwd(),'method', 'cnn_attention_area', 'test',
-        'test_attention_area{image_format}'.format(image_format='.png'))
-    cv2.imwrite(path_save, area_view)
+    if args.get_attention_area:
+        # test part_2
+        path_save = os.path.join(
+            os.getcwd(),'method', 'cnn_attention_area', 'test',
+            'test_attention_area{image_format}'.format(image_format='.png'))
+        cv2.imwrite(path_save, area_view)
 
     # get image attentioned
     # image_attentioned = image + attention_area

@@ -56,7 +56,7 @@ def argument():
     parser.add_argument('--no-attention-area', action='store_true', default=False)
     parser.add_argument('--visdom', action='store_true', default=False)
 
-    parser.add_argument('--get-attention-area', action='store_true', default=False)
+    parser.add_argument('--get-mid-product', action='store_true', default=False)
 
     args = parser.parse_args()
     cuda = not args.no_cuda and torch.cuda.is_available()
@@ -106,7 +106,7 @@ class DatasetTrain():
 
         # get image attentioned
         if not args.no_attention_area:
-            image = get_data_attentioned(self.model_vae, image, args)
+            image = get_image_attentioned(self.model_vae, image, args)
 
         # resize the image
         image = cv2.resize(image, (50, 50))
@@ -159,7 +159,7 @@ class DatasetTest():
 
         # get image attentioned
         if not args.no_attention_area:
-            image = get_data_attentioned(self.model_vae, image, args)
+            image = get_image_attentioned(self.model_vae, image, args)
 
         # resize the image
         image = cv2.resize(image, (50, 50))
@@ -316,35 +316,41 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, vi
         visdom_roc_auc(
             visdom, epoch, roc_auc, win='roc_auc', name=visdom_name)
 
-def get_data_attentioned(model_vae, image, args):
+def get_image_attentioned(model_vae, image, args):
 
     image_original = image
-
-    if args.get_attention_area:
-        # test part_1
-        path_save = os.path.join(
-            os.getcwd(),'method', 'cnn_attention_area', 'test',
-            'test_original_image{image_format}'.format(image_format='.png'))
-        cv2.imwrite(path_save, image * 255)
 
     # get attention area
     image = np.expand_dims(image, 0)
     image = np.expand_dims(image, 0)
     attention_area = model_vae(torch.Tensor(image))[0]
+    attention_area = attention_area.view(
+        args.size_cutting, args.size_cutting).detach().numpy()
 
-    # view
-    area_view = attention_area.view(args.size_cutting, args.size_cutting).detach().numpy() * 255
+    # get image attentioned
+    image_attentioned = np.stack([image_original, attention_area])
 
-    if args.get_attention_area:
-        # test part_2
+    # output mid-product
+    if args.get_mid_product:
+        np_zeros = np.zeros(shape=image_original.shape)
+
+        mid_product_original = np.stack([np_zeros, image_original, np_zeros]) # BGR
+        path_save = os.path.join(
+            os.getcwd(),'method', 'cnn_attention_area', 'test',
+            'test_image_original{image_format}'.format(image_format='.png'))
+        cv2.imwrite(path_save, np.transpose(mid_product_original * 255, (1,2,0)))
+
+        mid_product_attention_area = np.stack([np_zeros, np_zeros, attention_area]) # BGR
         path_save = os.path.join(
             os.getcwd(),'method', 'cnn_attention_area', 'test',
             'test_attention_area{image_format}'.format(image_format='.png'))
-        cv2.imwrite(path_save, area_view)
+        cv2.imwrite(path_save, np.transpose(mid_product_attention_area * 255, (1,2,0)))
 
-    # get image attentioned
-    # image_attentioned = image + attention_area
-    image_attentioned = image_original
+        mid_product_image_attentioned = np.stack([np_zeros, image_original, attention_area]) # BGR
+        path_save = os.path.join(
+            os.getcwd(),'method', 'cnn_attention_area', 'test',
+            'test_image_attentioned{image_format}'.format(image_format='.png'))
+        cv2.imwrite(path_save, np.transpose(mid_product_image_attentioned * 255, (1,2,0)))
 
     return image_attentioned
 

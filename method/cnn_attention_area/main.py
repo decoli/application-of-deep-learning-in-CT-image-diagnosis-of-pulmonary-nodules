@@ -38,7 +38,7 @@ def argument():
     parser.add_argument('--size-cutting', default=32)
     parser.add_argument('--learning-rate', default=1e-3)
 
-    parser.add_argument('--rate-train', default=0.9, type=float)
+    parser.add_argument('--rate-train', default=0.8, type=float)
     parser.add_argument('--size-batch', type=int, default=128,
         help='input batch size for train (default: 128)')
     parser.add_argument('--epoch', type=int, default=10,
@@ -256,7 +256,7 @@ def log_batch(prediction, label, loss_batch, loss, tp, fn, fp, tn, prediction_li
 
     # append probability list
     for (each_prediction, each_label) in zip(list(prediction), label):
-        prediction_list.append(each_prediction[0].detach().cpu().numpy())
+        prediction_list.append(each_prediction[1].detach().cpu().numpy())
         label_list.append(each_label.detach().cpu().numpy())
 
     # compute tp, fn, fp, tn
@@ -348,7 +348,8 @@ def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, vis
             prediction, label, loss, loss_batch, tp, fn, fp, tn, prediction_list, label_list)
 
     # log for each epoch
-    log_epoch(epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, visdom, visdom_name='train')
+    log_epoch(
+        epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, visdom, visdom_name='train')
 
 def test(model, model_vae, test_loader, epoch, args, visdom):
 
@@ -390,7 +391,8 @@ def test(model, model_vae, test_loader, epoch, args, visdom):
                 prediction, label, loss, loss_batch, tp, fn, fp, tn, prediction_list, label_list)
 
     # log for each epoch
-    log_epoch(epoch, loss, tp, fn, fp, tn, args, visdom, prediction_list, label_list, visdom_name='test')
+    log_epoch(
+        epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, visdom, visdom_name='test')
 
 if __name__ == "__main__":
     # get argument

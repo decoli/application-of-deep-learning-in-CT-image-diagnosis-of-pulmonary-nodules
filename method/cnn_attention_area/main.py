@@ -254,13 +254,13 @@ def log_batch(prediction, label, loss_batch, loss, tp, fn, fp, tn):
     prediction = torch.round(prediction) # https://pytorch.org/docs/master/torch.html#math-operations
 
     for (each_prediction, each_label) in zip(list(prediction), label):
-        if each_label == 1 and each_prediction[0] == 1:
+        if each_label == 1 and each_prediction[1] == 1:
             tp += 1
-        if each_label == 1 and each_prediction[0] == 0:
+        if each_label == 1 and each_prediction[0] == 1:
             fn += 1
-        if each_label == 0 and each_prediction[0] == 1:
+        if each_label == 0 and each_prediction[1] == 1:
             fp += 1
-        if each_label == 0 and each_prediction[0] == 0:
+        if each_label == 0 and each_prediction[0] == 1:
             tn += 1
 
     loss = loss + loss_batch
@@ -275,10 +275,10 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args, visdom, visdom_name):
     loss = loss / count_sample
 
     if args.visdom:
-        visdom_loss(
-            visdom, epoch, loss, win='loss', name=visdom_name)
         visdom_acc(
             visdom, epoch, acc, win='acc', name=visdom_name)
+        visdom_loss(
+            visdom, epoch, loss, win='loss', name=visdom_name)
         visdom_se(
             visdom, epoch, se, win='se', name=visdom_name)
         visdom_sp(

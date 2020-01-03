@@ -208,7 +208,7 @@ def test(model, test_loader, epoch, device, args):
                 comparison = torch.cat([data[:n],
                                       recon_batch.view(data.shape[0], 1, args.size_cutting, args.size_cutting)[:n]])
 
-                sub_path_reconstruction = 'method/vae_bc_learning/results/reconstruction_' + str(epoch) + '.png'
+                sub_path_reconstruction = 'utility/test/reconstruction_' + str(epoch) + '.png'
                 path_reconstruction = os.path.join(os.getcwd(), sub_path_reconstruction)
                 save_image(
                     comparison.cpu(),
@@ -259,7 +259,7 @@ if __name__ == "__main__":
             sample = torch.randn(64, args.dimension_latent).to(device)
             sample = model.decode(sample).cpu()
             
-            sub_path_sample = 'method/vae_bc_learning/results/sample_' + str(epoch) + '.png'
+            sub_path_sample = 'utility/test/sample_' + str(epoch) + '.png'
             path_sample = os.path.join(os.getcwd(), sub_path_sample)
             save_image(
                 sample.view(64, 1, int(args.size_cutting), int(args.size_cutting)),

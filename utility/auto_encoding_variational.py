@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import argparse
 import os
+import random
 import sys
 
 import cv2
@@ -14,7 +15,6 @@ from torch.nn import functional as F
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
 
-
 #d append sys.path
 sys.path.append(os.getcwd())
 from utility.pre_processing import get_coordinate, get_image_info
@@ -25,10 +25,10 @@ def argument():
     parser = argparse.ArgumentParser(description='VAE for utility')
     parser.add_argument('--path-input', default=None)
     parser.add_argument('--dir-image', type=str)
-    parser.add_argument('--size-cutting', default=28)
+    parser.add_argument('--size-cutting', type=int, default=28)
     parser.add_argument('--dimension-latent', type=int, default=20)
 
-    parser.add_argument('--rate-train', default=0.9, type=float)
+    parser.add_argument('--rate-train', default=0.8, type=float)
     parser.add_argument('--size-batch', type=int, default=128, metavar='N',
         help='input batch size for train (default: 128)')
     parser.add_argument('--epoch', type=int, default=10, metavar='N',
@@ -225,6 +225,7 @@ if __name__ == "__main__":
     # get image info
     info_luna16 = pd.read_csv(args.path_input, index_col=0)
     list_info_image = get_image_info(info_luna16)
+    random.shuffle(list_info_image)
 
     len_list_info_image = len(list_info_image)
     list_train = list_info_image[: int(len_list_info_image * args.rate_train)]

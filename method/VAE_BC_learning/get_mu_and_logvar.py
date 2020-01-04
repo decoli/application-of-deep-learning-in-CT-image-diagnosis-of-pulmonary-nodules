@@ -20,9 +20,9 @@ def argument():
     parser.add_argument('--path-input', default=None)
     parser.add_argument('--path-model-vae',
         default=os.path.join(os.getcwd(), 'utility', 'model', 'model_vae.pt'))
-    parser.add_argument('--dimension_latent', type=int, default=20)
+    parser.add_argument('--dimension-latent', type=int, default=20)
     parser.add_argument('--dir-image', type=str)
-    parser.add_argument('--size-cutting', default=32)
+    parser.add_argument('--size-cutting', type=int, default=32)
     parser.add_argument('--epoch', type=int, default=1024)
 
     parser.add_argument('--seed', type=int, default=1,
@@ -31,7 +31,7 @@ def argument():
     parser.add_argument('--num-cross', default=None, type=int)
     parser.add_argument('--use-cross', default=None, type=int)
 
-    parser.add_argument('--no-visdom', action='store_ture', default=False)
+    parser.add_argument('--no-visdom', action='store_true', default=False)
 
     args = parser.parse_args()
     return args

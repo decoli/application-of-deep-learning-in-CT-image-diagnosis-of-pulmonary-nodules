@@ -17,7 +17,8 @@ from torchvision.utils import save_image
 
 #d append sys.path
 sys.path.append(os.getcwd())
-from utility.pre_processing import get_coordinate, get_image_info
+from utility.pre_processing import (cross_validation, get_coordinate,
+                                    get_image_info)
 
 
 # define argument
@@ -50,7 +51,8 @@ def argument():
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
-    torch.manual_seed(args.seed)
+    # torch.manual_seed(args.seed)
+    random.seed(args.seed)
     device = torch.device("cuda" if args.cuda else "cpu")
     kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
@@ -232,9 +234,8 @@ if __name__ == "__main__":
     list_info_image = get_image_info(info_luna16)
     random.shuffle(list_info_image)
 
-    len_list_info_image = len(list_info_image)
-    list_train = list_info_image[: int(len_list_info_image * args.rate_train)]
-    list_test = list_info_image[int(len_list_info_image * args.rate_train): ]
+    # how to validation
+    list_train, list_test = cross_validation(args, list_info_image)
 
     # define date loader
     data_set_train = DatasetTrain(list_train, args)

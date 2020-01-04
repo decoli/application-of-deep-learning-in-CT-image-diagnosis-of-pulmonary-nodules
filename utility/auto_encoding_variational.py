@@ -18,7 +18,7 @@ from torchvision.utils import save_image
 #d append sys.path
 sys.path.append(os.getcwd())
 from utility.pre_processing import (cross_validation, get_coordinate,
-                                    get_image_info)
+                                    get_image_info, rate_validation)
 
 
 # define argument
@@ -235,7 +235,10 @@ if __name__ == "__main__":
     random.shuffle(list_info_image)
 
     # how to validation
-    list_train, list_test = cross_validation(args, list_info_image)
+    if not(args.num_cross is None) and not (args.use_cross is None):
+        list_train, list_test = cross_validation(args, list_info_image)
+    else:
+        list_train, list_test = rate_validation(args, list_info_image)
 
     # define date loader
     data_set_train = DatasetTrain(list_train, args)

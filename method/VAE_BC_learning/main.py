@@ -54,7 +54,7 @@ def argument():
     parser.add_argument('--num-cross', default=None, type=int)
     parser.add_argument('--use-cross', default=None, type=int)
 
-    parser.add_argument('--no-attention-area', action='store_true', default=False)
+    parser.add_argument('--rate-bc-class', type=float, default=0)
     parser.add_argument('--visdom', action='store_true', default=False)
 
     parser.add_argument('--get-mid-product', action='store_true', default=False)

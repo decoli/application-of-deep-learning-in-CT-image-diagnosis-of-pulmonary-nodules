@@ -75,3 +75,13 @@ def visdom_roc_auc(vis, epoch, roc_auc, win, name):
             ylabel='roc_auc',
         )
     )
+
+def visdom_scatter(vis, x, y, win, name):
+    vis.scatter(
+        X=x,
+        Y=y,
+        opts=dict(
+            legend=['a', 'b'],
+            markersize=5,
+        )
+    )

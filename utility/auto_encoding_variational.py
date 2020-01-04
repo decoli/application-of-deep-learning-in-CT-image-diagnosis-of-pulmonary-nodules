@@ -214,6 +214,7 @@ def test(model, test_loader, epoch, device, args):
 
                 path_reconstruction = os.path.join(
                     os.getcwd(), 'utility', 'test', 'reconstruction_{epoch_format}'.format(epoch_format=str(epoch) + '.png'))
+
                 save_image(
                     comparison.cpu(),
                     path_reconstruction,
@@ -265,6 +266,7 @@ if __name__ == "__main__":
             
             path_sample = os.path.join(
                 os.getcwd(), 'utility', 'test', 'sample_{epoch_format}'.format(epoch_format=str(epoch) + '.png'))
+
             save_image(
                 sample.view(64, 1, int(args.size_cutting), int(args.size_cutting)),
                 path_sample)

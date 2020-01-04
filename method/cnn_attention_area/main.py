@@ -264,7 +264,7 @@ class CnnModel(nn.Module):
 
         out = F.relu(out)
 
-        # out = F.dropout(out)
+        out = F.dropout(out)
         out = self.conv_4(out) # 2 * 1 * 1
 
         return out

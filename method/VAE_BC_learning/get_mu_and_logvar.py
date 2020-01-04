@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import torch
 from visdom import Visdom
+
 sys.path.append(os.getcwd())
 from utility.auto_encoding_variational import VAE
 from utility.pre_processing import (cross_validation, get_coordinate,
@@ -23,7 +24,7 @@ def argument():
     parser.add_argument('--dimension-latent', type=int, default=20)
     parser.add_argument('--dir-image', type=str)
     parser.add_argument('--size-cutting', type=int, default=32)
-    parser.add_argument('--epoch', type=int, default=1024)
+    parser.add_argument('--size-batch', type=int, default=1024)
 
     parser.add_argument('--seed', type=int, default=1,
         help='random seed (default: 1)')
@@ -31,9 +32,15 @@ def argument():
     parser.add_argument('--num-cross', default=None, type=int)
     parser.add_argument('--use-cross', default=None, type=int)
 
+    parser.add_argument('--no-cuda', action='store_true', default=False)
     parser.add_argument('--no-visdom', action='store_true', default=False)
 
     args = parser.parse_args()
+
+    cuda = not args.no_cuda and torch.cuda.is_available()
+    device = torch.device("cuda" if cuda else "cpu")
+    args.device = device
+
     return args
 
 class Dataset():
@@ -100,7 +107,11 @@ if __name__ == "__main__":
     # vae model
     path_model_vae = os.path.join(os.getcwd(), args.path_model_vae)
     model_vae = VAE(args)
-    model_vae.load_state_dict(torch.load(path_model_vae))
+
+    if torch.cuda.is_available():
+        model_vae.load_state_dict(torch.load(path_model_vae))
+    else:
+        model_vae.load_state_dict(torch.load(path_model_vae,  map_location=torch.device('cpu')))
 
     # get image info
     info_luna16 = pd.read_csv(args.path_input, index_col=0)
@@ -114,7 +125,7 @@ if __name__ == "__main__":
         list_train, list_test = rate_validation(args, list_info_image)
 
     # define date loader
-    data_set = Dataset(args, list_train, model_vae)
+    data_set = Dataset(args, model_vae, list_train)
     data_loader = torch.utils.data.DataLoader(
         data_set,
         batch_size=args.size_batch,

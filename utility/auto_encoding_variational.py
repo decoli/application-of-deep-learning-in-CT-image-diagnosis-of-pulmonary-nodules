@@ -58,8 +58,9 @@ def argument():
 
 # define data set
 class DatasetTrain():
-    def __init__(self, list_data_set):
+    def __init__(self, list_data_set, args):
         self.list_data_set = list_data_set
+        self.args = args
 
     def __len__(self):
         return len(self.list_data_set)
@@ -75,7 +76,7 @@ class DatasetTrain():
         image_index = int(image_coordinate['coordinate_z'])
 
         path_image = os.path.join(
-            args.dir_image,
+            self.args.dir_image,
             name_subset,
             image_current['seriesuid'],
             'whole_image',
@@ -85,18 +86,19 @@ class DatasetTrain():
         image = image / 255
 
         # cut the image
-        x_start = int(image_coordinate['coordinate_x'] - args.size_cutting / 2)
-        x_end = int(image_coordinate['coordinate_x'] + args.size_cutting / 2)
-        y_start = int(image_coordinate['coordinate_y'] - args.size_cutting / 2)
-        y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
+        x_start = int(image_coordinate['coordinate_x'] - self.args.size_cutting / 2)
+        x_end = int(image_coordinate['coordinate_x'] + self.args.size_cutting / 2)
+        y_start = int(image_coordinate['coordinate_y'] - self.args.size_cutting / 2)
+        y_end = int(image_coordinate['coordinate_y'] + self.args.size_cutting / 2)
 
         image = image[x_start: x_end, y_start: y_end]
         image = np.expand_dims(image, 0)
         return image
 
 class DatasetTest():
-    def __init__(self, list_data_set):
+    def __init__(self, list_data_set, args):
         self.list_data_set = list_data_set
+        self.args = args
 
     def __len__(self):
         return len(self.list_data_set)
@@ -112,7 +114,7 @@ class DatasetTest():
         image_index = int(image_coordinate['coordinate_z'])
 
         path_image = os.path.join(
-            args.dir_image,
+            self.args.dir_image,
             name_subset,
             image_current['seriesuid'],
             'whole_image',
@@ -122,10 +124,10 @@ class DatasetTest():
         image = image / 255
 
         # cut the image
-        x_start = int(image_coordinate['coordinate_x'] - args.size_cutting / 2)
-        x_end = int(image_coordinate['coordinate_x'] + args.size_cutting / 2)
-        y_start = int(image_coordinate['coordinate_y'] - args.size_cutting / 2)
-        y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
+        x_start = int(image_coordinate['coordinate_x'] - self.args.size_cutting / 2)
+        x_end = int(image_coordinate['coordinate_x'] + self.args.size_cutting / 2)
+        y_start = int(image_coordinate['coordinate_y'] - self.args.size_cutting / 2)
+        y_end = int(image_coordinate['coordinate_y'] + self.args.size_cutting / 2)
 
         image = image[x_start: x_end, y_start: y_end]
         image = np.expand_dims(image, 0)
@@ -210,8 +212,8 @@ def test(model, test_loader, epoch, device, args):
                 comparison = torch.cat([data[:n],
                                       recon_batch.view(data.shape[0], 1, args.size_cutting, args.size_cutting)[:n]])
 
-                sub_path_reconstruction = 'utility/test/reconstruction_' + str(epoch) + '.png'
-                path_reconstruction = os.path.join(os.getcwd(), sub_path_reconstruction)
+                path_reconstruction = os.path.join(
+                    os.getcwd(), 'utility', 'test', 'reconstruction_{epoch_format}'.format(epoch_format=str(epoch) + '.png'))
                 save_image(
                     comparison.cpu(),
                     path_reconstruction,
@@ -234,8 +236,8 @@ if __name__ == "__main__":
     list_test = list_info_image[int(len_list_info_image * args.rate_train): ]
 
     # define date loader
-    data_set_train = DatasetTrain(list_train)
-    data_set_test = DatasetTest(list_test)
+    data_set_train = DatasetTrain(list_train, args)
+    data_set_test = DatasetTest(list_test, args)
 
     train_loader = torch.utils.data.DataLoader(
         data_set_train,
@@ -261,8 +263,8 @@ if __name__ == "__main__":
             sample = torch.randn(64, args.dimension_latent).to(device)
             sample = model.decode(sample).cpu()
             
-            sub_path_sample = 'utility/test/sample_' + str(epoch) + '.png'
-            path_sample = os.path.join(os.getcwd(), sub_path_sample)
+            path_sample = os.path.join(
+                os.getcwd(), 'utility', 'test', 'sample_{epoch_format}'.format(epoch_format=str(epoch) + '.png'))
             save_image(
                 sample.view(64, 1, int(args.size_cutting), int(args.size_cutting)),
                 path_sample)

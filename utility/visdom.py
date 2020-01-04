@@ -80,8 +80,10 @@ def visdom_scatter(vis, x, y, win, name):
     vis.scatter(
         X=x,
         Y=y,
+        win=win,
+        name=name,
         opts=dict(
-            legend=['a', 'b'],
+            legend=['mu', 'logvar'],
             markersize=5,
         )
     )

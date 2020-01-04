@@ -4,6 +4,7 @@ import random
 import sys
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
@@ -34,6 +35,7 @@ def argument():
 
     parser.add_argument('--no-cuda', action='store_true', default=False)
     parser.add_argument('--no-visdom', action='store_true', default=False)
+    parser.add_argument('--plot', action='store_true', default=False)
 
     args = parser.parse_args()
 
@@ -97,8 +99,33 @@ def get_mu_and_logvar(args, model_vae, list_train, visdom):
             list_logvar.append(logvar)
 
     # output visdom
-    if not args.no_visdom:
-        print('test')
+    if not args.no_visdom or args.plot:
+        scatter_center = np.array([0, 0])
+
+        # size_batch >= len(list_train)
+        if batch_idx == 0:
+
+            for feature_idx in range(mu.shape[1]):
+
+                list_mu = []
+                list_logvar = []
+
+                for sample_idx in range(mu.shape[0]):
+                    list_mu.append(mu[sample_idx, feature_idx])
+                    list_logvar.append(logvar[sample_idx, feature_idx])
+
+                if not args.no_visdom:
+                    visdom_scatter( # bug
+                        vis=visdom, x=np.array([np.array(list_mu), scatter_center]), y=np.array(list_logvar), win=str(feature_idx), name='test-get')
+
+                elif args.plot:
+                    plt.scatter(
+                        x=np.array(list_mu), y=np.array(list_logvar))
+                    plt.show()
+
+        # size_batch < len(list_train)
+        else:
+            pass
 
 if __name__ == "__main__":
     # get argument
@@ -133,9 +160,9 @@ if __name__ == "__main__":
         )
 
     # visdom instance
-    env = 'mu_and_logvar'
+    use_cross = str(args.use_cross)
     visdom = Visdom(
-        env=env
+        env='use_cross == {use_cross}'.format(use_cross=use_cross)
     )
 
     # get mu and logvar of train-set

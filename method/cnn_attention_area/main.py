@@ -108,9 +108,28 @@ class DatasetTrain():
         # get image attentioned
         if not args.no_attention_area:
             image = get_image_attentioned(self.model_vae, image, args)
+
+            # get image before input
+            if args.get_mid_product:
+                path_save = os.path.join(
+                    os.getcwd(),'method', 'cnn_attention_area', 'test',
+                    'test_image_before_input{image_format}'.format(image_format='.png'))
+                
+                np_zeros = np.zeros((1, 50, 50))
+                image_before_input = np.concatenate([np_zeros, image])
+                cv2.imwrite(path_save, np.transpose(image_before_input * 255, (1,2,0)))
+
         else:
             # resize the image
             image = cv2.resize(image, (50, 50))
+
+            # get image before input
+            if args.get_mid_product:
+                path_save = os.path.join(
+                    os.getcwd(),'method', 'cnn_attention_area', 'test',
+                    'test_image_before_input{image_format}'.format(image_format='.png'))
+                cv2.imwrite(path_save, np.transpose(image * 255, (1,2,0)))
+
             image = np.expand_dims(image, 0)
 
         # get the label

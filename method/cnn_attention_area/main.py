@@ -493,3 +493,5 @@ if __name__ == "__main__":
     for epoch in range(1, args.epoch + 1):
         train(model, model_vae, optimizer, criterion, train_loader, epoch, args, visdom)
         test(model, model_vae, test_loader, epoch, args, visdom)
+
+        print('---epoch: {epoch:>4}---'.format(epoch=epoch))

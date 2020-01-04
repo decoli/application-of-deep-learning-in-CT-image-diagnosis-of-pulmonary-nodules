@@ -487,9 +487,10 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss()
 
     # visdom instance
+    env = 'no_attention_area' if args.no_attention_area else 'attention_area'
     if args.visdom:
         visdom = Visdom(
-            env='model performance')
+            env=env)
     else:
         visdom = None
 

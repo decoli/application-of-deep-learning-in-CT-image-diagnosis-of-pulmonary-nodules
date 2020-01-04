@@ -108,10 +108,10 @@ class DatasetTrain():
         # get image attentioned
         if not args.no_attention_area:
             image = get_image_attentioned(self.model_vae, image, args)
-
-        # resize the image
-        image = cv2.resize(image, (50, 50))
-        image = np.expand_dims(image, 0)
+        else:
+            # resize the image
+            image = cv2.resize(image, (50, 50))
+            image = np.expand_dims(image, 0)
 
         # get the label
         label = int(image_current['class'])
@@ -161,10 +161,10 @@ class DatasetTest():
         # get image attentioned
         if not args.no_attention_area:
             image = get_image_attentioned(self.model_vae, image, args)
-
-        # resize the image
-        image = cv2.resize(image, (50, 50))
-        image = np.expand_dims(image, 0)
+        else:
+            # resize the image
+            image = cv2.resize(image, (50, 50))
+            image = np.expand_dims(image, 0)
 
         # get the label
         label = int(image_current['class'])
@@ -327,6 +327,10 @@ def get_image_attentioned(model_vae, image, args):
     attention_area = model_vae(torch.Tensor(image))[0]
     attention_area = attention_area.view(
         args.size_cutting, args.size_cutting).detach().numpy()
+
+    # resize
+    image_original = cv2.resize(image_original, (50, 50))
+    attention_area = cv2.resize(attention_area, (50, 50))
 
     # get image attentioned
     image_attentioned = np.stack([image_original, attention_area])

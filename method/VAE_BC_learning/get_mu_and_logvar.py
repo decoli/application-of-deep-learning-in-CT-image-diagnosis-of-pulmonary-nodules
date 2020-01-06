@@ -128,7 +128,7 @@ def get_mu_and_logvar(args, model_vae, list_train, visdom):
                 x = np.stack([np.array(list_mu), np.array(list_logvar)])
                 x = np.transpose(x, (1, 0))
 
-                label = list(torch.squeeze(label).numpy())
+                label = torch.squeeze(label).numpy()
 
                 visdom_scatter(
                     vis=visdom,

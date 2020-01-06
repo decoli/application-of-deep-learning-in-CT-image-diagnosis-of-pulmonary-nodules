@@ -76,7 +76,7 @@ def visdom_roc_auc(vis, epoch, roc_auc, win, name):
         )
     )
 
-def visdom_scatter(vis, x, y, win, name):
+def visdom_scatter(vis, x, y, win):
     '''
     https://www.zhihu.com/question/365042640
     如果是两列，第一列表示x轴坐标，第二列表示y轴坐标，获得二维图像，

@@ -135,8 +135,7 @@ def get_mu_and_logvar(args, model_vae, list_train, visdom):
                     vis=visdom,
                     x=x,
                     y=label,
-                    win=str(feature_idx),
-                    name='test')
+                    win=str(feature_idx))
 
             elif args.plot:
 

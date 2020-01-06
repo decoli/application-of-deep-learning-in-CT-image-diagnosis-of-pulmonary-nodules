@@ -110,6 +110,8 @@ def get_mu_and_logvar(args, model_vae, list_train, visdom):
             list_label.append(torch.squeeze(label).detach().numpy())
 
     # output scatter
+    label = torch.squeeze(label).numpy()
+
     if batch_idx == 0: # size_batch >= len(list_train)
 
         for feature_idx in range(mu.shape[1]):
@@ -127,8 +129,6 @@ def get_mu_and_logvar(args, model_vae, list_train, visdom):
 
                 x = np.stack([np.array(list_mu), np.array(list_logvar)])
                 x = np.transpose(x, (1, 0))
-
-                label = torch.squeeze(label).numpy()
 
                 visdom_scatter(
                     vis=visdom,

@@ -81,51 +81,75 @@ class Dataset():
         y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
         image = image[x_start: x_end, y_start: y_end]
         image = np.expand_dims(image, 0)
-        return image
+
+        # get the label
+        label = int(image_current['class'])
+        if label == 0:
+            label = np.array([1])
+        elif label == 1:
+            label = np.array([2])
+
+        return image, label
 
 def get_mu_and_logvar(args, model_vae, list_train, visdom):
 
+    # the list for size_batch < len(list_train)
     list_mu = []
     list_logvar = []
+    list_label = []
 
     model_vae.eval()
     with torch.no_grad():
-        for batch_idx, data in enumerate(data_loader):
+        for batch_idx, (data, label) in enumerate(data_loader):
             data = data.to(args.device, dtype= torch.float)
 
             # get mu, logvar
             prediction, mu, logvar = model_vae(data)
             list_mu.append(mu)
             list_logvar.append(logvar)
+            list_label.append(torch.squeeze(label).detach().numpy())
 
-    # output visdom
-    if not args.no_visdom or args.plot:
-        scatter_center = np.array([0, 0])
+    # output scatter
+    if batch_idx == 0: # size_batch >= len(list_train)
 
-        # size_batch >= len(list_train)
-        if batch_idx == 0:
+        for feature_idx in range(mu.shape[1]):
 
-            for feature_idx in range(mu.shape[1]):
+            # the list for size_batch >= len(list_train)
+            list_mu = []
+            list_logvar = []
 
-                list_mu = []
-                list_logvar = []
+            for sample_idx in range(mu.shape[0]):
 
-                for sample_idx in range(mu.shape[0]):
-                    list_mu.append(mu[sample_idx, feature_idx])
-                    list_logvar.append(logvar[sample_idx, feature_idx])
+                list_mu.append(mu[sample_idx, feature_idx])
+                list_logvar.append(logvar[sample_idx, feature_idx])
 
-                if not args.no_visdom:
-                    visdom_scatter( # bug
-                        vis=visdom, x=np.array([np.array(list_mu), scatter_center]), y=np.array(list_logvar), win=str(feature_idx), name='test-get')
+            if not args.no_visdom:
 
-                elif args.plot:
-                    plt.scatter(
-                        x=np.array(list_mu), y=np.array(list_logvar))
-                    plt.show()
+                x = np.stack([np.array(list_mu), np.array(list_logvar)])
+                x = np.transpose(x, (1, 0))
 
-        # size_batch < len(list_train)
-        else:
-            pass
+                label = list(torch.squeeze(label).numpy())
+
+                visdom_scatter(
+                    vis=visdom,
+                    x=x,
+                    y=label,
+                    win=str(feature_idx),
+                    name='test')
+
+            elif args.plot:
+
+                # make color map for plt
+
+                # show plt
+                plt.scatter(
+                    x=np.array(list_mu), y=np.array(list_logvar),
+                    cmap=torch.squeeze(label).detach().numpy())
+                plt.show()
+
+    # size_batch < len(list_train)
+    else:
+        pass
 
 if __name__ == "__main__":
     # get argument
@@ -138,7 +162,8 @@ if __name__ == "__main__":
     if torch.cuda.is_available():
         model_vae.load_state_dict(torch.load(path_model_vae))
     else:
-        model_vae.load_state_dict(torch.load(path_model_vae,  map_location=torch.device('cpu')))
+        model_vae.load_state_dict(
+            torch.load(path_model_vae,  map_location=torch.device('cpu')))
 
     # get image info
     info_luna16 = pd.read_csv(args.path_input, index_col=0)
@@ -160,10 +185,13 @@ if __name__ == "__main__":
         )
 
     # visdom instance
-    use_cross = str(args.use_cross)
-    visdom = Visdom(
-        env='use_cross == {use_cross}'.format(use_cross=use_cross)
-    )
+    if not args.no_visdom:
+        use_cross = str(args.use_cross)
+        visdom = Visdom(
+            env='use_cross == {use_cross}'.format(use_cross=use_cross)
+        )
+    else:
+        visdom = None
 
     # get mu and logvar of train-set
     get_mu_and_logvar(args, model_vae, list_train, visdom)

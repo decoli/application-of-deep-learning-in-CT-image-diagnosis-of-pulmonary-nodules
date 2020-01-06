@@ -77,13 +77,19 @@ def visdom_roc_auc(vis, epoch, roc_auc, win, name):
     )
 
 def visdom_scatter(vis, x, y, win, name):
+    '''
+    https://www.zhihu.com/question/365042640
+    如果是两列，第一列表示x轴坐标，第二列表示y轴坐标，获得二维图像，
+    如果是三列，那么第三列是z轴坐标，获得三维散点图，
+    y使用一个向量可以表示每个点的分组情况
+    '''
     vis.scatter(
         X=x,
         Y=y,
         win=win,
         name=name,
-        opts=dict(
-            legend=['mu', 'logvar'],
-            markersize=5,
-        )
+        # opts=dict(
+            # legend=['mu', 'logvar'],
+            # markersize=5,
+        # )
     )

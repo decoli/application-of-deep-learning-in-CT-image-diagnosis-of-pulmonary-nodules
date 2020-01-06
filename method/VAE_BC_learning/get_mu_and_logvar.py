@@ -127,8 +127,7 @@ def get_mu_and_logvar(args, model_vae, list_train, visdom):
 
             if not args.no_visdom:
 
-                np_d = np.random.rand(len(list_mu))
-                x = np.stack([np.array(list_mu), np.array(list_logvar), np_d])
+                x = np.stack([np.array(list_mu), np.array(list_logvar)])
                 x = np.transpose(x, (1, 0))
 
                 visdom_scatter(

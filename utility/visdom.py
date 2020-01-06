@@ -87,4 +87,6 @@ def visdom_scatter(vis, x, y, win, name):
         X=x,
         Y=y,
         win=win,
+        opts=dict(
+            legend=['benign', 'malignant'])
     )

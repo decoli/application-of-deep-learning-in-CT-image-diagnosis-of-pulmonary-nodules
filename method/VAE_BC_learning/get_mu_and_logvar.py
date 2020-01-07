@@ -101,7 +101,7 @@ def get_mu_and_logvar(args, model_vae, list_train, visdom):
     model_vae.eval()
     with torch.no_grad():
         for batch_idx, (data, label) in enumerate(data_loader):
-            data = data.to(args.device, dtype= torch.float)
+            # data = data.to(args.device, dtype= torch.float)
 
             # get mu, logvar
             prediction, mu, logvar = model_vae(data)
@@ -158,11 +158,13 @@ if __name__ == "__main__":
     path_model_vae = os.path.join(os.getcwd(), args.path_model_vae)
     model_vae = VAE(args)
 
-    if torch.cuda.is_available():
-        model_vae.load_state_dict(torch.load(path_model_vae))
-    else:
-        model_vae.load_state_dict(
-            torch.load(path_model_vae,  map_location=torch.device('cpu')))
+    # if torch.cuda.is_available():
+    #     model_vae.load_state_dict(torch.load(path_model_vae))
+    # else:
+    #     model_vae.load_state_dict(
+    #         torch.load(path_model_vae,  map_location=torch.device('cpu')))
+
+    torch.load(path_model_vae,  map_location=torch.device('cpu'))
 
     # get image info
     info_luna16 = pd.read_csv(args.path_input, index_col=0)

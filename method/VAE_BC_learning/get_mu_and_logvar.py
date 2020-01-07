@@ -91,7 +91,7 @@ class Dataset():
 
         return image, label
 
-def get_mu_and_logvar(args, model_vae, list_train, visdom):
+def get_mu_and_logvar(args, model_vae, data_loader, visdom):
 
     # the list for size_batch < len(list_train)
     list_mu = []
@@ -195,4 +195,4 @@ if __name__ == "__main__":
         visdom = None
 
     # get mu and logvar of train-set
-    get_mu_and_logvar(args, model_vae, list_train, visdom)
+    get_mu_and_logvar(args, model_vae, data_loader, visdom)

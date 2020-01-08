@@ -38,7 +38,8 @@ def argument():
         default=os.path.join(os.getcwd(), 'data', 'model', 'model_vae.pt'))
     parser.add_argument('--dimension_latent', type=int, default=20)
     parser.add_argument('--dir-image', type=str)
-    parser.add_argument('--size-cutting', default=32)
+    parser.add_argument('--size-cutting', default=32, type=int)
+    parser.add_argument('--size-resize', type=int)
     parser.add_argument('--learning-rate', default=1e-3)
 
     parser.add_argument('--rate-train', default=0.8, type=float)
@@ -116,13 +117,13 @@ class DatasetTrain():
                     os.getcwd(),'method', 'cnn_attention_area', 'test',
                     'test_image_before_input{image_format}'.format(image_format='.png'))
                 
-                np_zeros = np.zeros((1, 50, 50))
+                np_zeros = np.zeros((1, self.args.size_resize, self.args.size_resize))
                 image_before_input = np.concatenate([np_zeros, image])
                 cv2.imwrite(path_save, np.transpose(image_before_input * 255, (1,2,0)))
 
         else:
             # resize the image
-            image = cv2.resize(image, (50, 50))
+            # image = cv2.resize(image, (self.args.size_resize, self.args.size_resize))
 
             # get image before input
             if args.get_mid_product:
@@ -255,8 +256,8 @@ def get_image_attentioned(model_vae, image, args):
         args.size_cutting, args.size_cutting).detach().numpy()
 
     # resize
-    image_original = cv2.resize(image_original, (50, 50))
-    attention_area = cv2.resize(attention_area, (50, 50))
+    # image_original = cv2.resize(image_original, (args.size_resize, args.size_resize))
+    # attention_area = cv2.resize(attention_area, (args.size_resize, args.size_resize))
 
     # get image attentioned
     image_attentioned = np.stack([image_original, attention_area])

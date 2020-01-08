@@ -286,7 +286,11 @@ def get_image_attentioned(model_vae, image, args):
             'test_attention_area{image_format}'.format(image_format='.png'))
         cv2.imwrite(path_save, np.transpose(mid_product_attention_area * 255, (1,2,0)))
 
-        mid_product_image_attentioned = np.stack([np_zeros, image_original, attention_area]) # BGR
+        if not args.triple:
+            mid_product_image_attentioned = np.stack([np_zeros, image_original, attention_area]) # BGR
+        else:
+            mid_product_image_attentioned = np.stack([image_original, attention_area, image_triple])
+
         path_save = os.path.join(
             os.getcwd(),'method', 'cnn_attention_area', 'test',
             'test_image_attentioned{image_format}'.format(image_format='.png'))

@@ -6,18 +6,23 @@ class CnnModel(nn.Module):
         super().__init__()
 
         if args.no_attention_area:
-        # input 1 * 32 * 32
-
+            # input 1 * 32 * 32
             self.conv_1_1 = nn.Conv2d(
                 in_channels=1, out_channels=64, kernel_size=3, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
             ) # 64 * 30 * 30
 
         else:
-        # input 2 * 32 * 32
+            if not args.triple:
+                # input 2 * 32 * 32
+                self.conv_1_1 = nn.Conv2d(
+                    in_channels=2, out_channels=64, kernel_size=3, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
+                ) # 64 * 30 * 30
 
-            self.conv_1_1 = nn.Conv2d(
-                in_channels=2, out_channels=64, kernel_size=3, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
-            ) # 64 * 30 * 30
+            else:
+                # input 3 * 32 * 32
+                self.conv_1_1 = nn.Conv2d(
+                    in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
+                ) # 64 * 30 * 30
 
         self.conv_1_2 = nn.Conv2d(
             in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'

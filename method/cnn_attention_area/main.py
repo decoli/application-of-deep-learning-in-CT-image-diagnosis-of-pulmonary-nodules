@@ -39,7 +39,7 @@ def argument():
     parser.add_argument('--dimension_latent', type=int, default=20)
     parser.add_argument('--dir-image', type=str)
     parser.add_argument('--size-cutting', default=32, type=int)
-    parser.add_argument('--size-resize', type=int)
+    parser.add_argument('--size-resize', default=32, type=int)
     parser.add_argument('--learning-rate', default=1e-3)
 
     parser.add_argument('--rate-train', default=0.8, type=float)
@@ -56,6 +56,7 @@ def argument():
     parser.add_argument('--num-cross', default=None, type=int)
     parser.add_argument('--use-cross', default=None, type=int)
 
+    parser.add_argument('--triple', action='store_true', default=False)
     parser.add_argument('--no-attention-area', action='store_true', default=False)
     parser.add_argument('--visdom', action='store_true', default=False)
 
@@ -184,7 +185,7 @@ class DatasetTest():
             image = get_image_attentioned(self.model_vae, image, args)
         else:
             # resize the image
-            image = cv2.resize(image, (50, 50))
+            image = cv2.resize(image, (self.args.size_resize, self.args.size_resize))
             image = np.expand_dims(image, 0)
 
         # get the label
@@ -260,7 +261,14 @@ def get_image_attentioned(model_vae, image, args):
     # attention_area = cv2.resize(attention_area, (args.size_resize, args.size_resize))
 
     # get image attentioned
-    image_attentioned = np.stack([image_original, attention_area])
+    if args.triple:
+
+        # triple
+        image_triple = image_original * attention_area
+        image_attentioned = np.stack([image_original, attention_area, image_triple])
+    
+    else:
+        image_attentioned = np.stack([image_original, attention_area])
 
     # output mid-product
     if args.get_mid_product:

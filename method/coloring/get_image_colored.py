@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 
 sys.path.append(os.getcwd())
-from pre_processing.utility import get_image_info, get_coordinate
+from utility.pre_processing import get_image_info, get_coordinate
 
 
 def argument():
@@ -42,7 +42,7 @@ def read_image(args, image_current):
 
     # read image
     bias_z = int(image_current['diameter'] / (2 * image_current['spacing_z']))
-    image_index = int(image_coordinate['coord_z'])
+    image_index = int(image_coordinate['coordinate_z'])
 
     for idx in range(image_index - bias_z, image_index + bias_z + 1):
         path_image = os.path.join(
@@ -57,10 +57,10 @@ def read_image(args, image_current):
         cv2.imwrite(args.path_image_colored, image) # test
 
         # cut the image
-        x_start = int(image_coordinate['coord_x'] - args.size_cutting / 2)
-        x_end = int(image_coordinate['coord_x'] + args.size_cutting / 2)
-        y_start = int(image_coordinate['coord_y'] - args.size_cutting / 2)
-        y_end = int(image_coordinate['coord_y'] + args.size_cutting / 2)
+        x_start = int(image_coordinate['coordinate_x'] - args.size_cutting / 2)
+        x_end = int(image_coordinate['coordinate_x'] + args.size_cutting / 2)
+        y_start = int(image_coordinate['coordinate_y'] - args.size_cutting / 2)
+        y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
 
         image = image[x_start: x_end, y_start: y_end]
 

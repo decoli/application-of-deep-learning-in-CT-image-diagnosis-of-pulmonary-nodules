@@ -9,3 +9,4 @@ method/cnn_attention_area/test/
 run/
 data/model/*
 !.gitkeep
+data/test/*

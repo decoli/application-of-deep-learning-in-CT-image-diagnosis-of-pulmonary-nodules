@@ -22,7 +22,7 @@ from visdom import Visdom
 
 # append sys.path
 sys.path.append(os.getcwd())
-from utility.auto_encoding_variational import VAE
+from utility.model.auto_encoding_variational import VAE
 from utility.model.model_cnn_attention_area import CnnModel
 from utility.pre_processing import (cross_validation, get_coordinate,
                                     get_image_info, rate_validation)
@@ -35,7 +35,7 @@ def argument():
     parser = argparse.ArgumentParser()
     parser.add_argument('--path-input', default=None)
     parser.add_argument('--path-model-vae',
-        default=os.path.join(os.getcwd(), 'utility', 'model', 'model_vae.pt'))
+        default=os.path.join(os.getcwd(), 'data', 'model', 'model_vae.pt'))
     parser.add_argument('--dimension_latent', type=int, default=20)
     parser.add_argument('--dir-image', type=str)
     parser.add_argument('--size-cutting', default=32)
@@ -373,7 +373,7 @@ if __name__ == "__main__":
 
         # load model vae
         model_vae = VAE(args)
-        model_vae.load_state_dict(torch.load(path_model_vae))
+        model_vae.load_state_dict(torch.load(path_model_vae, map_location=args.device))
     else:
         model_vae = None
 

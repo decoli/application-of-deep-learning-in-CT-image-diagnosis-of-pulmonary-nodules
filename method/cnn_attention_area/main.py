@@ -40,7 +40,7 @@ def argument():
     parser.add_argument('--dir-image', type=str)
     parser.add_argument('--size-cutting', default=32, type=int)
     parser.add_argument('--size-resize', default=32, type=int)
-    parser.add_argument('--learning-rate', default=1e-3)
+    parser.add_argument('--learning-rate', default=1e-3, type=float)
 
     parser.add_argument('--rate-train', default=0.8, type=float)
     parser.add_argument('--size-batch', type=int, default=128,

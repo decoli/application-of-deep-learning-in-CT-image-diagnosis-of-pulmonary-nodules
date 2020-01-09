@@ -139,7 +139,7 @@ def get_mu_and_logvar(args, model_vae, data_loader, visdom):
             pass
 
     if not __name__ == "__main__":
-        return mu, logvar, label
+        return mu, logvar, label - 1
 
 if __name__ == "__main__":
     # get argument

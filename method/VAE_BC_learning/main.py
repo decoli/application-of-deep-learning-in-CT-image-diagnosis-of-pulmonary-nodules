@@ -81,64 +81,22 @@ class DatasetTrain():
 
     def __getitem__(self, idx):
         image_current = self.list_data_set[idx]
-        image_coordinate = get_coordinate(image_current)
 
-        # get image path
-        name_subset = os.path.basename(
-            os.path.dirname(image_current['path_seriesuid_folder'])
-            ).split('_')[0] + '_tiff'
-        image_index = int(image_coordinate['coordinate_z'])
+        # generate the image
+        z = self.model_vae.reparameterize(image_current[0], image_current[1])
+        image = self.model_vae.decode(z)
 
-        path_image = os.path.join(
-            args.dir_image,
-            name_subset,
-            image_current['seriesuid'],
-            'whole_image',
-            'whole_{image_index}.tiff'.format(image_index=image_index)
-            )
-        image = cv2.imread(path_image, flags=2)
-        image = image / 255
+        image = image.view(self.args.size_cutting, self.args.size_cutting)
+        image = image.detach().numpy()
 
-        # cut the image
-        x_start = int(image_coordinate['coordinate_x'] - args.size_cutting / 2)
-        x_end = int(image_coordinate['coordinate_x'] + args.size_cutting / 2)
-        y_start = int(image_coordinate['coordinate_y'] - args.size_cutting / 2)
-        y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
-        image = image[x_start: x_end, y_start: y_end]
-
-        # get image attentioned
-        if not args.no_attention_area:
-            image = get_image_attentioned(self.model_vae, image, args)
-
-            # get image before input
-            if args.get_mid_product:
-                path_save = os.path.join(
-                    os.getcwd(),'method', 'cnn_attention_area', 'test',
-                    'test_image_before_input{image_format}'.format(image_format='.png'))
-                
-                np_zeros = np.zeros((1, 50, 50))
-                image_before_input = np.concatenate([np_zeros, image])
-                cv2.imwrite(path_save, np.transpose(image_before_input * 255, (1,2,0)))
-
-        else:
-            # resize the image
-            image = cv2.resize(image, (50, 50))
-
-            # get image before input
-            if args.get_mid_product:
-                path_save = os.path.join(
-                    os.getcwd(),'method', 'cnn_attention_area', 'test',
-                    'test_image_before_input{image_format}'.format(image_format='.png'))
-                cv2.imwrite(path_save, np.transpose(image * 255, (1,2,0)))
-
-            image = np.expand_dims(image, 0)
+        if self.args.get_mid_product:
+            path_image_mid_produc = os.path.join(
+                os.getcwd(), 'method', 'vae_bc_learning', 'test',
+                'image_mid_produc{image_format}'.format(image_format='.png'))
+            cv2.imwrite(path_image_mid_produc, image * 255)
 
         # get the label
-        label = int(image_current['class'])
-        if label == 0:
-            label = np.array([0])
-        elif label == 1:
-            label = np.array([1])
+        label = image_current[2].detach().numpy()
 
         return image, label
 
@@ -242,48 +200,6 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, vi
             visdom, epoch, sp, win='sp', name=visdom_name)
         visdom_roc_auc(
             visdom, epoch, roc_auc, win='roc_auc', name=visdom_name)
-
-def get_image_attentioned(model_vae, image, args):
-
-    image_original = image
-
-    # get attention area
-    image = np.expand_dims(image, 0)
-    image = np.expand_dims(image, 0)
-    attention_area = model_vae(torch.Tensor(image))[0]
-    attention_area = attention_area.view(
-        args.size_cutting, args.size_cutting).detach().numpy()
-
-    # resize
-    image_original = cv2.resize(image_original, (50, 50))
-    attention_area = cv2.resize(attention_area, (50, 50))
-
-    # get image attentioned
-    image_attentioned = np.stack([image_original, attention_area])
-
-    # output mid-product
-    if args.get_mid_product:
-        np_zeros = np.zeros(shape=image_original.shape)
-
-        mid_product_original = np.stack([np_zeros, image_original, np_zeros]) # BGR
-        path_save = os.path.join(
-            os.getcwd(),'method', 'cnn_attention_area', 'test',
-            'test_image_original{image_format}'.format(image_format='.png'))
-        cv2.imwrite(path_save, np.transpose(mid_product_original * 255, (1,2,0)))
-
-        mid_product_attention_area = np.stack([np_zeros, np_zeros, attention_area]) # BGR
-        path_save = os.path.join(
-            os.getcwd(),'method', 'cnn_attention_area', 'test',
-            'test_attention_area{image_format}'.format(image_format='.png'))
-        cv2.imwrite(path_save, np.transpose(mid_product_attention_area * 255, (1,2,0)))
-
-        mid_product_image_attentioned = np.stack([np_zeros, image_original, attention_area]) # BGR
-        path_save = os.path.join(
-            os.getcwd(),'method', 'cnn_attention_area', 'test',
-            'test_image_attentioned{image_format}'.format(image_format='.png'))
-        cv2.imwrite(path_save, np.transpose(mid_product_image_attentioned * 255, (1,2,0)))
-
-    return image_attentioned
 
 def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, visdom):
 

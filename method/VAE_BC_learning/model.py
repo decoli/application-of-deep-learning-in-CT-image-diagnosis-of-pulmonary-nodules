@@ -47,7 +47,7 @@ class CnnModel(nn.Module):
         out = F.relu(out)
         out = self.pooling_2(out)
 
-        out = out.view(size_batch_in,-1)
+        out = out.view(size_batch_in, -1)
         # out = self.fc_1(out)
         out = F.relu(out)
         out = F.dropout(out)

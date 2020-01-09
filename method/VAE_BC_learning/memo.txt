@@ -1,0 +1,2 @@
+通过get_mu_and_logvar.py得到通过肺结节CT图像训练后，VAE模型的中间特征参数。
+通过观察其散点图，得出其散点特征分布不明显。benign的散点范围略大于malignant。

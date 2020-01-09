@@ -397,10 +397,10 @@ if __name__ == "__main__":
         )
 
     args.no_visdom = True
-    mu, logvar = get_mu_and_logvar(args, model_vae, data_loader, visdom=None)
+    mu, logvar, label = get_mu_and_logvar(args, model_vae, data_loader, visdom=None)
 
     # define date loader
-    data_set_train = DatasetTrain(args, list_train, model_vae)
+    data_set_train = DatasetTrain(args, list(zip(mu, logvar, label)), model_vae)
     data_set_test = DatasetTest(args, list_test, model_vae)
 
     train_loader = torch.utils.data.DataLoader(

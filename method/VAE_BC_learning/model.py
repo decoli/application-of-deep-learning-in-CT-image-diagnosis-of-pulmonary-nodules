@@ -32,7 +32,7 @@ class CnnModel(nn.Module):
 
         # self.fc_1 = nn.Linear(3200, 3200)
 
-        self.fc_2 = nn.Linear(3200, 2)
+        self.fc_2 = nn.Linear(4608, 2)
 
     def forward(self, input_image):
         size_batch_in = input_image.size(0)

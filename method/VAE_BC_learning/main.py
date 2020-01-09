@@ -38,7 +38,7 @@ def argument():
         default=os.path.join(os.getcwd(), 'data', 'model', 'model_vae.pt'))
     parser.add_argument('--dimension-latent', type=int, default=20)
     parser.add_argument('--dir-image', type=str)
-    parser.add_argument('--size-cutting', default=32)
+    parser.add_argument('--size-cutting', type=int, default=32)
     parser.add_argument('--learning-rate', type=int, default=1e-4)
 
     parser.add_argument('--rate-train', default=0.8, type=float)

@@ -3,7 +3,6 @@
 *.pyc
 method/coloring/test/
 !.gitkeep
-method/vae_bc_learning/results/
 utility/test/
 method/cnn_attention_area/test/
 !.gitkeep

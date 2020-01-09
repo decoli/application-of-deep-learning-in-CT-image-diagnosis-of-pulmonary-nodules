@@ -36,7 +36,7 @@ def argument():
     parser.add_argument('--path-input', default=None)
     parser.add_argument('--path-model-vae',
         default=os.path.join(os.getcwd(), 'data', 'model', 'model_vae.pt'))
-    parser.add_argument('--dimension_latent', type=int, default=20)
+    parser.add_argument('--dimension-latent', type=int, default=20)
     parser.add_argument('--dir-image', type=str)
     parser.add_argument('--size-cutting', default=32)
     parser.add_argument('--learning-rate', type=int, default=1e-4)
@@ -74,6 +74,19 @@ class DatasetTrain():
     def __init__(self, args, list_data_set, model_vae=None):
         self.args = args
         self.list_data_set = list_data_set
+
+        list_benign = [] # class == 0
+        list_malignant = [] # class == 1
+
+        for each_date in list_data_set:
+            if each_date[2] == 0:
+                list_benign.append(each_date)
+            elif each_date[2] == 1:
+                list_malignant.append(each_date)
+
+        self.list_benign = list_benign
+        self.list_malignant = list_malignant
+
         self.model_vae = model_vae
 
     def __len__(self):
@@ -82,8 +95,29 @@ class DatasetTrain():
     def __getitem__(self, idx):
         image_current = self.list_data_set[idx]
 
+        # get the label
+        # label = image_current[2].detach().numpy()
+        label = random.choice([0, 1])
+        label = np.array([label])
+
+        # get the normal distribution parameter
+        if label == 0:
+            list_normal_distribution = random.sample(self.list_benign, self.args.dimension_latent)
+        elif label == 1:
+            list_normal_distribution = random.sample(self.list_malignant, self.args.dimension_latent)
+
+        # get list of mu, logvar
+        list_mu = []
+        list_logvar = []
+
+        for i, each_para in enumerate(list_normal_distribution):
+            list_mu.append(np.array(each_para[0][i]))
+            list_logvar.append(np.array(each_para[1][i]))
+
         # generate the image
-        z = self.model_vae.reparameterize(image_current[0], image_current[1])
+        # z = self.model_vae.reparameterize(image_current[0], image_current[1])
+        z = self.model_vae.reparameterize(
+            torch.from_numpy(np.array(list_mu)), torch.from_numpy(np.array(list_logvar)))
         image = self.model_vae.decode(z)
 
         image = image.view(self.args.size_cutting, self.args.size_cutting)
@@ -94,9 +128,7 @@ class DatasetTrain():
                 os.getcwd(), 'method', 'vae_bc_learning', 'test',
                 'image_mid_produc{image_format}'.format(image_format='.png'))
             cv2.imwrite(path_image_mid_produc, image * 255)
-
-        # get the label
-        label = image_current[2].detach().numpy()
+        image = np.expand_dims(image, 0)
 
         return image, label
 

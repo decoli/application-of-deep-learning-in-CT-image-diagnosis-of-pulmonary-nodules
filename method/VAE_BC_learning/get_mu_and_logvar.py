@@ -109,7 +109,7 @@ def get_mu_and_logvar(args, model_vae, data_loader, visdom):
             list_logvar.append(logvar)
             list_label.append(torch.squeeze(label).detach().numpy())
 
-    if (not args.no_visdom):
+    if not args.no_visdom:
         # output scatter
         label = torch.squeeze(label).numpy()
 

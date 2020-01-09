@@ -111,17 +111,17 @@ class DatasetTrain():
         list_logvar = []
 
         for i, each_para in enumerate(list_normal_distribution):
-            list_mu.append(np.array(each_para[0][i]))
-            list_logvar.append(np.array(each_para[1][i]))
+            list_mu.append(np.array(each_para[0][i].cpu()))
+            list_logvar.append(np.array(each_para[1][i].cpu()))
 
         # generate the image
         # z = self.model_vae.reparameterize(image_current[0], image_current[1])
         z = self.model_vae.reparameterize(
             torch.from_numpy(np.array(list_mu)), torch.from_numpy(np.array(list_logvar)))
-        image = self.model_vae.decode(z)
+        image = self.model_vae.decode(z.to(device=self.args.device))
 
         image = image.view(self.args.size_cutting, self.args.size_cutting)
-        image = image.detach().numpy()
+        image = image.cpu().detach().numpy()
 
         if self.args.get_mid_product:
             path_image_mid_produc = os.path.join(
@@ -330,8 +330,8 @@ if __name__ == "__main__":
         list_train, list_test = rate_validation(args, list_info_image)
 
     #### get mu and logvar
-    from method.vae_bc_learning.get_mu_and_logvar import get_mu_and_logvar
     from method.vae_bc_learning.get_mu_and_logvar import Dataset
+    from method.vae_bc_learning.get_mu_and_logvar import get_mu_and_logvar
 
     data_set = Dataset(args, model_vae, list_train)
     size_batch_get_mu_and_logvar = 1024

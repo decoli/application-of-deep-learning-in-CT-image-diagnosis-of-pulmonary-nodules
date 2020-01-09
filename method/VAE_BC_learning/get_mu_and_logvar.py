@@ -101,7 +101,7 @@ def get_mu_and_logvar(args, model_vae, data_loader, visdom):
     model_vae.eval()
     with torch.no_grad():
         for batch_idx, (data, label) in enumerate(data_loader):
-            data = data.to(dtype= torch.float)
+            data = data.to(device=args.device, dtype=torch.float)
 
             # get mu, logvar
             prediction, mu, logvar = model_vae(data)

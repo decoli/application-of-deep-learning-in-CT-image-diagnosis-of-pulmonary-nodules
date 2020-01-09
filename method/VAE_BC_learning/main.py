@@ -241,8 +241,8 @@ def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, vis
     label_list = []
 
     for batch_idx, (data, label) in enumerate(train_loader):
-        data = data.to(args.device, dtype= torch.float)
-        label = label.to(args.device, dtype= torch.long)
+        data = data.to(args.device, dtype=torch.float)
+        label = label.to(args.device, dtype=torch.long)
 
         # train the model
         optimizer.zero_grad()
@@ -316,6 +316,7 @@ if __name__ == "__main__":
     # load model vae
     model_vae = VAE(args)
     model_vae.load_state_dict(torch.load(path_model_vae, map_location=args.device))
+    model_vae.to(args.device)
 
     # get image info
     info_luna16 = pd.read_csv(args.path_input, index_col=0)

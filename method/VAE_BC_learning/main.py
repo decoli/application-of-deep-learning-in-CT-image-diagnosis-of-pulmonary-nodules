@@ -167,14 +167,7 @@ class DatasetTest():
         y_start = int(image_coordinate['coordinate_y'] - args.size_cutting / 2)
         y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
         image = image[x_start: x_end, y_start: y_end]
-
-        # get image attentioned
-        if not args.no_attention_area:
-            image = get_image_attentioned(self.model_vae, image, args)
-        else:
-            # resize the image
-            image = cv2.resize(image, (50, 50))
-            image = np.expand_dims(image, 0)
+        image = np.expand_dims(image, 0)
 
         # get the label
         label = int(image_current['class'])
@@ -295,6 +288,9 @@ def test(model, model_vae, test_loader, epoch, args, visdom):
             label = label.to(args.device, dtype= torch.long)
 
             # model predict
+            data = model_vae(data)
+            data = data[0]
+            data = data.view(data.shape[0], 1, args.size_cutting, args. size_cutting)
             prediction = model(data)
 
             # get loss

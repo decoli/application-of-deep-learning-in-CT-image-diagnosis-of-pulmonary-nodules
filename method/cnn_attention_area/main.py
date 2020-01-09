@@ -22,8 +22,8 @@ from visdom import Visdom
 
 # append sys.path
 sys.path.append(os.getcwd())
+from method.cnn_attention_area.model import CnnModel
 from utility.model.auto_encoding_variational import VAE
-from utility.model.model_cnn_attention_area import CnnModel
 from utility.pre_processing import (cross_validation, get_coordinate,
                                     get_image_info, rate_validation)
 from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,

@@ -22,7 +22,8 @@ from visdom import Visdom
 
 # append sys.path
 sys.path.append(os.getcwd())
-from utility.auto_encoding_variational import VAE
+from method.vae_bc_learning.model import CnnModel
+from utility.model.auto_encoding_variational import VAE
 from utility.pre_processing import (cross_validation, get_coordinate,
                                     get_image_info, rate_validation)
 from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
@@ -34,11 +35,11 @@ def argument():
     parser = argparse.ArgumentParser()
     parser.add_argument('--path-input', default=None)
     parser.add_argument('--path-model-vae',
-        default=os.path.join(os.getcwd(), 'utility', 'model', 'model_vae.pt'))
+        default=os.path.join(os.getcwd(), 'data', 'model', 'model_vae.pt'))
     parser.add_argument('--dimension_latent', type=int, default=20)
     parser.add_argument('--dir-image', type=str)
     parser.add_argument('--size-cutting', default=32)
-    parser.add_argument('--learning-rate', default=1e-3)
+    parser.add_argument('--learning-rate', type=int, default=1e-4)
 
     parser.add_argument('--rate-train', default=0.8, type=float)
     parser.add_argument('--size-batch', type=int, default=128,
@@ -193,100 +194,6 @@ class DatasetTest():
             label = np.array([1])
 
         return image, label
-
-class CnnModel(nn.Module):
-    def __init__(self, args):
-        super().__init__()
-
-        if args.no_attention_area:
-            # input 1 * 50 * 50
-            self.conv_1 = nn.Conv2d(
-                in_channels=1, out_channels=20, kernel_size=7, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
-            ) # 20 * 44 * 44
-
-        else:
-            # input 2 * 50 * 50
-            self.conv_1 = nn.Conv2d(
-                in_channels=2, out_channels=20, kernel_size=7, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
-            ) # 20 * 44 * 44
-
-        self.pooling_1 = nn.MaxPool2d(
-            kernel_size=2, stride=2, padding=0, dilation=1, return_indices=False, ceil_mode=False
-        ) # 20 * 22 * 22
-
-        self.conv_2 = nn.Conv2d(
-            in_channels=20, out_channels=50, kernel_size=7, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
-        ) # 50 * 16 * 16
-
-        self.pooling_2 = nn.MaxPool2d(
-            kernel_size=2, stride=2, padding=0, dilation=1, return_indices=False, ceil_mode=False
-        ) # 50 * 8 * 8
-
-        self.conv_3 = nn.Conv2d(
-            in_channels=50, out_channels=500, kernel_size=7, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
-        ) # 500 * 2 * 2
-
-        self.pooling_3 = nn.MaxPool2d(
-            kernel_size=2, stride=2, padding=0, dilation=1, return_indices=False, ceil_mode=False
-        ) # 500 * 1 * 1
-
-        # activate fuction ReLU layer
-
-        self.conv_4 = nn.Conv2d(
-            in_channels=500, out_channels=2, kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
-        ) # 2 * 1 * 1
-
-        '''
-        # original model
-        # input 1* 50 * 50
-
-        self.conv_1 = nn.Conv2d(
-            in_channels=1, out_channels=20, kernel_size=7, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
-        ) # 20 * 44 * 44
-
-        self.pooling_1 = nn.MaxPool2d(
-            kernel_size=2, stride=2, padding=0, dilation=1, return_indices=False, ceil_mode=False
-        ) # 20 * 22 * 22
-
-        self.conv_2 = nn.Conv2d(
-            in_channels=20, out_channels=50, kernel_size=7, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
-        ) # 50 * 16 * 16
-
-        self.pooling_2 = nn.MaxPool2d(
-            kernel_size=2, stride=2, padding=0, dilation=1, return_indices=False, ceil_mode=False
-        ) # 50 * 8 * 8
-
-        self.conv_3 = nn.Conv2d(
-            in_channels=50, out_channels=500, kernel_size=7, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
-        ) # 500 * 2 * 2
-
-        self.pooling_3 = nn.MaxPool2d(
-            kernel_size=2, stride=2, padding=0, dilation=1, return_indices=False, ceil_mode=False
-        ) # 500 * 1 * 1
-
-        # activate fuction ReLU layer
-
-        self.conv_4 = nn.Conv2d(
-            in_channels=500, out_channels=2, kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
-        ) # 2 * 1 * 1
-        '''
-
-    def forward(self, input_image):
-        out = self.conv_1(input_image) # 20 * 44 * 44
-        out = self.pooling_1(out) # 20 * 22 * 22
-
-        out = self.conv_2(out) # 50 * 16 * 16
-        out = self.pooling_2(out) # 50 * 8 * 8
-
-        out = self.conv_3(out) # 500 * 2 * 2
-        out = self.pooling_3(out) # 500 * 1 * 1
-
-        out = F.relu(out)
-
-        out = F.dropout(out)
-        out = self.conv_4(out) # 2 * 1 * 1
-
-        return out
 
 def log_batch(prediction, label, loss_batch, loss, tp, fn, fp, tn, prediction_list, label_list):
     prediction = nn.functional.softmax(prediction, dim=1)
@@ -459,16 +366,12 @@ if __name__ == "__main__":
     # get argument
     args = argument()
 
-    # get vae model
-    if not args.no_attention_area:
-        # get path of model vae
-        path_model_vae = os.path.join(os.getcwd(), args.path_model_vae)
+    # get path of model vae
+    path_model_vae = os.path.join(os.getcwd(), args.path_model_vae)
 
-        # load model vae
-        model_vae = VAE(args)
-        model_vae.load_state_dict(torch.load(path_model_vae))
-    else:
-        model_vae = None
+    # load model vae
+    model_vae = VAE(args)
+    model_vae.load_state_dict(torch.load(path_model_vae, map_location=args.device))
 
     # get image info
     info_luna16 = pd.read_csv(args.path_input, index_col=0)
@@ -480,6 +383,21 @@ if __name__ == "__main__":
         list_train, list_test = cross_validation(args, list_info_image)
     else:
         list_train, list_test = rate_validation(args, list_info_image)
+
+    #### get mu and logvar
+    from method.vae_bc_learning.get_mu_and_logvar import get_mu_and_logvar
+    from method.vae_bc_learning.get_mu_and_logvar import Dataset
+
+    data_set = Dataset(args, model_vae, list_train)
+    size_batch_get_mu_and_logvar = 1024
+    data_loader = torch.utils.data.DataLoader(
+        data_set,
+        batch_size=size_batch_get_mu_and_logvar,
+        shuffle=True,
+        )
+
+    args.no_visdom = True
+    mu, logvar = get_mu_and_logvar(args, model_vae, data_loader, visdom=None)
 
     # define date loader
     data_set_train = DatasetTrain(args, list_train, model_vae)
@@ -506,7 +424,7 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss()
 
     # visdom instance
-    env = 'no_attention_area' if args.no_attention_area else 'attention_area'
+    env = 'vae_bc_learning'
     if args.visdom:
         visdom = Visdom(
             env=env)

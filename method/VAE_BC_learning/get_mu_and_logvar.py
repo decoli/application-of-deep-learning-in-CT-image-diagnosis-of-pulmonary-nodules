@@ -11,7 +11,7 @@ import torch
 from visdom import Visdom
 
 sys.path.append(os.getcwd())
-from utility.auto_encoding_variational import VAE
+from utility.model.auto_encoding_variational import VAE
 from utility.pre_processing import (cross_validation, get_coordinate,
                                     get_image_info, rate_validation)
 from utility.visdom import visdom_scatter
@@ -65,7 +65,7 @@ class Dataset():
         image_index = int(image_coordinate['coordinate_z'])
 
         path_image = os.path.join(
-            args.dir_image,
+            self.args.dir_image,
             name_subset,
             image_current['seriesuid'],
             'whole_image',
@@ -75,10 +75,10 @@ class Dataset():
         image = image / 255
 
         # cut the image
-        x_start = int(image_coordinate['coordinate_x'] - args.size_cutting / 2)
-        x_end = int(image_coordinate['coordinate_x'] + args.size_cutting / 2)
-        y_start = int(image_coordinate['coordinate_y'] - args.size_cutting / 2)
-        y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
+        x_start = int(image_coordinate['coordinate_x'] - self.args.size_cutting / 2)
+        x_end = int(image_coordinate['coordinate_x'] + self.args.size_cutting / 2)
+        y_start = int(image_coordinate['coordinate_y'] - self.args.size_cutting / 2)
+        y_end = int(image_coordinate['coordinate_y'] + self.args.size_cutting / 2)
         image = image[x_start: x_end, y_start: y_end]
         image = np.expand_dims(image, 0)
 
@@ -109,23 +109,22 @@ def get_mu_and_logvar(args, model_vae, data_loader, visdom):
             list_logvar.append(logvar)
             list_label.append(torch.squeeze(label).detach().numpy())
 
-    # output scatter
-    label = torch.squeeze(label).numpy()
+    if (not args.no_visdom):
+        # output scatter
+        label = torch.squeeze(label).numpy()
 
-    if batch_idx == 0: # size_batch >= len(list_train)
+        if batch_idx == 0: # size_batch >= len(list_train)
 
-        for feature_idx in range(mu.shape[1]):
+            for feature_idx in range(mu.shape[1]):
 
-            # the list for size_batch >= len(list_train)
-            list_mu = []
-            list_logvar = []
+                # the list for size_batch >= len(list_train)
+                list_mu = []
+                list_logvar = []
 
-            for sample_idx in range(mu.shape[0]):
+                for sample_idx in range(mu.shape[0]):
 
-                list_mu.append(mu[sample_idx, feature_idx])
-                list_logvar.append(logvar[sample_idx, feature_idx])
-
-            if not args.no_visdom:
+                    list_mu.append(mu[sample_idx, feature_idx])
+                    list_logvar.append(logvar[sample_idx, feature_idx])
 
                 x = np.stack([np.array(list_mu), np.array(list_logvar)])
                 x = np.transpose(x, (1, 0))
@@ -136,19 +135,11 @@ def get_mu_and_logvar(args, model_vae, data_loader, visdom):
                     y=label,
                     win=str(feature_idx))
 
-            elif args.plot:
+        else: # size_batch < len(list_train)
+            pass
 
-                # make color map for plt
-
-                # show plt
-                plt.scatter(
-                    x=np.array(list_mu), y=np.array(list_logvar),
-                    cmap=torch.squeeze(label).detach().numpy())
-                plt.show()
-
-    # size_batch < len(list_train)
-    else:
-        pass
+    if not __name__ == "__main__":
+        return mu, logvar
 
 if __name__ == "__main__":
     # get argument

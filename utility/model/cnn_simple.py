@@ -37,9 +37,15 @@ class CnnSimple(nn.Module):
             kernel_size=2, stride=2, padding=0, dilation=1, return_indices=False, ceil_mode=False
         ) # 500 * 1 * 1
 
-        self.conv_4 = nn.Conv2d(
-            in_channels=500, out_channels=2, kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
-        ) # 2 * 1 * 1
+        if not self.args.between_class:
+            self.conv_4 = nn.Conv2d(
+                in_channels=500, out_channels=2, kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
+            ) # 2 * 1 * 1
+
+        elif self.args.between_class:
+            self.conv_4 = nn.Conv2d(
+                in_channels=500, out_channels=3, kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
+            ) # 3 * 1 * 1
 
     def forward(self, input_image):
         out = self.conv_1(input_image)

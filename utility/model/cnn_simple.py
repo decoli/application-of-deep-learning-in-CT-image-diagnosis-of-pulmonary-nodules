@@ -6,7 +6,7 @@ referenced
 Deep Learning for the Classification of Lung Nodules. He Yang.
 '''
 
-class CnnModel(nn.Module):
+class CnnSimple(nn.Module):
     def __init__(self, args):
         super().__init__()
         # input 1 * 50 * 50

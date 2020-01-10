@@ -12,22 +12,23 @@ import cv2
 import numpy as np
 import pandas as pd
 import torch
+import torch.nn.functional as nnf
 import torch.utils.data
 from sklearn.metrics import roc_auc_score, roc_curve
 from torch import nn, optim
-from torch.nn import functional as F
+from torch.nn import functional as nnf
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
 from visdom import Visdom
 
 # append sys.path
 sys.path.append(os.getcwd())
-from method.vae_bc_learning.model import CnnModel
 from utility.model.auto_encoding_variational import VAE
+from utility.model.cnn_simple import CnnSimple
 from utility.pre_processing import (cross_validation, get_coordinate,
                                     get_image_info, rate_validation)
-from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
-                            visdom_sp)
+from utility.visdom import (
+    visdom_acc, visdom_loss, visdom_roc_auc, visdom_se, visdom_sp)
 
 
 # define argument
@@ -131,6 +132,7 @@ class DatasetTrain():
 
         image = image.view(self.args.size_cutting, self.args.size_cutting)
         image = image.cpu().detach().numpy()
+        image = cv2.resize(image, (50, 50))
 
         if self.args.get_mid_product:
             path_image_mid_produc = os.path.join(
@@ -176,6 +178,7 @@ class DatasetTest():
         y_start = int(image_coordinate['coordinate_y'] - args.size_cutting / 2)
         y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
         image = image[x_start: x_end, y_start: y_end]
+        # image = cv2.resize(image, (50, 50))
         image = np.expand_dims(image, 0)
 
         # get the label
@@ -299,7 +302,8 @@ def test(model, model_vae, test_loader, epoch, args, visdom):
             # model predict
             data = model_vae(data)
             data = data[0]
-            data = data.view(data.shape[0], 1, args.size_cutting, args. size_cutting)
+            data = data.view(data.shape[0], 1, args.size_cutting, args.size_cutting)
+            data = nnf.interpolate(data, size=(50, 50), mode='bicubic', align_corners=False)
             prediction = model(data)
 
             # get loss
@@ -369,7 +373,7 @@ if __name__ == "__main__":
         )
 
     # model instance
-    model = CnnModel(args).to(args.device)
+    model = CnnSimple(args).to(args.device)
 
     # optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)

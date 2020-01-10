@@ -314,10 +314,8 @@ def test(model, model_vae, test_loader, epoch, args, visdom):
                 data = model_vae(data)
                 data = data[0]
                 data = data.view(data.shape[0], 1, args.size_cutting, args.size_cutting)
-                data = nnf.interpolate(data, size=(50, 50), mode='bicubic', align_corners=False)
 
-            else:
-                data = cv2.resize(data, (50, 50))
+            data = nnf.interpolate(data, size=(50, 50), mode='bicubic', align_corners=False)
             prediction = model(data)
 
             # get loss

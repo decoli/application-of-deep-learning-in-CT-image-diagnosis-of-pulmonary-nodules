@@ -40,7 +40,8 @@ def argument():
     parser.add_argument('--dimension-latent', type=int, default=20)
     parser.add_argument('--dir-image', type=str)
     parser.add_argument('--size-cutting', type=int, default=32)
-    parser.add_argument('--learning-rate', type=int, default=1e-4)
+    parser.add_argument('--rate-learning', type=float, default=1e-4)
+    parser.add_argument('--dropout', action='store_ture', default=False)
 
     parser.add_argument('--rate-train', default=0.8, type=float)
     parser.add_argument('--size-batch', type=int, default=128,
@@ -376,7 +377,7 @@ if __name__ == "__main__":
     model = CnnSimple(args).to(args.device)
 
     # optimizer
-    optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+    optimizer = optim.Adam(model.parameters(), lr=args.rate_learning)
 
     # criterion
     criterion = nn.CrossEntropyLoss()

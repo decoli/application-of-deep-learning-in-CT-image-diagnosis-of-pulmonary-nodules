@@ -9,8 +9,10 @@ Deep Learning for the Classification of Lung Nodules. He Yang.
 class CnnSimple(nn.Module):
     def __init__(self, args):
         super().__init__()
-        # input 1 * 50 * 50
 
+        self.args = args
+
+        # input 1 * 50 * 50
         self.conv_1 = nn.Conv2d(
             in_channels=1, out_channels=20, kernel_size=7, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros'
         ) # 20 * 44 * 44
@@ -50,6 +52,10 @@ class CnnSimple(nn.Module):
         out = self.pooling_3(out)
 
         out = F.relu(out)
+
+        if self.args.dropout:
+            out = F.dropout(out)
+
         out = self.conv_4(out)
 
         return out

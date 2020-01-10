@@ -162,7 +162,15 @@ class DatasetTrain():
             cv2.imwrite(path_image_mid_produc, image * 255)
         image = np.expand_dims(image, 0)
 
-        return image, label
+        if label == 0.5:
+            label = 1
+            label = np.array([label])
+            flag_bc = 1
+        else:
+            flag_bc = 0
+        flag_bc = np.array([flag_bc])
+
+        return image, label, flag_bc
 
 class DatasetTest():
     def __init__(self, args, list_data_set, model_vae=None):
@@ -273,7 +281,7 @@ def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, vis
     prediction_list = []
     label_list = []
 
-    for batch_idx, (data, label) in enumerate(train_loader):
+    for batch_idx, (data, label, flag_bc) in enumerate(train_loader):
         data = data.to(args.device, dtype=torch.float)
         label = label.to(args.device, dtype=torch.long)
 

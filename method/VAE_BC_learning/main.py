@@ -42,6 +42,7 @@ def argument():
     parser.add_argument('--size-cutting', type=int, default=32)
     parser.add_argument('--rate-learning', type=float, default=1e-4)
     parser.add_argument('--dropout', action='store_true', default=False)
+    parser.add_argument('--random-switch', action='store_true', default=False)
     parser.add_argument('--test-original', action='store_true', default=False)
 
     parser.add_argument('--rate-train', default=0.8, type=float)
@@ -107,22 +108,32 @@ class DatasetTrain():
             list_normal_distribution = random.sample(self.list_malignant, 2)
 
         # get list of mu, logvar
-        list_swich = []
-        list_swich_r = ['r'] * int(args.dimension_latent / 2)
-        list_swich_l = ['l'] * int(args.dimension_latent / 2)
-        list_swich.extend(list_swich_r)
-        list_swich.extend(list_swich_l)
-        random.shuffle(list_swich)
-
         list_mu = []
         list_logvar = []
-        for i, each_swich in enumerate(list_swich):
-            if each_swich == 'r':
-                list_mu.append(list_normal_distribution[0][0][i].cpu())
-                list_logvar.append(list_normal_distribution[0][1][i].cpu())
-            elif each_swich == 'l':
-                list_mu.append(list_normal_distribution[1][0][i].cpu())
-                list_logvar.append(list_normal_distribution[1][1][i].cpu())
+
+        if not self.args.random_switch:
+            list_swich = []
+            list_swich_r = ['r'] * int(args.dimension_latent / 2)
+            list_swich_l = ['l'] * int(args.dimension_latent / 2)
+            list_swich.extend(list_swich_r)
+            list_swich.extend(list_swich_l)
+            random.shuffle(list_swich)
+            for i, each_swich in enumerate(list_swich):
+                if each_swich == 'r':
+                    list_mu.append(list_normal_distribution[0][0][i].cpu())
+                    list_logvar.append(list_normal_distribution[0][1][i].cpu())
+                elif each_swich == 'l':
+                    list_mu.append(list_normal_distribution[1][0][i].cpu())
+                    list_logvar.append(list_normal_distribution[1][1][i].cpu())
+
+        elif self.args.random_switch:
+            for i in range(len(list_normal_distribution)):
+                if i % 2 == 0:
+                    list_mu.append(list_normal_distribution[0][0][i].cpu())
+                    list_logvar.append(list_normal_distribution[0][1][i].cpu())
+                elif i % 2 == 1:
+                    list_mu.append(list_normal_distribution[1][0][i].cpu())
+                    list_logvar.append(list_normal_distribution[1][1][i].cpu())
 
         # generate the image
         z = self.model_vae.reparameterize(

@@ -43,6 +43,7 @@ def argument():
     parser.add_argument('--rate-learning', type=float, default=1e-4)
     parser.add_argument('--dropout', action='store_true', default=False)
     parser.add_argument('--random-switch', action='store_true', default=False)
+    parser.add_argument('--between-class', action='store_true', default=False)
     parser.add_argument('--test-original', action='store_true', default=False)
 
     parser.add_argument('--rate-train', default=0.8, type=float)
@@ -98,7 +99,10 @@ class DatasetTrain():
 
     def __getitem__(self, idx):
         # get the label
-        label = random.choice([0, 1])
+        if self.args.between_class:
+            label = random.choice([0, 0.5, 1])
+        else:
+            label = random.choice([0, 1])
         label = np.array([label])
 
         # get the normal distribution parameter
@@ -106,6 +110,13 @@ class DatasetTrain():
             list_normal_distribution = random.sample(self.list_benign, 2)
         elif label == 1:
             list_normal_distribution = random.sample(self.list_malignant, 2)
+        elif label == 0.5:
+            list_normal_distribution = []
+            sample_benign = random.sample(self.list_benign, 1)
+            sample_malignant = random.sample(self.list_malignant, 1)
+
+            list_normal_distribution.append(sample_benign)
+            list_normal_distribution.append(sample_malignant)            
 
         # get list of mu, logvar
         list_mu = []

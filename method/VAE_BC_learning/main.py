@@ -127,7 +127,7 @@ class DatasetTrain():
                     list_logvar.append(list_normal_distribution[1][1][i].cpu())
 
         elif self.args.random_switch:
-            for i in range(len(list_normal_distribution)):
+            for i in range(len(self.args.dimension_latent)):
                 if i % 2 == 0:
                     list_mu.append(list_normal_distribution[0][0][i].cpu())
                     list_logvar.append(list_normal_distribution[0][1][i].cpu())

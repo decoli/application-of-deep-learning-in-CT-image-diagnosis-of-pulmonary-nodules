@@ -111,7 +111,7 @@ class DatasetTrain():
         list_mu = []
         list_logvar = []
 
-        if not self.args.random_switch:
+        if self.args.random_switch:
             list_swich = []
             list_swich_r = ['r'] * int(args.dimension_latent / 2)
             list_swich_l = ['l'] * int(args.dimension_latent / 2)
@@ -126,8 +126,8 @@ class DatasetTrain():
                     list_mu.append(list_normal_distribution[1][0][i].cpu())
                     list_logvar.append(list_normal_distribution[1][1][i].cpu())
 
-        elif self.args.random_switch:
-            for i in range(len(self.args.dimension_latent)):
+        elif not self.args.random_switch:
+            for i in range(self.args.dimension_laten):
                 if i % 2 == 0:
                     list_mu.append(list_normal_distribution[0][0][i].cpu())
                     list_logvar.append(list_normal_distribution[0][1][i].cpu())

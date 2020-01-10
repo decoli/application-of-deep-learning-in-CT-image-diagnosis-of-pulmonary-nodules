@@ -95,10 +95,7 @@ class DatasetTrain():
         return len(self.list_data_set)
 
     def __getitem__(self, idx):
-        image_current = self.list_data_set[idx]
-
         # get the label
-        # label = image_current[2].detach().numpy()
         label = random.choice([0, 1])
         label = np.array([label])
 
@@ -109,24 +106,24 @@ class DatasetTrain():
             list_normal_distribution = random.sample(self.list_malignant, 2)
 
         # get list of mu, logvar
+        list_swich = []
+        list_swich_r = ['r'] * int(args.dimension_latent / 2)
+        list_swich_l = ['l'] * int(args.dimension_latent / 2)
+        list_swich.extend(list_swich_r)
+        list_swich.extend(list_swich_l)
+        random.shuffle(list_swich)
+
         list_mu = []
         list_logvar = []
-
-        # method_02
-        for i in range(args.dimension_latent):
-            if i % 2 == 0:
+        for i, each_swich in enumerate(list_swich):
+            if each_swich == 'r':
                 list_mu.append(list_normal_distribution[0][0][i].cpu())
                 list_logvar.append(list_normal_distribution[0][1][i].cpu())
-            elif i % 2 == 1:
+            elif each_swich == 'l':
                 list_mu.append(list_normal_distribution[1][0][i].cpu())
                 list_logvar.append(list_normal_distribution[1][1][i].cpu())
 
-        # method_01
-        # list_mu.append(np.array(each_para[0][i].cpu()))
-        # list_logvar.append(np.array(each_para[1][i].cpu()))
-
         # generate the image
-        # z = self.model_vae.reparameterize(image_current[0], image_current[1])
         z = self.model_vae.reparameterize(
             torch.from_numpy(np.array(list_mu)), torch.from_numpy(np.array(list_logvar)))
         image = self.model_vae.decode(z.to(device=self.args.device))

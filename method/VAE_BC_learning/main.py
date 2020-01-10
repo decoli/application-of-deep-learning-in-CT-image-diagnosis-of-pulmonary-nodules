@@ -42,6 +42,7 @@ def argument():
     parser.add_argument('--size-cutting', type=int, default=32)
     parser.add_argument('--rate-learning', type=float, default=1e-4)
     parser.add_argument('--dropout', action='store_true', default=False)
+    parser.add_argument('--test-original', action='store_true', default=False)
 
     parser.add_argument('--rate-train', default=0.8, type=float)
     parser.add_argument('--size-batch', type=int, default=128,
@@ -298,10 +299,14 @@ def test(model, model_vae, test_loader, epoch, args, visdom):
             label = label.to(args.device, dtype= torch.long)
 
             # model predict
-            data = model_vae(data)
-            data = data[0]
-            data = data.view(data.shape[0], 1, args.size_cutting, args.size_cutting)
-            data = nnf.interpolate(data, size=(50, 50), mode='bicubic', align_corners=False)
+            if not args.test_original:
+                data = model_vae(data)
+                data = data[0]
+                data = data.view(data.shape[0], 1, args.size_cutting, args.size_cutting)
+                data = nnf.interpolate(data, size=(50, 50), mode='bicubic', align_corners=False)
+
+            else:
+                data = cv2.resize(data, (50, 50))
             prediction = model(data)
 
             # get loss

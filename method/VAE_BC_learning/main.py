@@ -102,17 +102,26 @@ class DatasetTrain():
 
         # get the normal distribution parameter
         if label == 0:
-            list_normal_distribution = random.sample(self.list_benign, self.args.dimension_latent)
+            list_normal_distribution = random.sample(self.list_benign, 2)
         elif label == 1:
-            list_normal_distribution = random.sample(self.list_malignant, self.args.dimension_latent)
+            list_normal_distribution = random.sample(self.list_malignant, 2)
 
         # get list of mu, logvar
         list_mu = []
         list_logvar = []
 
-        for i, each_para in enumerate(list_normal_distribution):
-            list_mu.append(np.array(each_para[0][i].cpu()))
-            list_logvar.append(np.array(each_para[1][i].cpu()))
+        # method_02
+        for i in range(args.dimension_latent):
+            if i % 2 == 0:
+                list_mu.append(list_normal_distribution[0][0][i].cpu())
+                list_logvar.append(list_normal_distribution[0][1][i].cpu())
+            elif i % 2 == 1:
+                list_mu.append(list_normal_distribution[1][0][i].cpu())
+                list_logvar.append(list_normal_distribution[1][1][i].cpu())
+
+        # method_01
+        # list_mu.append(np.array(each_para[0][i].cpu()))
+        # list_logvar.append(np.array(each_para[1][i].cpu()))
 
         # generate the image
         # z = self.model_vae.reparameterize(image_current[0], image_current[1])

@@ -1,6 +1,7 @@
 from torch import nn
 from torch.nn import functional as F
 
+
 class CnnModel(nn.Module):
     def __init__(self, args):
         super().__init__()

@@ -115,8 +115,8 @@ class DatasetTrain():
             sample_benign = random.sample(self.list_benign, 1)
             sample_malignant = random.sample(self.list_malignant, 1)
 
-            list_normal_distribution.append(sample_benign)
-            list_normal_distribution.append(sample_malignant)            
+            list_normal_distribution.append([sample_benign])
+            list_normal_distribution.append([sample_malignant])            
 
         # get list of mu, logvar
         list_mu = []

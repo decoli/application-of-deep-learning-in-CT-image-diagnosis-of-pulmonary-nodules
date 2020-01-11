@@ -76,10 +76,6 @@ def argument():
     # set random seed
     random.seed(args.seed)
 
-    # set dynamic switch
-    if args.dynamic_switch:
-        args.dynamic_switch_rate_se = 50
-
     return args
 
 # define data set
@@ -108,19 +104,8 @@ class DatasetTrain():
     def __getitem__(self, idx):
 
         # get the label
-        if not args.dynamic_switch:
-            label = random.choice([0, 1])
-            label = np.array([label])
-        else:
-            list_label = []
-            list_label_se = [1] * args.dynamic_switch_rate_se
-            list_label_sp = [0] * int(100 - args.dynamic_switch_rate_se)
-
-            list_label.extend(list_label_se)
-            list_label.extend(list_label_sp)
-
-            label = random.choice(list_label)
-            label = np.array([label])
+        label = random.choice([0, 1])
+        label = np.array([label])
 
         # get the normal distribution parameter
         if label == 0:
@@ -275,12 +260,6 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, vi
             visdom, epoch, sp, win='sp', name=visdom_name)
         visdom_roc_auc(
             visdom, epoch, roc_auc, win='roc_auc', name=visdom_name)
-    
-    if args.dynamic_switch:
-        if se > sp:
-            args.dynamic_switch_rate_se = args.dynamic_switch_rate_se - 2
-        elif se < sp:
-            args.dynamic_switch_rate_se = args.dynamic_switch_rate_se + 2
 
 def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, visdom):
 

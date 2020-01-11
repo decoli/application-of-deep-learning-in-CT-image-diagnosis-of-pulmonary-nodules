@@ -42,7 +42,9 @@ def argument():
     parser.add_argument('--size-cutting', type=int, default=32)
     parser.add_argument('--rate-learning', type=float, default=1e-4)
     parser.add_argument('--dropout', action='store_true', default=False)
+
     parser.add_argument('--random-switch', action='store_true', default=False)
+    parser.add_argument('--dynamic-switch', action='store_true', default=False)
     parser.add_argument('--between-class', action='store_true', default=False)
     parser.add_argument('--test-original', action='store_true', default=False)
 
@@ -65,11 +67,18 @@ def argument():
     parser.add_argument('--no-recombination', type=float, default=0)
 
     args = parser.parse_args()
-    cuda = not args.no_cuda and torch.cuda.is_available()
 
-    random.seed(args.seed)
+    # set device for pytorch
+    cuda = not args.no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if cuda else "cpu")
     args.device = device
+
+    # set random seed
+    random.seed(args.seed)
+
+    # set dynamic switch
+    if args.dynamic_switch:
+        args.dynamic_switch_rate_se = 50
 
     return args
 
@@ -97,9 +106,21 @@ class DatasetTrain():
         return len(self.list_data_set)
 
     def __getitem__(self, idx):
+
         # get the label
-        label = random.choice([0, 1])
-        label = np.array([label])
+        if not args.dynamic_switch:
+            label = random.choice([0, 1])
+            label = np.array([label])
+        else:
+            list_label = []
+            list_label_se = [1] * args.dynamic_switch_rate_se
+            list_label_sp = [0] * int(100 - args.dynamic_switch_rate_se)
+
+            list_label.extend(list_label_se)
+            list_label.extend(list_label_sp)
+
+            label = random.choice(list_label)
+            label = np.array([label])
 
         # get the normal distribution parameter
         if label == 0:
@@ -254,6 +275,12 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, vi
             visdom, epoch, sp, win='sp', name=visdom_name)
         visdom_roc_auc(
             visdom, epoch, roc_auc, win='roc_auc', name=visdom_name)
+    
+    if args.dynamic_switch:
+        if se > sp:
+            args.dynamic_switch_rate_se = args.dynamic_switch_rate_se - 2
+        elif se < sp:
+            args.dynamic_switch_rate_se = args.dynamic_switch_rate_se + 2
 
 def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, visdom):
 

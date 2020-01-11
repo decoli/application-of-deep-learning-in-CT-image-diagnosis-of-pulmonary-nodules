@@ -60,10 +60,9 @@ def argument():
     parser.add_argument('--num-cross', default=None, type=int)
     parser.add_argument('--use-cross', default=None, type=int)
 
-    parser.add_argument('--rate-bc-class', type=float, default=0)
     parser.add_argument('--visdom', action='store_true', default=False)
-
     parser.add_argument('--get-mid-product', action='store_true', default=False)
+    parser.add_argument('--no-recombination', type=float, default=0)
 
     args = parser.parse_args()
     cuda = not args.no_cuda and torch.cuda.is_available()
@@ -99,10 +98,7 @@ class DatasetTrain():
 
     def __getitem__(self, idx):
         # get the label
-        if self.args.between_class:
-            label = random.choice([0, 0.5, 1])
-        else:
-            label = random.choice([0, 1])
+        label = random.choice([0, 1])
         label = np.array([label])
 
         # get the normal distribution parameter
@@ -162,15 +158,7 @@ class DatasetTrain():
             cv2.imwrite(path_image_mid_produc, image * 255)
         image = np.expand_dims(image, 0)
 
-        if label == 0.5:
-            label = 1
-            label = np.array([label])
-            flag_bc = 1
-        else:
-            flag_bc = 0
-        flag_bc = np.array([flag_bc])
-
-        return image, label, flag_bc
+        return image, label
 
 class DatasetTest():
     def __init__(self, args, list_data_set, model_vae=None):
@@ -281,7 +269,7 @@ def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, vis
     prediction_list = []
     label_list = []
 
-    for batch_idx, (data, label, flag_bc) in enumerate(train_loader):
+    for batch_idx, (data, label) in enumerate(train_loader):
         data = data.to(args.device, dtype=torch.float)
         label = label.to(args.device, dtype=torch.long)
 

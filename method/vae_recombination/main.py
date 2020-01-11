@@ -362,8 +362,8 @@ if __name__ == "__main__":
         list_train, list_test = rate_validation(args, list_info_image)
 
     #### get mu and logvar
-    from method.vae_bc_learning.get_mu_and_logvar import Dataset
-    from method.vae_bc_learning.get_mu_and_logvar import get_mu_and_logvar
+    from method.vae_recombination.get_mu_and_logvar import Dataset
+    from method.vae_recombination.get_mu_and_logvar import get_mu_and_logvar
 
     data_set = Dataset(args, model_vae, list_train)
     size_batch_get_mu_and_logvar = 1024

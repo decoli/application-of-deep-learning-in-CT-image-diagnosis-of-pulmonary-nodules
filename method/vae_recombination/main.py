@@ -413,7 +413,7 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss()
 
     # visdom instance
-    env = 'vae_bc_learning'
+    env = 'vae_recombination'
     if args.visdom:
         visdom = Visdom(
             env=env)

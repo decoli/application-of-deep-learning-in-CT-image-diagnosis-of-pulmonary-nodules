@@ -13,3 +13,4 @@ data/test/*
 !.gitkeep
 method/vae_bc_learning/test/*
 !.gitkeep
+.python-version

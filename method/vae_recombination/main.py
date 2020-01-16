@@ -275,9 +275,9 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, vi
             visdom, epoch, roc_auc, win='roc_auc', name=visdom_name)
 
     if args.dynamic_train_set:
-        if se - sp > 0.3:
+        if se - sp > 0.03:
             args.train_set_se = args.train_set_se - 1
-        if sp - se > 0.3:
+        if sp - se > 0.03:
             args.train_set_sp = args.train_set_sp - 1
 
 def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, visdom):

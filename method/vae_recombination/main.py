@@ -44,7 +44,7 @@ def argument():
     parser.add_argument('--dropout', action='store_true', default=False)
 
     parser.add_argument('--random-switch', action='store_true', default=False)
-    parser.add_argument('--dynamic-switch', action='store_true', default=False)
+    parser.add_argument('--dynamic-train-set', action='store_true', default=False)
     parser.add_argument('--between-class', action='store_true', default=False)
     parser.add_argument('--test-original', action='store_true', default=False)
 
@@ -76,6 +76,10 @@ def argument():
     # set random seed
     random.seed(args.seed)
 
+    # set train set rate
+    args.train_set_se = 50
+    args.train_set_sp = 50
+
     return args
 
 # define data set
@@ -104,8 +108,17 @@ class DatasetTrain():
     def __getitem__(self, idx):
 
         # get the label
-        label = random.choice([0, 1])
-        label = np.array([label])
+        if not self.args.dynamic_train_set:
+            label = random.choice([0, 1])
+            label = np.array([label])
+        else:
+            label_se = [1] * self.args.train_set_se
+            label_sp = [0] * self.args.train_set_sp
+            label = []
+            label.extend(label_se)
+            label.extend(label_sp)
+            label = random_switch.choice(label)
+            label = np.array([label])
 
         # get the normal distribution parameter
         if label == 0:
@@ -260,6 +273,12 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, vi
             visdom, epoch, sp, win='sp', name=visdom_name)
         visdom_roc_auc(
             visdom, epoch, roc_auc, win='roc_auc', name=visdom_name)
+
+    if args.dynamic_train_set:
+        if se - sp > 5:
+            args.train_set_se = args.train_set_se - 1
+        if sp - se > 5:
+            args.train_set_sp = args.train_set_sp - 1
 
 def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, visdom):
 

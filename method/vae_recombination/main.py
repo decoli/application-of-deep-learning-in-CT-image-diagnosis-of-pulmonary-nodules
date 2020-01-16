@@ -112,8 +112,8 @@ class DatasetTrain():
             label = random.choice([0, 1])
             label = np.array([label])
         else:
-            label_se = [1] * self.args.train_set_se
-            label_sp = [0] * self.args.train_set_sp
+            label_se = [1] * args.train_set_se # universal args
+            label_sp = [0] * args.train_set_sp # universal args
             label = []
             label.extend(label_se)
             label.extend(label_sp)

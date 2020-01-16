@@ -283,8 +283,8 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, vi
             args.train_set_sp = args.train_set_sp - 1
         print('se: {se}'.format(se=se))
         print('sp: {sp}'.format(sp=sp))
-        print('train_set_se: {train_set_se}'.format(train_set_se=train_set_se))
-        print('train_set_sp: {train_set_sp}'.format(train_set_sp=train_set_sp))
+        print('train_set_se: {train_set_se}'.format(train_set_se=args.train_set_se))
+        print('train_set_sp: {train_set_sp}'.format(train_set_sp=args.train_set_sp))
 
 def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, visdom):
 

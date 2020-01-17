@@ -226,7 +226,7 @@ class DatasetTest():
 
         return image, label
 
-def log_batch(prediction, label, loss_batch, loss, tp, fn, fp, tn, prediction_list, label_list):
+def log_batch(prediction, label, loss_batch, loss, tp, fn, fp, tn, prediction_list, label_list, type_batch):
     prediction = nn.functional.softmax(prediction, dim=1)
 
     # append probability list
@@ -250,7 +250,7 @@ def log_batch(prediction, label, loss_batch, loss, tp, fn, fp, tn, prediction_li
     loss = loss + loss_batch
     return loss, tp, fn, fp, tn, prediction_list, label_list
 
-def log_epoch(epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, visdom, visdom_name):
+def log_epoch(epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, visdom, visdom_name, type_epoch):
     count_sample = tp + fn + fp + tn
 
     acc = (tp + tn) / count_sample
@@ -274,7 +274,7 @@ def log_epoch(epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, vi
         visdom_roc_auc(
             visdom, epoch, roc_auc, win='roc_auc', name=visdom_name)
 
-    if args.dynamic_train_set:
+    if (args.dynamic_train_set) and (type_epoch == 'train'):
         if se - sp > 0.03:
             args.train_set_se = args.train_set_se - 1
             args.train_set_sp = args.train_set_sp + 1
@@ -321,11 +321,11 @@ def train(model, model_vae, optimizer, criterion, train_loader, epoch, args, vis
 
         # log for each batch
         loss, tp, fn, fp, tn, prediction_list, label_list = log_batch(
-            prediction, label, loss, loss_batch, tp, fn, fp, tn, prediction_list, label_list)
+            prediction, label, loss, loss_batch, tp, fn, fp, tn, prediction_list, label_list, type_batch='batch')
 
     # log for each epoch
     log_epoch(
-        epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, visdom, visdom_name='train')
+        epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, visdom, visdom_name='train', type_epoch='train')
 
 def test(model, model_vae, test_loader, epoch, args, visdom):
 
@@ -363,11 +363,11 @@ def test(model, model_vae, test_loader, epoch, args, visdom):
 
             # log for each batch
             loss, tp, fn, fp, tn, prediction_list, label_list = log_batch(
-                prediction, label, loss, loss_batch, tp, fn, fp, tn, prediction_list, label_list)
+                prediction, label, loss, loss_batch, tp, fn, fp, tn, prediction_list, label_list, type_batch='test')
 
     # log for each epoch
     log_epoch(
-        epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, visdom, visdom_name='test')
+        epoch, loss, tp, fn, fp, tn, args, prediction_list, label_list, visdom, visdom_name='test', type_epoch='test')
 
 if __name__ == "__main__":
     # get argument

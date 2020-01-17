@@ -227,6 +227,27 @@ class DatasetTest():
 
         return image, label
 
+def count_sample(list_sample, type_sample):
+    count_benign = 0
+    count_malignant = 0
+
+    for each_sample in list_sample:
+        if each_sample['class'] == 0:
+            count_benign = count_benign + 1
+        elif each_sample['class'] == 1:
+            count_malignant = count_malignant + 1
+
+    print(
+        '---{type_sample}---\n'
+        '---number of benign samples: {count_benign}\n'
+        '---number of malignant samples: {count_malignant}\n'
+        .format(
+            type_sample=type_sample,
+            count_benign=count_benign,
+            count_malignant=count_malignant,
+            )
+        )
+
 def log_batch(prediction, label, loss_batch, loss, tp, fn, fp, tn, prediction_list, label_list, type_batch):
     prediction = nn.functional.softmax(prediction, dim=1)
 
@@ -392,6 +413,10 @@ if __name__ == "__main__":
         list_train, list_test = cross_validation(args, list_info_image)
     else:
         list_train, list_test = rate_validation(args, list_info_image)
+
+    # count sample
+    count_sample(list_train, 'train')
+    count_sample(list_test, 'test')
 
     #### get mu and logvar
     from method.vae_recombination.get_mu_and_logvar import Dataset

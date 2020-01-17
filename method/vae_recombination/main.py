@@ -44,6 +44,7 @@ def argument():
     parser.add_argument('--dropout', action='store_true', default=False)
 
     parser.add_argument('--random-switch', action='store_true', default=False)
+    parser.add_argument('--multiple-train-set', type=int, default=1)
     parser.add_argument('--dynamic-train-set', action='store_true', default=False)
     parser.add_argument('--between-class', action='store_true', default=False)
     parser.add_argument('--test-original', action='store_true', default=False)
@@ -103,7 +104,7 @@ class DatasetTrain():
         self.model_vae = model_vae
 
     def __len__(self):
-        return len(self.list_data_set)
+        return len(self.list_data_set) * self.args.multiple_train_set
 
     def __getitem__(self, idx):
 

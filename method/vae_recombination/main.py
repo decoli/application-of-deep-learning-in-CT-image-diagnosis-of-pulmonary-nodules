@@ -232,9 +232,9 @@ def count_sample(list_sample, type_sample):
     count_malignant = 0
 
     for each_sample in list_sample:
-        if each_sample['class'] == 0:
+        if each_sample['class'] == 1: # opposite ?
             count_benign = count_benign + 1
-        elif each_sample['class'] == 1:
+        elif each_sample['class'] == 0: # opposite ?
             count_malignant = count_malignant + 1
 
     print(

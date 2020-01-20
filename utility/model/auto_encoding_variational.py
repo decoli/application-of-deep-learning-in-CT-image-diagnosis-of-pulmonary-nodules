@@ -276,3 +276,4 @@ if __name__ == "__main__":
                 path_sample)
     
     torch.save(model.state_dict(), args.path_save_model)
+    print('model saved: {path_save_model}'.format(path_save_model=args.path_save_model))

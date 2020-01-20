@@ -256,11 +256,11 @@ def get_image_from_decoder(args, device, list_test):
 
     image = image[x_start: x_end, y_start: y_end]
 
-    # save the iriginal image
+    # save the original image
     path_image_original = os.path.join(
-        os.getcwd(), 'test', 'image_original{format_image}'.format(format_image='.png')
+        os.getcwd(),'method', 'vae_recombination', 'test', 'image_original{format_image}'.format(format_image='.png')
     )
-    cv2.imwrite(path_image_original, image)
+    cv2.imwrite(path_image_original, image * 255)
     print(
         'original image saved: {path_image_original}'
         .format(path_image_original=path_image_original)
@@ -279,9 +279,9 @@ def get_image_from_decoder(args, device, list_test):
     image_decoder = image_decoder.cpu().detach().numpy()
 
     path_image_decoder = os.path.join(
-        os.getcwd(), 'test', 'image_decoder{format_image}'.format(format_image='.png')
+        os.getcwd(),'method', 'vae_recombination', 'test', 'image_decoder{format_image}'.format(format_image='.png')
     )
-    cv2.imwrite(path_image_decoder, image_decoder)
+    cv2.imwrite(path_image_decoder, image_decoder * 255)
     print(
         'decoder image saved: {path_image_decoder}'
         .format(path_image_decoder=path_image_decoder)

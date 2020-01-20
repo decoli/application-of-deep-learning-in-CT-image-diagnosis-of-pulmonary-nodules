@@ -62,6 +62,7 @@ def argument():
     parser.add_argument('--path-save-model', default=os.path.join(os.getcwd(), 'data/model/model_vae.pt'), type=str,
         help='set the path of model to save')
 
+    parser.add_argument('--path-image-input', type=str)
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -215,30 +216,6 @@ def train(model, train_loader, epoch, device, args):
     print('====> Epoch: {} Average loss: {:.4f}'.format(
           epoch, train_loss / len(train_loader.dataset)))
 
-def test(model, test_loader, epoch, device, args):
-    model.eval()
-    test_loss = 0
-    with torch.no_grad():
-        for i, data in enumerate(test_loader):
-            data = data.to(device, dtype= torch.float)
-            recon_batch, mu, logvar = model(data)
-            test_loss += loss_function(recon_batch, data, mu, logvar, args).item()
-            if i == 0:
-                n = min(data.size(0), 8)
-                comparison = torch.cat([data[:n],
-                                      recon_batch.view(data.shape[0], 1, args.size_cutting, args.size_cutting)[:n]])
-
-                path_reconstruction = os.path.join(
-                    os.getcwd(), 'test', 'reconstruction_{epoch_format}'.format(epoch_format=str(epoch) + '.png'))
-
-                save_image(
-                    comparison.cpu(),
-                    path_reconstruction,
-                    nrow=n)
-
-    test_loss /= len(test_loader.dataset)
-    print('====> Test set loss: {:.4f}'.format(test_loss))
-
 if __name__ == "__main__":
     # get argument
     args, device, kwargs = argument()
@@ -277,6 +254,5 @@ if __name__ == "__main__":
 
     for epoch in range(1, args.epoch + 1):
         train(model, train_loader, epoch, device, args)
-        test(model, test_loader, epoch, device, args)
     
     torch.save(model.state_dict(), args.path_save_model)

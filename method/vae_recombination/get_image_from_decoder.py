@@ -229,7 +229,7 @@ def test(model, test_loader, epoch, device, args):
                                       recon_batch.view(data.shape[0], 1, args.size_cutting, args.size_cutting)[:n]])
 
                 path_reconstruction = os.path.join(
-                    os.getcwd(), 'utility', 'test', 'reconstruction_{epoch_format}'.format(epoch_format=str(epoch) + '.png'))
+                    os.getcwd(), 'test', 'reconstruction_{epoch_format}'.format(epoch_format=str(epoch) + '.png'))
 
                 save_image(
                     comparison.cpu(),

@@ -41,7 +41,7 @@ def argument():
     parser = argparse.ArgumentParser(description='VAE for utility')
     parser.add_argument('--path-input', default=None)
     parser.add_argument('--dir-image', type=str)
-    parser.add_argument('--size-cutting', type=int, default=28)
+    parser.add_argument('--size-cutting', type=int, default=32)
     parser.add_argument('--dimension-latent', type=int, default=20)
 
     parser.add_argument('--size-batch', type=int, default=128, metavar='N',
@@ -64,7 +64,10 @@ def argument():
 
     parser.add_argument('--get-image-from-decoder', action='store_true', default=False)
     parser.add_argument('--path-load-model', type=str, default=None)
-    parser.add_argument('--path-image-input', type=str, default=None)
+
+    # set the number within the 'test set'
+    # feed the vae model with the image seleceted by the number
+    parser.add_argument('--number-image-input', type=int, default=None)
 
     args = parser.parse_args()
 
@@ -220,19 +223,58 @@ def train(model, train_loader, epoch, device, args):
     print('====> Epoch: {} Average loss: {:.4f}'.format(
           epoch, train_loss / len(train_loader.dataset)))
 
-def get_image_from_decoder(args, list_test):
-    # print the image of 'test set'
-    print('you can input images below:')
-    for each_test_image in list_test:
-        print(each_test_image)
-
+def get_image_from_decoder(args, device, list_test):
     # load the vae model
     model_vae = VAE(args)
     model_vae.load_state_dict(torch.load(args.path_load_model))
-    model_vae.to(args.device)
+    model_vae.to(device)
 
-    # get the info of the image of input
-    
+    # get image path
+    image_current = list_test[args.number_image_input]
+    image_coordinate = get_coordinate(image_current)
+
+    name_subset = os.path.basename(
+        os.path.dirname(image_current['path_seriesuid_folder'])
+        ).split('_')[0] + '_tiff'
+    image_index = int(image_coordinate['coordinate_z'])
+
+    path_image = os.path.join(
+        args.dir_image,
+        name_subset,
+        image_current['seriesuid'],
+        'whole_image',
+        'whole_{image_index}.tiff'.format(image_index=image_index)
+        )
+    image = cv2.imread(path_image, flags=2)
+    image = image / 255
+
+    # cut the image
+    x_start = int(image_coordinate['coordinate_x'] - args.size_cutting / 2)
+    x_end = int(image_coordinate['coordinate_x'] + args.size_cutting / 2)
+    y_start = int(image_coordinate['coordinate_y'] - args.size_cutting / 2)
+    y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
+
+    image = image[x_start: x_end, y_start: y_end]
+
+    # save the iriginal image
+    path_image_original = os.path.join(
+        os.getcwd(), 'test', 'image_original{format_image}'.format(format_image='.png')
+    )
+    cv2.imwrite(path_image_original, image)
+
+    # feed the VAE image with the seleceted image
+    image = np.expand_dims(image, 0)
+    image = np.expand_dims(image, 0)
+    image = torch.Tensor(image)
+    image.to(device)
+
+    image_decoder = model_vae(image)
+
+    # save the image from decoder of VAE
+    path_image_decoder = os.path.join(
+        os.getcwd(), 'test', 'image_decoder{format_image}'.format(format_image='.png')
+    )
+    cv2.imwrite(image_decoder)
 
 if __name__ == "__main__":
     # get argument
@@ -270,8 +312,11 @@ if __name__ == "__main__":
         torch.save(model.state_dict(), args.path_save_model)
 
     else:
-        if not args.path_image_input:
-            print('[--path-image-input]: input the path of image to encoder and decoder.')
+        if not args.number_image_input:
+            print(
+                '[--number-image-input]: set the number within the "test set".\n'
+                'feed the vae model with the image seleceted by the number.'
+                )
             sys.exit()
 
-        get_image_from_decoder(args, list_test)
+        get_image_from_decoder(args, device, list_test)

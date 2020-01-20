@@ -45,7 +45,7 @@ def argument():
     parser.add_argument('--num-cross', default=None, type=int)
     parser.add_argument('--use-cross', default=None, type=int)
 
-    parser.add_argument('--path-save-model', default=os.path.join(os.getcwd(), 'utility/model/model_vae.pt'), type=str,
+    parser.add_argument('--path-save-model', default=os.path.join(os.getcwd(), 'data/model/model_vae.pt'), type=str,
         help='set the path of model to save')
 
     args = parser.parse_args()

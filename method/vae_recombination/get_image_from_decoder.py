@@ -227,7 +227,7 @@ def get_image_from_decoder(args, device, list_test):
     # load the vae model
     model_vae = VAE(args)
     model_vae.load_state_dict(torch.load(args.path_load_model))
-    model_vae.to(device)
+    model_vae = model_vae.to(device)
 
     # get image path
     image_current = list_test[args.number_image_input]
@@ -261,20 +261,31 @@ def get_image_from_decoder(args, device, list_test):
         os.getcwd(), 'test', 'image_original{format_image}'.format(format_image='.png')
     )
     cv2.imwrite(path_image_original, image)
+    print(
+        'original image saved: {path_image_original}'
+        .format(path_image_original=path_image_original)
+    )
 
     # feed the VAE image with the seleceted image
     image = np.expand_dims(image, 0)
     image = np.expand_dims(image, 0)
     image = torch.Tensor(image)
-    image.to(device)
+    image = image.to(device)
 
-    image_decoder = model_vae(image)
+    image_decoder = model_vae(image)[0]
 
     # save the image from decoder of VAE
+    image_decoder = image_decoder.view(args.size_cutting, args.size_cutting)
+    image_decoder = image_decoder.cpu().detach().numpy()
+
     path_image_decoder = os.path.join(
         os.getcwd(), 'test', 'image_decoder{format_image}'.format(format_image='.png')
     )
-    cv2.imwrite(image_decoder)
+    cv2.imwrite(path_image_decoder, image_decoder)
+    print(
+        'decoder image saved: {path_image_decoder}'
+        .format(path_image_decoder=path_image_decoder)
+    )
 
 if __name__ == "__main__":
     # get argument
@@ -319,4 +330,6 @@ if __name__ == "__main__":
                 )
             sys.exit()
 
+        print('------')
         get_image_from_decoder(args, device, list_test)
+        print('------')

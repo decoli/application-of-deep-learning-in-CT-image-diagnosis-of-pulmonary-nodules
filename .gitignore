@@ -16,3 +16,5 @@ method/vae_bc_learning/test/*
 .python-version
 data/image/*
 method/vae_recombination/test/*
+utility/model/test/*
+!.gitkeep

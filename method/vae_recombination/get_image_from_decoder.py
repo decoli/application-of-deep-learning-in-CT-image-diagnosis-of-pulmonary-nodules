@@ -44,7 +44,6 @@ def argument():
     parser.add_argument('--size-cutting', type=int, default=28)
     parser.add_argument('--dimension-latent', type=int, default=20)
 
-    parser.add_argument('--rate-train', default=0.8, type=float)
     parser.add_argument('--size-batch', type=int, default=128, metavar='N',
         help='input batch size for train (default: 128)')
     parser.add_argument('--epoch', type=int, default=10, metavar='N',
@@ -60,7 +59,7 @@ def argument():
     parser.add_argument('--num-cross', default=None, type=int)
     parser.add_argument('--use-cross', default=None, type=int)
 
-    parser.add_argument('--path-save-model', default=os.path.join(os.getcwd(), 'utility/model/model_vae.pt'), type=str,
+    parser.add_argument('--path-save-model', default=os.path.join(os.getcwd(), 'data/model/model_vae.pt'), type=str,
         help='set the path of model to save')
 
     args = parser.parse_args()

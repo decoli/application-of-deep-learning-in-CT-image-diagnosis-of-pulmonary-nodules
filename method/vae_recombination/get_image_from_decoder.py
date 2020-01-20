@@ -62,8 +62,12 @@ def argument():
     parser.add_argument('--path-save-model', default=os.path.join(os.getcwd(), 'data/model/model_vae.pt'), type=str,
         help='set the path of model to save')
 
-    parser.add_argument('--path-image-input', type=str)
+    parser.add_argument('--get-image-from-decoder', action='store_true', default=False)
+    parser.add_argument('--path-load-model', type=str, default=None)
+    parser.add_argument('--path-image-input', type=str, default=None)
+
     args = parser.parse_args()
+
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
     # torch.manual_seed(args.seed)
@@ -216,6 +220,20 @@ def train(model, train_loader, epoch, device, args):
     print('====> Epoch: {} Average loss: {:.4f}'.format(
           epoch, train_loss / len(train_loader.dataset)))
 
+def get_image_from_decoder(args, list_test):
+    # print the image of 'test set'
+    print('you can input images below:')
+    for each_test_image in list_test:
+        print(each_test_image)
+
+    # load the vae model
+    model_vae = VAE(args)
+    model_vae.load_state_dict(torch.load(args.path_load_model))
+    model_vae.to(args.device)
+
+    # get the info of the image of input
+    
+
 if __name__ == "__main__":
     # get argument
     args, device, kwargs = argument()
@@ -231,28 +249,29 @@ if __name__ == "__main__":
     else:
         list_train, list_test = rate_validation(args, list_info_image)
 
-    # define date loader
-    data_set_train = DatasetTrain(list_train, args)
-    data_set_test = DatasetTest(list_test, args)
+    if not args.get_image_from_decoder:
+        # define date loader
+        data_set_train = DatasetTrain(list_train, args)
 
-    train_loader = torch.utils.data.DataLoader(
-        data_set_train,
-        batch_size=args.size_batch,
-        shuffle=True,
-        **kwargs,
-        )
-    test_loader = torch.utils.data.DataLoader(
-        data_set_test,
-        batch_size=args.size_batch,
-        shuffle=True,
-        **kwargs,
-        )
+        train_loader = torch.utils.data.DataLoader(
+            data_set_train,
+            batch_size=args.size_batch,
+            shuffle=True,
+            **kwargs,
+            )
 
-    # model instance
-    model = VAE(args).to(device)
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+        # model instance
+        model = VAE(args).to(device)
+        optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
-    for epoch in range(1, args.epoch + 1):
-        train(model, train_loader, epoch, device, args)
-    
-    torch.save(model.state_dict(), args.path_save_model)
+        for epoch in range(1, args.epoch + 1):
+            train(model, train_loader, epoch, device, args)
+        
+        torch.save(model.state_dict(), args.path_save_model)
+
+    else:
+        if not args.path_image_input:
+            print('[--path-image-input]: input the path of image to encoder and decoder.')
+            sys.exit()
+
+        get_image_from_decoder(args, list_test)

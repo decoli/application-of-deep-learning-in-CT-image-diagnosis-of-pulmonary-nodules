@@ -149,13 +149,12 @@ if __name__ == "__main__":
     path_model_vae = os.path.join(os.getcwd(), args.path_model_vae)
     model_vae = VAE(args)
 
-    # if torch.cuda.is_available():
-    #     model_vae.load_state_dict(torch.load(path_model_vae))
-    # else:
-    #     model_vae.load_state_dict(
-    #         torch.load(path_model_vae,  map_location=torch.device('cpu')))
-
-    torch.load(path_model_vae,  map_location=torch.device('cpu'))
+    if torch.cuda.is_available():
+        model_vae.load_state_dict(
+            torch.load(path_model_vae))
+    else:
+        model_vae.load_state_dict(
+            torch.load(path_model_vae, map_location=torch.device('cpu')))
 
     # get image info
     info_luna16 = pd.read_csv(args.path_input, index_col=0)

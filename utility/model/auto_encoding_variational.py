@@ -47,6 +47,7 @@ def argument():
 
     parser.add_argument('--path-save-model', default=os.path.join(os.getcwd(), 'data/model/model_vae.pt'), type=str,
         help='set the path of model to save')
+    parser.add_argument('--epoch-save-point', type=int, default=None, nargs='+')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -274,7 +275,32 @@ if __name__ == "__main__":
             save_image(
                 sample.view(64, 1, int(args.size_cutting), int(args.size_cutting)),
                 path_sample)
-    
+
+        # model save point
+        if args.epoch_save_point:
+            if epoch in args.epoch_save_point:
+                name_model = 'model_vae_random_{seed}_cross_{use_cross}_epoch_{epoch}{format_model}'.format(
+                    seed=args.seed,
+                    use_cross=args.use_cross,
+                    epoch=epoch,
+                    format_model='.pt',
+                )
+                path_save_model = os.path.join(
+                    os.getcwd(), 'data', 'model', name_model)
+
+                torch.save(model.state_dict(), path_save_model)
+                print(
+                    '------\n'
+                    'model saved: {path_save_model}\n'
+                    'use cross: {use_cross}\n'
+                    'epoch: {epoch}'
+                    .format(
+                        path_save_model=path_save_model,
+                        use_cross=args.use_cross,
+                        epoch=epoch,
+                        )
+                    )
+
     torch.save(model.state_dict(), args.path_save_model)
     print(
         '------\n'

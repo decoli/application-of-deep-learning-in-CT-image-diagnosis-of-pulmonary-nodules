@@ -1,6 +1,6 @@
 '''
 get the image from devoder of different epoch
-original image set is 'train set'
+original image set is 'train set' or 'test set'
 
 step.1
 train the vae model. (set the epoch)
@@ -9,7 +9,7 @@ model path:
 data\\model\\model_vae_random_*_cross_*_epoch_*.pt
 
 step.2
-select the image from 'train set' (important)
+select the image from 'train set' or 'test set' (important)
 feed the vae and get the image from the decoder.
 '''
 
@@ -32,6 +32,7 @@ from torchvision.utils import save_image
 
 #d append sys.path
 sys.path.append(os.getcwd())
+from utility.model.auto_encoding_variational import VAE
 from utility.pre_processing import (cross_validation, get_coordinate,
                                     get_image_info, rate_validation)
 
@@ -44,11 +45,6 @@ def argument():
     parser.add_argument('--size-cutting', type=int, default=32)
     parser.add_argument('--dimension-latent', type=int, default=20)
 
-    parser.add_argument('--size-batch', type=int, default=128, metavar='N',
-        help='input batch size for train (default: 128)')
-    parser.add_argument('--epoch', type=int, default=10, metavar='N',
-        help='number of epoch to train (default: 10)')
-
     parser.add_argument('--no-cuda', action='store_true', default=False,
         help='enables CUDA train')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
@@ -59,15 +55,11 @@ def argument():
     parser.add_argument('--num-cross', default=None, type=int)
     parser.add_argument('--use-cross', default=None, type=int)
 
-    parser.add_argument('--path-save-model', default=os.path.join(os.getcwd(), 'data/model/model_vae.pt'), type=str,
-        help='set the path of model to save')
-
-    parser.add_argument('--get-image-from-decoder', action='store_true', default=False)
-    parser.add_argument('--path-load-model', type=str, default=None)
-
     # set the number within the 'test set'
     # feed the vae model with the image seleceted by the number
     parser.add_argument('--number-image-input', type=int, default=None)
+    parser.add_argument('--path-load-model', type=str, default=None)
+    parser.add_argument('--set-for-decoder', type=str, required=True, default=None)
 
     args = parser.parse_args()
 
@@ -80,157 +72,32 @@ def argument():
 
     return args, device, kwargs
 
-# define class 
-class VAE(nn.Module):
-    def __init__(self, args):
-        super(VAE, self).__init__()
-
-        image_pixel = int(args.size_cutting * args.size_cutting)
-
-        self.fc1 = nn.Linear(image_pixel, 400)
-        self.fc21 = nn.Linear(400, args.dimension_latent)
-        self.fc22 = nn.Linear(400, args.dimension_latent)
-        self.fc3 = nn.Linear(args.dimension_latent, 400)
-        self.fc4 = nn.Linear(400, image_pixel)
-
-        self.args = args
-
-    def encode(self, x):
-        h1 = F.relu(self.fc1(x))
-        return self.fc21(h1), self.fc22(h1)
-
-    def reparameterize(self, mu, logvar):
-        std = torch.exp(0.5*logvar)
-        eps = torch.randn_like(std)
-        return mu + eps*std
-
-    def decode(self, z):
-        h3 = F.relu(self.fc3(z))
-        return torch.sigmoid(self.fc4(h3))
-
-    def forward(self, x):
-        mu, logvar = self.encode(x.view(-1, self.args.size_cutting * self.args.size_cutting))
-        z = self.reparameterize(mu, logvar)
-        return self.decode(z), mu, logvar
-
-# Reconstruction + KL divergence losses summed over all elements and batch
-def loss_function(recon_x, x, mu, logvar, args):
-    BCE = F.binary_cross_entropy(recon_x, x.view(-1, args.size_cutting * args.size_cutting), reduction='sum')
-
-    # see Appendix B from VAE paper:
-    # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
-    # https://arxiv.org/abs/1312.6114
-    # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-
-    return BCE + KLD
-
-# define data set
-class DatasetTrain():
-    def __init__(self, list_data_set, args):
-        self.list_data_set = list_data_set
-        self.args = args
-
-    def __len__(self):
-        return len(self.list_data_set)
-
-    def __getitem__(self, idx):
-        image_current = self.list_data_set[idx]
-        image_coordinate = get_coordinate(image_current)
-
-        # get image path
-        name_subset = os.path.basename(
-            os.path.dirname(image_current['path_seriesuid_folder'])
-            ).split('_')[0] + '_tiff'
-        image_index = int(image_coordinate['coordinate_z'])
-
-        path_image = os.path.join(
-            self.args.dir_image,
-            name_subset,
-            image_current['seriesuid'],
-            'whole_image',
-            'whole_{image_index}.tiff'.format(image_index=image_index)
-            )
-        image = cv2.imread(path_image, flags=2)
-        image = image / 255
-
-        # cut the image
-        x_start = int(image_coordinate['coordinate_x'] - self.args.size_cutting / 2)
-        x_end = int(image_coordinate['coordinate_x'] + self.args.size_cutting / 2)
-        y_start = int(image_coordinate['coordinate_y'] - self.args.size_cutting / 2)
-        y_end = int(image_coordinate['coordinate_y'] + self.args.size_cutting / 2)
-
-        image = image[x_start: x_end, y_start: y_end]
-        image = np.expand_dims(image, 0)
-        return image
-
-class DatasetTest():
-    def __init__(self, list_data_set, args):
-        self.list_data_set = list_data_set
-        self.args = args
-
-    def __len__(self):
-        return len(self.list_data_set)
-
-    def __getitem__(self, idx):
-        image_current = self.list_data_set[idx]
-        image_coordinate = get_coordinate(image_current)
-
-        # get image path
-        name_subset = os.path.basename(
-            os.path.dirname(image_current['path_seriesuid_folder'])
-            ).split('_')[0] + '_tiff'
-        image_index = int(image_coordinate['coordinate_z'])
-
-        path_image = os.path.join(
-            self.args.dir_image,
-            name_subset,
-            image_current['seriesuid'],
-            'whole_image',
-            'whole_{image_index}.tiff'.format(image_index=image_index)
-            )
-        image = cv2.imread(path_image, flags=2)
-        image = image / 255
-
-        # cut the image
-        x_start = int(image_coordinate['coordinate_x'] - self.args.size_cutting / 2)
-        x_end = int(image_coordinate['coordinate_x'] + self.args.size_cutting / 2)
-        y_start = int(image_coordinate['coordinate_y'] - self.args.size_cutting / 2)
-        y_end = int(image_coordinate['coordinate_y'] + self.args.size_cutting / 2)
-
-        image = image[x_start: x_end, y_start: y_end]
-        image = np.expand_dims(image, 0)
-        return image
-
-def train(model, train_loader, epoch, device, args):
-    model.train()
-    train_loss = 0
-    for batch_idx, data in enumerate(train_loader):
-        data = data.to(device, dtype= torch.float)
-        optimizer.zero_grad()
-        recon_batch, mu, logvar = model(data)
-        loss = loss_function(recon_batch, data, mu, logvar, args)
-        loss.backward()
-        train_loss += loss.item()
-        optimizer.step()
-
-        if batch_idx % args.log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader),
-                loss.item() / len(data)))
-
-    print('====> Epoch: {} Average loss: {:.4f}'.format(
-          epoch, train_loss / len(train_loader.dataset)))
-
-def get_image_from_decoder(args, device, list_test):
+def get_image_from_decoder(args, device, list_to_select):
     # load the vae model
     model_vae = VAE(args)
     model_vae.load_state_dict(torch.load(args.path_load_model))
     model_vae = model_vae.to(device)
 
     # get image path
-    image_current = list_test[args.number_image_input]
+    if args.number_image_input + 1 > len(list_to_select):
+        print(
+            'the length of the list to select is : {len_list}\n'
+            '------'
+            .format(len_list=len(list_to_select) - 1)
+            )
+        sys.exit()
+
+    else:
+        print(
+            'your selected number: {number_image_input}\n'
+            'the max number can be: {len_list_to_select}'
+            .format(
+                number_image_input=args.number_image_input,
+                len_list_to_select=len(list_to_select) - 1,
+                )
+            )
+
+    image_current = list_to_select[args.number_image_input]
     image_coordinate = get_coordinate(image_current)
 
     name_subset = os.path.basename(
@@ -302,34 +169,26 @@ if __name__ == "__main__":
     else:
         list_train, list_test = rate_validation(args, list_info_image)
 
-    if not args.get_image_from_decoder:
-        # define date loader
-        data_set_train = DatasetTrain(list_train, args)
-
-        train_loader = torch.utils.data.DataLoader(
-            data_set_train,
-            batch_size=args.size_batch,
-            shuffle=True,
-            **kwargs,
+    # get image from decoder
+    if not args.number_image_input:
+        print(
+            '[--number-image-input]: the number within the "test set".\n'
+            'feed the vae model with the image seleceted by the number.'
             )
+        sys.exit()
 
-        # model instance
-        model = VAE(args).to(device)
-        optimizer = optim.Adam(model.parameters(), lr=1e-3)
+    if not args.path_load_model:
+        print(
+            '[--path-load-model]: the path of the vae model'
+        )
+        sys.exit()
 
-        for epoch in range(1, args.epoch + 1):
-            train(model, train_loader, epoch, device, args)
-        
-        torch.save(model.state_dict(), args.path_save_model)
+    print('------')
 
-    else:
-        if not args.number_image_input:
-            print(
-                '[--number-image-input]: set the number within the "test set".\n'
-                'feed the vae model with the image seleceted by the number.'
-                )
-            sys.exit()
-
-        print('------')
+    # select which set to decoder
+    if args.set_for_decoder == 'train':
         get_image_from_decoder(args, device, list_test)
-        print('------')
+    elif args.set_for_devoder == 'test':
+        get_image_from_decoder(args, device, list_train)
+
+    print('------')

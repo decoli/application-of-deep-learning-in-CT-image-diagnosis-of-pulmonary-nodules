@@ -123,8 +123,8 @@ def get_mu_and_logvar(args, model_vae, data_loader, visdom):
 
                 for sample_idx in range(mu.shape[0]):
 
-                    list_mu.append(mu[sample_idx, feature_idx])
-                    list_logvar.append(logvar[sample_idx, feature_idx])
+                    list_mu.append(mu[sample_idx, feature_idx].cpu().detach().numpy())
+                    list_logvar.append(logvar[sample_idx, feature_idx].cpu().detach().numpy())
 
                 x = np.stack([np.array(list_mu), np.array(list_logvar)])
                 x = np.transpose(x, (1, 0))
@@ -155,6 +155,8 @@ if __name__ == "__main__":
     else:
         model_vae.load_state_dict(
             torch.load(path_model_vae, map_location=torch.device('cpu')))
+
+    model_vae = model_vae.to(args.device)
 
     # get image info
     info_luna16 = pd.read_csv(args.path_input, index_col=0)

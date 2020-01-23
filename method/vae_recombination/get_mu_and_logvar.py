@@ -1,4 +1,5 @@
 import argparse
+import csv
 import os
 import random
 import sys
@@ -134,6 +135,20 @@ def get_mu_and_logvar(args, model_vae, data_loader, visdom):
                     x=x,
                     y=label,
                     win=str(feature_idx))
+
+                # write .csv
+                path_csv = os.path.join(
+                    os.getcwd(), 'method', 'vae_recombination',
+                    'test', 'mu_and_var_{feature_idx}{format_csv}'
+                    .format(
+                        feature_idx=feature_idx + 1,
+                        format_csv='.csv',
+                        )
+                )
+                with open(path_csv, 'w') as f:
+                    writer = csv.writer(f)
+                    writer.writerow(list_mu)
+                    writer.writerow(list_logvar)
 
         else: # size_batch < len(list_train)
             pass

@@ -55,9 +55,14 @@ def argument():
     parser.add_argument('--num-cross', default=None, type=int)
     parser.add_argument('--use-cross', default=None, type=int)
 
-    # set the number within the 'test set'
-    # feed the vae model with the image seleceted by the number
+    # set the number within the 'train/test set'
+    # then feed the vae model with the image seleceted by the number
+    parser.add_argument('--single', action='store_true', default=None)
     parser.add_argument('--number-image-input', type=int, default=None)
+
+    # randomly seclet two images to generate the breeding image
+    parser.add_argument('--breeding', action='store_true', default=None)
+
     parser.add_argument('--path-load-model', type=str, default=None)
     parser.add_argument('--set-for-decoder', type=str, required=True, default=None)
 
@@ -72,13 +77,25 @@ def argument():
 
     return args, device, kwargs
 
-def get_image_from_decoder(args, device, list_to_select):
-    # load the vae model
-    model_vae = VAE(args)
-    model_vae.load_state_dict(torch.load(args.path_load_model))
-    model_vae = model_vae.to(device)
+def check_argument(args, list_to_select):
 
-    # get image path
+    # sys.exit()
+
+    if not args.number_image_input:
+        print(
+            '[--number-image-input]: the number within the "test set".\n'
+            'feed the vae model with the image seleceted by the number.\n'
+            '------'
+            )
+        sys.exit()
+
+    if not args.path_load_model:
+        print(
+            '[--path-load-model]: the path of the vae model.\n'
+            '------'
+            )
+        sys.exit()
+
     if args.number_image_input + 1 > len(list_to_select):
         print(
             'the length of the list to select is : {len_list}\n'
@@ -87,7 +104,9 @@ def get_image_from_decoder(args, device, list_to_select):
             )
         sys.exit()
 
-    else:
+    # not sys.exit()
+
+    if not args.number_image_input + 1 > len(list_to_select):
         print(
             'your selected number: {number_image_input}\n'
             'the max number can be: {len_list_to_select}'
@@ -97,6 +116,13 @@ def get_image_from_decoder(args, device, list_to_select):
                 )
             )
 
+def get_image_from_decoder(args, device, list_to_select):
+    # load the vae model
+    model_vae = VAE(args)
+    model_vae.load_state_dict(torch.load(args.path_load_model))
+    model_vae = model_vae.to(device)
+
+    # get image path
     image_current = list_to_select[args.number_image_input]
     image_coordinate = get_coordinate(image_current)
 
@@ -154,6 +180,54 @@ def get_image_from_decoder(args, device, list_to_select):
         .format(path_image_decoder=path_image_decoder)
     )
 
+def get_image_breeding(args, device, list_data_set):
+    # re-get image list
+    list_benign = [] # class == 0
+    list_malignant = [] # class == 1
+
+    for each_date in list_data_set:
+        if each_date[2] == 0:
+            list_benign.append(each_date)
+        elif each_date[2] == 1:
+            list_malignant.append(each_date)
+
+    # get the label
+    label = random.choice([0, 1])
+    label = np.array([label])
+
+    # get the normal distribution parameter
+    if label == 0:
+        list_normal_distribution = random.sample(self.list_benign, 2)
+    elif label == 1:
+        list_normal_distribution = random.sample(self.list_malignant, 2)         
+
+    # get list of mu, logvar
+    list_mu = []
+    list_logvar = []
+
+    elif not self.args.random_switch:
+        for i in range(self.args.dimension_latent):
+            if i % 2 == 0:
+                list_mu.append(list_normal_distribution[0][0][i].cpu())
+                list_logvar.append(list_normal_distribution[0][1][i].cpu())
+            elif i % 2 == 1:
+                list_mu.append(list_normal_distribution[1][0][i].cpu())
+                list_logvar.append(list_normal_distribution[1][1][i].cpu())
+
+    # generate the image
+    z = self.model_vae.reparameterize(
+        torch.from_numpy(np.array(list_mu)), torch.from_numpy(np.array(list_logvar)))
+    image = self.model_vae.decode(z.to(device=self.args.device))
+
+    image = image.view(self.args.size_cutting, self.args.size_cutting)
+    image = image.cpu().detach().numpy()
+
+    # save the image breeding
+    path_image_mid_produc = os.path.join(
+        os.getcwd(), 'method', 'vae_recombination', 'test',
+        'image_breeding{image_format}'.format(image_format='.png'))
+    cv2.imwrite(path_image_mid_produc, image * 255)
+
 if __name__ == "__main__":
     # get argument
     args, device, kwargs = argument()
@@ -170,25 +244,19 @@ if __name__ == "__main__":
         list_train, list_test = rate_validation(args, list_info_image)
 
     # get image from decoder
-    if not args.number_image_input:
-        print(
-            '[--number-image-input]: the number within the "test set".\n'
-            'feed the vae model with the image seleceted by the number.'
-            )
-        sys.exit()
-
-    if not args.path_load_model:
-        print(
-            '[--path-load-model]: the path of the vae model'
-        )
-        sys.exit()
-
     print('------')
 
-    # select which set to decoder
-    if args.set_for_decoder == 'train':
-        get_image_from_decoder(args, device, list_test)
-    elif args.set_for_devoder == 'test':
-        get_image_from_decoder(args, device, list_train)
+    if args.single:
+        if args.set_for_decoder == 'train': # select which set to decoder
+            check_argument(args, list_train)
+            get_image_from_decoder(args, device, list_train)
+
+        elif args.set_for_devoder == 'test': # select which set to decoder
+            check_argument(args, list_test)
+            get_image_from_decoder(args, device, list_test)
+
+    if args.breeding:
+        # only for 'train' set image
+        get_image_breeding(args, device, list_train)
 
     print('------')

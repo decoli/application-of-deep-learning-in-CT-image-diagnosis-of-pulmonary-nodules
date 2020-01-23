@@ -18,3 +18,4 @@ data/image/*
 method/vae_recombination/test/*
 utility/model/test/*
 !.gitkeep
+method/vae_recombination/test/image_mid_produc.png

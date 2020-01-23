@@ -64,7 +64,7 @@ def argument():
     parser.add_argument('--breeding', action='store_true', default=None)
 
     parser.add_argument('--path-load-model', type=str, default=None)
-    parser.add_argument('--set-for-decoder', type=str, required=True, default=None)
+    parser.add_argument('--set-for-decoder', type=str, default=None)
 
     args = parser.parse_args()
 
@@ -181,45 +181,81 @@ def get_image_from_decoder(args, device, list_to_select):
     )
 
 def get_image_breeding(args, device, list_data_set):
+    def get_image_to_feed_vae(image_current):
+        image_coordinate = get_coordinate(image_current)
+
+        name_subset = os.path.basename(
+            os.path.dirname(image_current['path_seriesuid_folder'])
+            ).split('_')[0] + '_tiff'
+        image_index = int(image_coordinate['coordinate_z'])
+
+        path_image = os.path.join(
+            args.dir_image,
+            name_subset,
+            image_current['seriesuid'],
+            'whole_image',
+            'whole_{image_index}.tiff'.format(image_index=image_index)
+            )
+        image = cv2.imread(path_image, flags=2)
+        image = image / 255
+
+        # cut the image
+        x_start = int(image_coordinate['coordinate_x'] - args.size_cutting / 2)
+        x_end = int(image_coordinate['coordinate_x'] + args.size_cutting / 2)
+        y_start = int(image_coordinate['coordinate_y'] - args.size_cutting / 2)
+        y_end = int(image_coordinate['coordinate_y'] + args.size_cutting / 2)
+
+        image = image[x_start: x_end, y_start: y_end]
+        return image
+
+    # load the vae model
+    model_vae = VAE(args)
+    model_vae.load_state_dict(torch.load(args.path_load_model))
+    model_vae = model_vae.to(device)
+
     # re-get image list
     list_benign = [] # class == 0
     list_malignant = [] # class == 1
 
     for each_date in list_data_set:
-        if each_date[2] == 0:
+        if each_date['class'] == 0:
             list_benign.append(each_date)
-        elif each_date[2] == 1:
+        elif each_date['class'] == 1:
             list_malignant.append(each_date)
 
     # get the label
     label = random.choice([0, 1])
     label = np.array([label])
 
-    # get the normal distribution parameter
     if label == 0:
-        list_normal_distribution = random.sample(self.list_benign, 2)
+        list_sample_image = random.sample(list_benign, 2)
     elif label == 1:
-        list_normal_distribution = random.sample(self.list_malignant, 2)         
+        list_sample_image = random.sample(list_malignant, 2)         
+
+    # get image to feed the vae model
+    image_1 = get_image_to_feed_vae(list_sample_image[0])
+    image_2 = get_image_to_feed_vae(list_sample_image[1])
+
+    # feed the vae
 
     # get list of mu, logvar
     list_mu = []
     list_logvar = []
 
-    elif not self.args.random_switch:
-        for i in range(self.args.dimension_latent):
-            if i % 2 == 0:
-                list_mu.append(list_normal_distribution[0][0][i].cpu())
-                list_logvar.append(list_normal_distribution[0][1][i].cpu())
-            elif i % 2 == 1:
-                list_mu.append(list_normal_distribution[1][0][i].cpu())
-                list_logvar.append(list_normal_distribution[1][1][i].cpu())
+    for i in range(args.dimension_latent):
+        if i % 2 == 0:
+            list_mu.append(list_normal_distribution[0][0][i].cpu())
+            list_logvar.append(list_normal_distribution[0][1][i].cpu())
+        elif i % 2 == 1:
+            list_mu.append(list_normal_distribution[1][0][i].cpu())
+            list_logvar.append(list_normal_distribution[1][1][i].cpu())
 
     # generate the image
-    z = self.model_vae.reparameterize(
+    z = model_vae.reparameterize(
         torch.from_numpy(np.array(list_mu)), torch.from_numpy(np.array(list_logvar)))
-    image = self.model_vae.decode(z.to(device=self.args.device))
+    image = model_vae.decode(z.to(device=device))
 
-    image = image.view(self.args.size_cutting, self.args.size_cutting)
+    image = image.view(args.size_cutting, args.size_cutting)
     image = image.cpu().detach().numpy()
 
     # save the image breeding

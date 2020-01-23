@@ -62,6 +62,7 @@ def argument():
 
     # randomly seclet two images to generate the breeding image
     parser.add_argument('--breeding', action='store_true', default=None)
+    parser.add_argument('--seed-breeding', type=int, default=1)
 
     parser.add_argument('--path-load-model', type=str, default=None)
     parser.add_argument('--set-for-decoder', type=str, default=None)
@@ -227,6 +228,7 @@ def get_image_breeding(args, device, list_data_set):
     label = random.choice([0, 1])
     label = np.array([label])
 
+    random.seed(args.seed_breeding)
     if label == 0:
         list_sample_image = random.sample(list_benign, 2)
     elif label == 1:
@@ -234,9 +236,33 @@ def get_image_breeding(args, device, list_data_set):
 
     # get image to feed the vae model
     image_1 = get_image_to_feed_vae(list_sample_image[0])
+    path_image_1 = os.path.join(
+        os.getcwd(), 'method', 'vae_recombination', 'test',
+        'image_original_1{image_format}'.format(image_format='.png'))
+    cv2.imwrite(path_image_1, image_1 * 255)
+    print(
+        'image_1 saved:\n{path_image_1}'
+        .format(path_image_1=path_image_1)
+    )
+
     image_2 = get_image_to_feed_vae(list_sample_image[1])
+    path_image_2 = os.path.join(
+        os.getcwd(), 'method', 'vae_recombination', 'test',
+        'image_original_2{image_format}'.format(image_format='.png'))
+    cv2.imwrite(path_image_2, image_2 * 255)
+    print(
+        'image_2 saved:\n{path_image_2}'
+        .format(path_image_2=path_image_2)
+    )
+
+    list_image = []
+    list_image.append(np.expand_dims(image_1, 0))
+    list_image.append(np.expand_dims(image_2, 0))
+    image = torch.Tensor(np.array(list_image))
+    image = image.to(device)
 
     # feed the vae
+    prediction_decode, mu, logvar = model_vae(image)
 
     # get list of mu, logvar
     list_mu = []
@@ -244,11 +270,11 @@ def get_image_breeding(args, device, list_data_set):
 
     for i in range(args.dimension_latent):
         if i % 2 == 0:
-            list_mu.append(list_normal_distribution[0][0][i].cpu())
-            list_logvar.append(list_normal_distribution[0][1][i].cpu())
+            list_mu.append(mu[0][i].cpu().detach().numpy())
+            list_logvar.append(logvar[0][i].cpu().detach().numpy())
         elif i % 2 == 1:
-            list_mu.append(list_normal_distribution[1][0][i].cpu())
-            list_logvar.append(list_normal_distribution[1][1][i].cpu())
+            list_mu.append(mu[1][i].cpu().detach().numpy())
+            list_logvar.append(logvar[1][i].cpu().detach().numpy())
 
     # generate the image
     z = model_vae.reparameterize(
@@ -259,10 +285,14 @@ def get_image_breeding(args, device, list_data_set):
     image = image.cpu().detach().numpy()
 
     # save the image breeding
-    path_image_mid_produc = os.path.join(
+    path_image_breeding = os.path.join(
         os.getcwd(), 'method', 'vae_recombination', 'test',
         'image_breeding{image_format}'.format(image_format='.png'))
-    cv2.imwrite(path_image_mid_produc, image * 255)
+    cv2.imwrite(path_image_breeding, image * 255)
+    print(
+        'image_breeding saved:\n{path_image_breeding}'
+        .format(path_image_breeding=path_image_breeding)
+    )
 
 if __name__ == "__main__":
     # get argument

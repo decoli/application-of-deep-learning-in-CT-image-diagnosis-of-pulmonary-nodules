@@ -63,6 +63,7 @@ def argument():
     # randomly seclet two images to generate the breeding image
     parser.add_argument('--breeding', action='store_true', default=None)
     parser.add_argument('--seed-breeding', type=int, default=1)
+    parser.add_argument('--seed-class-choice', type=int, default=1)
 
     parser.add_argument('--path-load-model', type=str, default=None)
     parser.add_argument('--set-for-decoder', type=str, default=None)
@@ -225,6 +226,7 @@ def get_image_breeding(args, device, list_data_set):
             list_malignant.append(each_date)
 
     # get the label
+    random.seed(args.seed_class_choice)
     label = random.choice([0, 1])
     label = np.array([label])
 

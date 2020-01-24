@@ -147,6 +147,7 @@ def get_mu_and_logvar(args, model_vae, data_loader, visdom):
                 )
                 with open(path_csv, 'w') as f:
                     writer = csv.writer(f)
+                    writer.writerow(label)
                     writer.writerow(list_mu)
                     writer.writerow(list_logvar)
 

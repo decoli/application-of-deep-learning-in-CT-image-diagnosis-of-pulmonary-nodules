@@ -97,6 +97,7 @@ def get_mu_and_logvar(args, model_vae, data_loader, visdom):
     # the list for size_batch < len(list_train)
     list_mu = []
     list_logvar = []
+    list_std = []
     list_label = []
 
     model_vae.eval()
@@ -104,10 +105,14 @@ def get_mu_and_logvar(args, model_vae, data_loader, visdom):
         for batch_idx, (data, label) in enumerate(data_loader):
             data = data.to(device=args.device, dtype=torch.float)
 
-            # get mu, logvar
+            # get mu, logvar, std
             prediction, mu, logvar = model_vae(data)
+            std = torch.exp(0.5 * logvar)
+
             list_mu.append(mu)
             list_logvar.append(logvar)
+            list_std.append(std)
+
             list_label.append(torch.squeeze(label).detach().numpy())
 
     if not args.no_visdom:
@@ -121,13 +126,16 @@ def get_mu_and_logvar(args, model_vae, data_loader, visdom):
                 # the list for size_batch >= len(list_train)
                 list_mu = []
                 list_logvar = []
+                list_std = []
 
                 for sample_idx in range(mu.shape[0]):
 
                     list_mu.append(mu[sample_idx, feature_idx].cpu().detach().numpy())
                     list_logvar.append(logvar[sample_idx, feature_idx].cpu().detach().numpy())
+                    list_std.append(std[sample_idx, feature_idx].cpu().detach().numpy())
 
-                x = np.stack([np.array(list_mu), np.array(list_logvar)])
+                # x = np.stack([np.array(list_mu), np.array(list_logvar)])
+                x = np.stack([np.array(list_mu), np.array(list_std)])
                 x = np.transpose(x, (1, 0))
 
                 visdom_scatter(
@@ -150,6 +158,7 @@ def get_mu_and_logvar(args, model_vae, data_loader, visdom):
                     writer.writerow(label)
                     writer.writerow(list_mu)
                     writer.writerow(list_logvar)
+                    writer.writerow(list_std)
 
         else: # size_batch < len(list_train)
             pass

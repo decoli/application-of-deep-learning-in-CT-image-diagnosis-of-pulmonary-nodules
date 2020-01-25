@@ -153,20 +153,24 @@ def get_mu_and_logvar(args, model_vae, data_loader, visdom):
                         format_csv='.csv',
                         )
                 )
-                with open(path_csv, 'w') as f:
+                with open(path_csv, 'w', newline='') as f:
                     writer = csv.writer(f)
 
-                    writer.writerow('label')
+                    writer.writerow(['label'])
                     writer.writerow(label)
+                    writer.writerow([])
 
-                    writer.writerow('list_mu')
+                    writer.writerow(['list_mu'])
                     writer.writerow(list_mu)
+                    writer.writerow([])
 
-                    writer.writerow('list_logvar')
+                    writer.writerow(['list_logvar'])
                     writer.writerow(list_logvar)
+                    writer.writerow([])
 
-                    writer.writerow('list_std')
+                    writer.writerow(['list_std'])
                     writer.writerow(list_std)
+                    writer.writerow([])
 
         else: # size_batch < len(list_train)
             pass

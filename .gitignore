@@ -19,3 +19,4 @@ method/vae_recombination/test/*
 utility/model/test/*
 !.gitkeep
 origin/
+data/lidc/*

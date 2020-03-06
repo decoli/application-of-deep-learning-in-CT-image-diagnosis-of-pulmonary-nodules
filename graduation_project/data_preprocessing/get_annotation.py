@@ -13,7 +13,13 @@ reading_sessions = xml.LidcReadMessage.find_all('readingSession')
 
 # 在每个病例里找结节信息， 包括 < unblindedReadNodule > 和 < nonNodule >
 # < nonNodule > 是无关发现。
-for reading_session in reading_sessions:
+
+list_characteristics_0 = []
+list_characteristics_1 = []
+list_characteristics_2 = []
+list_characteristics_3 = []
+
+for index, reading_session in enumerate(reading_sessions):
     nodules = reading_session.find_all("unblindedReadNodule") # 每个 unblindedReadNodule 表示一个（大或小）结节
 
     for nodule in nodules:
@@ -30,7 +36,20 @@ for reading_session in reading_sessions:
                 'malignancy': int(nodule.characteristics.malignancy.text),
                 }
             nodule_id = nodule.noduleID.text
-            print(characteristics_dic)
+            # print(characteristics_dic)
 
+            if index == 0:
+                list_characteristics_0.append(characteristics_dic)
+            elif index == 1:
+                list_characteristics_1.append(characteristics_dic)
+            elif index == 2:
+                list_characteristics_2.append(characteristics_dic)
+            elif index == 3:
+                list_characteristics_3.append(characteristics_dic)
+
+print(list_characteristics_0)
+print(list_characteristics_1)
+print(list_characteristics_2)
+print(list_characteristics_3)
 print('ttt')
 

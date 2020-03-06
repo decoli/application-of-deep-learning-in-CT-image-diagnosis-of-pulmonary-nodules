@@ -17,20 +17,20 @@ for reading_session in reading_sessions:
     nodules = reading_session.find_all("unblindedReadNodule") # 每个 unblindedReadNodule 表示一个（大或小）结节
 
     for nodule in nodules:
-        nodule_id = nodule.noduleID.text
-
-        characteristics_dic = {
-            'subtlety': int(nodule.characteristics.subtlety.text),
-            'internalStructure': int(nodule.characteristics.internalStructure.text),
-            'calcification': int(nodule.characteristics.calcification.text),
-            'sphericity': int(nodule.characteristics.sphericity.text),
-            'margin': int(nodule.characteristics.margin.text),
-            'lobulation': int(nodule.characteristics.lobulation.text),
-            'spiculation': int(nodule.characteristics.spiculation.text),
-            'texture': int(nodule.characteristics.texture.text),
-            'malignancy': int(nodule.characteristics.malignancy.text),
-            }
-        print(characteristics_dic)
+        if nodule.characteristics:
+            characteristics_dic = {
+                'subtlety': int(nodule.characteristics.subtlety.text),
+                'internalStructure': int(nodule.characteristics.internalStructure.text),
+                'calcification': int(nodule.characteristics.calcification.text),
+                'sphericity': int(nodule.characteristics.sphericity.text),
+                'margin': int(nodule.characteristics.margin.text),
+                'lobulation': int(nodule.characteristics.lobulation.text),
+                'spiculation': int(nodule.characteristics.spiculation.text),
+                'texture': int(nodule.characteristics.texture.text),
+                'malignancy': int(nodule.characteristics.malignancy.text),
+                }
+            nodule_id = nodule.noduleID.text
+            print(characteristics_dic)
 
 print('ttt')
 

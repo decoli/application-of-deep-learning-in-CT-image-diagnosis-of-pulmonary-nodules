@@ -20,3 +20,4 @@ utility/model/test/*
 !.gitkeep
 origin/
 data/lidc/*
+data/dataset_lidc/image/*

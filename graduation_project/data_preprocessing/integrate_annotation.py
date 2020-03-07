@@ -19,6 +19,50 @@ print(pd_3_2)
 recursive_path_xml = os.path.join(test_root_lidc, '**', '*.xml')
 list_path_xml = glob.glob(recursive_path_xml, recursive=True)
 
+
+def get_mean_dic_3(dic_1, dic_2, dic_3):
+    dic_characteristics = {
+        'subtlety': (dic_1['subtlety'] + dic_2['subtlety'] + dic_3['subtlety']) / 3,
+        'internalStructure': (dic_1['internalStructure'] + dic_2['internalStructure'] + dic_3['internalStructure']) / 3,
+        'calcification': (dic_1['calcification'] + dic_2['calcification'] + dic_3['calcification']) / 3,
+        'sphericity': (dic_1['sphericity'] + dic_2['sphericity'] + dic_3['sphericity']) / 3,
+        'margin': (dic_1['margin'] + dic_2['margin'] + dic_3['margin']) / 3,
+        'lobulation': (dic_1['lobulation'] + dic_2['lobulation'] + dic_3['lobulation']) / 3,
+        'spiculation': (dic_1['spiculation'] + dic_2['spiculation'] + dic_3['spiculation']) / 3,
+        'texture': (dic_1['texture'] + dic_2['texture'] + dic_3['texture']) / 3,
+        'malignancy': (dic_1['malignancy'] + dic_2['malignancy'] + dic_3['malignancy']) / 3,
+    }
+    return dic_characteristics
+
+def get_mean_dic_4(dic_1, dic_2, dic_3, dic_4):
+    dic_characteristics = {
+        'subtlety': (dic_1['subtlety'] + dic_2['subtlety'] + dic_3['subtlety'] + dic_3['subtlety']) / 4,
+        'internalStructure': (dic_1['internalStructure'] + dic_2['internalStructure'] + dic_3['internalStructure'] + dic_3['internalStructure']) / 4,
+        'calcification': (dic_1['calcification'] + dic_2['calcification'] + dic_3['calcification'] + dic_3['calcification']) / 4,
+        'sphericity': (dic_1['sphericity'] + dic_2['sphericity'] + dic_3['sphericity'] + dic_3['sphericity']) / 4,
+        'margin': (dic_1['margin'] + dic_2['margin'] + dic_3['margin'] + dic_3['margin']) / 4,
+        'lobulation': (dic_1['lobulation'] + dic_2['lobulation'] + dic_3['lobulation'] + dic_3['lobulation']) / 4,
+        'spiculation': (dic_1['spiculation'] + dic_2['spiculation'] + dic_3['spiculation'] + dic_3['spiculation']) / 4,
+        'texture': (dic_1['texture'] + dic_2['texture'] + dic_3['texture'] + dic_3['texture']) / 4,
+        'malignancy': (dic_1['malignancy'] + dic_2['malignancy'] + dic_3['malignancy'] + dic_3['malignancy']) / 4,
+    }
+    return dic_characteristics
+
+def get_dic_characteristics(nodule):
+    dic_characteristics = {
+        'subtlety': int(nodule.characteristics.subtlety.text),
+        'internalStructure': int(nodule.characteristics.internalStructure.text),
+        'calcification': int(nodule.characteristics.calcification.text),
+        'sphericity': int(nodule.characteristics.sphericity.text),
+        'margin': int(nodule.characteristics.margin.text),
+        'lobulation': int(nodule.characteristics.lobulation.text),
+        'spiculation': int(nodule.characteristics.spiculation.text),
+        'texture': int(nodule.characteristics.texture.text),
+        'malignancy': int(nodule.characteristics.malignancy.text),
+        }
+    return dic_characteristics
+
+
 for each_path_xml in list_path_xml:
     lidc_no = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(each_path_xml))))
     lidc_sub = os.path.basename(os.path.dirname(os.path.dirname(each_path_xml)))
@@ -42,19 +86,32 @@ for each_path_xml in list_path_xml:
     xml = BeautifulSoup(markup, features="xml")
 
     # 在同一组结节中查询被标注的结节
-    for each_scan in pd_scan.itertuples():
-        if not math.isnan(each_scan['Unnamed: 13']): # 诊断太多， 大于医师人数
+    for index_row, each_row in pd_scan.iterrows():
+        print(each_row)
+
+        if not math.isnan(each_row['Unnamed: 13']): # 诊断太多， 大于医师人数
             continue
-        if math.isnan(each_scan['Unnamed: 11']): # 诊断太少， 至少3个医师的诊断
-        continue
+
+        try:
+            math.isnan(each_row['Unnamed: 11'])
+        except TypeError:
+            None
+        else:
+            if math.isnan(each_row['Unnamed: 11']): # 诊断太少， 至少3个医师的诊断
+                continue
 
         # get nodule IDs
         list_nodule_id = []
-        list_nodule_id.append(each_scan['nodIDs']) # 第1个诊断
-        list_nodule_id.append(each_scan['Unnamed: 10']) # 第2个诊断
-        list_nodule_id.append(each_scan['Unnamed: 11']) # 第3个诊断
-        if not math.isnan(each_scan['Unnamed: 12']): # 可能第4个诊断为空
-            list_nodule_id.append(each_scan['Unnamed: 12']) # 第4个诊断
+        list_nodule_id.append(each_row['nodIDs']) # 第1个诊断
+        list_nodule_id.append(each_row['Unnamed: 10']) # 第2个诊断
+        list_nodule_id.append(each_row['Unnamed: 11']) # 第3个诊断
+
+        try:
+            math.isnan(each_row['Unnamed: 12'])
+        except TypeError:
+            list_nodule_id.append(each_row['Unnamed: 12']) # 第4个诊断
+        else:
+            None
 
         # parsing diagnostic information
         flag_malignant_physician_1 = 0
@@ -131,49 +188,4 @@ for each_path_xml in list_path_xml:
             mean_dic = get_mean_dic_4(dic_characteristics_1, dic_characteristics_2, dic_characteristics_3, dic_characteristics_4)
 
         # write info at new_annotation.csv 
-        csv.writer(
-            class_malignant
-            mean_dic
-        )
-
-def get_mean_dic_3(dic_1, dic_2, dic_3):
-    dic_characteristics = {
-        'subtlety': (dic_1['subtlety'] + dic_2['subtlety'] + dic_3['subtlety']) / 3,
-        'internalStructure': (dic_1['internalStructure'] + dic_2['internalStructure'] + dic_3['internalStructure']) / 3,
-        'calcification': (dic_1['calcification'] + dic_2['calcification'] + dic_3['calcification']) / 3,
-        'sphericity': (dic_1['sphericity'] + dic_2['sphericity'] + dic_3['sphericity']) / 3,
-        'margin': (dic_1['margin'] + dic_2['margin'] + dic_3['margin']) / 3,
-        'lobulation': (dic_1['lobulation'] + dic_2['lobulation'] + dic_3['lobulation']) / 3,
-        'spiculation': (dic_1['spiculation'] + dic_2['spiculation'] + dic_3['spiculation']) / 3,
-        'texture': (dic_1['texture'] + dic_2['texture'] + dic_3['texture']) / 3,
-        'malignancy': (dic_1['malignancy'] + dic_2['malignancy'] + dic_3['malignancy']) / 3,
-    }
-    return dic_characteristics
-
-def get_mean_dic_4(dic_1, dic_2, dic_3, dic_4):
-    dic_characteristics = {
-        'subtlety': (dic_1['subtlety'] + dic_2['subtlety'] + dic_3['subtlety'] + dic_3['subtlety']) / 4,
-        'internalStructure': (dic_1['internalStructure'] + dic_2['internalStructure'] + dic_3['internalStructure'] + dic_3['internalStructure']) / 4,
-        'calcification': (dic_1['calcification'] + dic_2['calcification'] + dic_3['calcification'] + dic_3['calcification']) / 4,
-        'sphericity': (dic_1['sphericity'] + dic_2['sphericity'] + dic_3['sphericity'] + dic_3['sphericity']) / 4,
-        'margin': (dic_1['margin'] + dic_2['margin'] + dic_3['margin'] + dic_3['margin']) / 4,
-        'lobulation': (dic_1['lobulation'] + dic_2['lobulation'] + dic_3['lobulation'] + dic_3['lobulation']) / 4,
-        'spiculation': (dic_1['spiculation'] + dic_2['spiculation'] + dic_3['spiculation'] + dic_3['spiculation']) / 4,
-        'texture': (dic_1['texture'] + dic_2['texture'] + dic_3['texture'] + dic_3['texture']) / 4,
-        'malignancy': (dic_1['malignancy'] + dic_2['malignancy'] + dic_3['malignancy'] + dic_3['malignancy']) / 4,
-    }
-    return dic_characteristics
-
-def get_dic_characteristics(nodule):
-    dic_characteristics = {
-        'subtlety': int(nodule.characteristics.subtlety.text),
-        'internalStructure': int(nodule.characteristics.internalStructure.text),
-        'calcification': int(nodule.characteristics.calcification.text),
-        'sphericity': int(nodule.characteristics.sphericity.text),
-        'margin': int(nodule.characteristics.margin.text),
-        'lobulation': int(nodule.characteristics.lobulation.text),
-        'spiculation': int(nodule.characteristics.spiculation.text),
-        'texture': int(nodule.characteristics.texture.text),
-        'malignancy': int(nodule.characteristics.malignancy.text),
-        }
-    return dic_characteristics
+        print(each_path_xml)

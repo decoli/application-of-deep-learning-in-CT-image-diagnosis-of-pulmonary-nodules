@@ -2,12 +2,14 @@ path_list_3_2 = '/Users/shirui/study/tianjin-university-study/application-of-dee
 root_lidc = '/Volumes/shirui_WD_2/lung_image/LIDC-IDRI'
 test_root_lidc = '/Users/shirui/study/tianjin-university-study/application-of-deep-learning-in-CT-image-diagnosis-of-pulmonary-nodules/data/dataset_lidc/image/LIDC-IDRI'
 
-import os
-from bs4 import BeautifulSoup
+import csv
 import glob
+import math
+import os
+
 import pandas as pd
 import pydicom
-import math
+from bs4 import BeautifulSoup
 
 # read list_3_2
 pd_3_2 = pd.read_csv(path_list_3_2)
@@ -75,59 +77,95 @@ for each_path_xml in list_path_xml:
                     # 判定1.结节被诊断医师人数 >= 3； 判定2.结节良恶性。
                     nodule_id = nodule.noduleID.text
                     malignancy = int(nodule.characteristics.malignancy.text)
-                    if  (not nodule_id in list_nodule_id) or malignancy == 3:
+                    if (not nodule_id in list_nodule_id) or malignancy == 3:
                         continue
 
                     if malignancy > 3: # 判定为恶性
                         if diagnostic_index == 1:
                             flag_malignant_physician_1 += 1
-                            dic_malignant_1 = get_characteristics_dic(nodule)
+                            dic_characteristics_1 = get_dic_characteristics(nodule)
 
                         elif diagnostic_index == 2:
                             flag_malignant_physician_2 += 1
-                            dic_malignant_2 = get_characteristics_dic(nodule)
+                            dic_characteristics_2 = get_dic_characteristics(nodule)
 
                         elif diagnostic_index == 3:
                             flag_malignant_physician_3 += 1
-                            dic_malignant_3 = get_characteristics_dic(nodule)
+                            dic_characteristics_3 = get_dic_characteristics(nodule)
                             
                         elif diagnostic_index == 4:
                             flag_malignant_physician_4 += 1
-                            dic_malignant_4 = get_characteristics_dic(nodule)
+                            dic_characteristics_4 = get_dic_characteristics(nodule)
                         
                     if malignancy < 3: # 判定为良性
                         if diagnostic_index == 1:
-                            flag_malignant_physician_1 += 1
-                            dic_benign_1 = get_characteristics_dic(nodule)
+                            flag_benign_physician_1 += 1
+                            dic_characteristics_1 = get_dic_characteristics(nodule)
 
                         elif diagnostic_index == 2:
-                            flag_malignant_physician_2 += 1
-                            dic_benign_2 = get_characteristics_dic(nodule)
+                            flag_benign_physician_2 += 1
+                            dic_characteristics_2 = get_dic_characteristics(nodule)
 
                         elif diagnostic_index == 3:
-                            flag_malignant_physician_3 += 1
-                            dic_benign_3 = get_characteristics_dic(nodule)
+                            flag_benign_physician_3 += 1
+                            dic_characteristics_3 = get_dic_characteristics(nodule)
                             
                         elif diagnostic_index == 4:
-                            flag_malignant_physician_4 += 1
-                            dic_benign_4 = get_characteristics_dic(nodule)
+                            flag_benign_physician_4 += 1
+                            dic_characteristics_4 = get_dic_characteristics(nodule)
         
-        if flag_malignant_physician_1 + flag_malignant_physician_2 + flag_malignant_physician_3 + flag_malignant_physician_4 >= 3:
-            # write info at new_annotation.csv 判定为恶性
+        count_malignant_physician = flag_malignant_physician_1 + flag_malignant_physician_2 + flag_malignant_physician_3 + flag_malignant_physician_4
+        count_benign_physician = flag_benign_physician_1 + flag_benign_physician_2 + flag_benign_physician_3 + flag_benign_physician_4
+
+        if count_malignant_physician >= 3:
+            # 判定为恶性
             class_malignant = 1
 
-        if flag_benign_physician_1 + flag_benign_physician_2 + flag_benign_physician_3 + flag_benign_physician_4 >= 3:
-            # write info at new_annotation.csv 判定为良性
+        if count_benign_physician >= 3:
+            # 判定为良性
             class_malignant = 0
 
-def get_mean_dic_3(dic_1, dic_2, dic_3):
+        if count_malignant_physician + count_benign_physician == 3:
+            mean_dic = get_mean_dic_3(dic_characteristics_1, dic_characteristics_2, dic_characteristics_3)
+        if count_malignant_physician + count_benign_physician == 4:
+            mean_dic = get_mean_dic_4(dic_characteristics_1, dic_characteristics_2, dic_characteristics_3, dic_characteristics_4)
 
+        # write info at new_annotation.csv 
+        csv.writer(
+            class_malignant
+            mean_dic
+        )
+
+def get_mean_dic_3(dic_1, dic_2, dic_3):
+    dic_characteristics = {
+        'subtlety': (dic_1['subtlety'] + dic_2['subtlety'] + dic_3['subtlety']) / 3,
+        'internalStructure': (dic_1['internalStructure'] + dic_2['internalStructure'] + dic_3['internalStructure']) / 3,
+        'calcification': (dic_1['calcification'] + dic_2['calcification'] + dic_3['calcification']) / 3,
+        'sphericity': (dic_1['sphericity'] + dic_2['sphericity'] + dic_3['sphericity']) / 3,
+        'margin': (dic_1['margin'] + dic_2['margin'] + dic_3['margin']) / 3,
+        'lobulation': (dic_1['lobulation'] + dic_2['lobulation'] + dic_3['lobulation']) / 3,
+        'spiculation': (dic_1['spiculation'] + dic_2['spiculation'] + dic_3['spiculation']) / 3,
+        'texture': (dic_1['texture'] + dic_2['texture'] + dic_3['texture']) / 3,
+        'malignancy': (dic_1['malignancy'] + dic_2['malignancy'] + dic_3['malignancy']) / 3,
+    }
+    return dic_characteristics
 
 def get_mean_dic_4(dic_1, dic_2, dic_3, dic_4):
+    dic_characteristics = {
+        'subtlety': (dic_1['subtlety'] + dic_2['subtlety'] + dic_3['subtlety'] + dic_3['subtlety']) / 4,
+        'internalStructure': (dic_1['internalStructure'] + dic_2['internalStructure'] + dic_3['internalStructure'] + dic_3['internalStructure']) / 4,
+        'calcification': (dic_1['calcification'] + dic_2['calcification'] + dic_3['calcification'] + dic_3['calcification']) / 4,
+        'sphericity': (dic_1['sphericity'] + dic_2['sphericity'] + dic_3['sphericity'] + dic_3['sphericity']) / 4,
+        'margin': (dic_1['margin'] + dic_2['margin'] + dic_3['margin'] + dic_3['margin']) / 4,
+        'lobulation': (dic_1['lobulation'] + dic_2['lobulation'] + dic_3['lobulation'] + dic_3['lobulation']) / 4,
+        'spiculation': (dic_1['spiculation'] + dic_2['spiculation'] + dic_3['spiculation'] + dic_3['spiculation']) / 4,
+        'texture': (dic_1['texture'] + dic_2['texture'] + dic_3['texture'] + dic_3['texture']) / 4,
+        'malignancy': (dic_1['malignancy'] + dic_2['malignancy'] + dic_3['malignancy'] + dic_3['malignancy']) / 4,
+    }
+    return dic_characteristics
 
-
-def get_characteristics_dic(nodule):
-    characteristics_dic = {
+def get_dic_characteristics(nodule):
+    dic_characteristics = {
         'subtlety': int(nodule.characteristics.subtlety.text),
         'internalStructure': int(nodule.characteristics.internalStructure.text),
         'calcification': int(nodule.characteristics.calcification.text),
@@ -138,4 +176,4 @@ def get_characteristics_dic(nodule):
         'texture': int(nodule.characteristics.texture.text),
         'malignancy': int(nodule.characteristics.malignancy.text),
         }
-    return characteristics_dic
+    return dic_characteristics

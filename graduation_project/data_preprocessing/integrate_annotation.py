@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 import glob
 import pandas as pd
 import pydicom
+import math
 
 # read list_3_2
 pd_3_2 = pd.read_csv(path_list_3_2)
@@ -33,10 +34,27 @@ for each_path_xml in list_path_xml:
         continue
     print(pd_scan)
 
-    # parse xml
-    with open(each_path_xml, 'r') as xml_file:
-        markup = xml_file.read()
-    xml = BeautifulSoup(markup, features="xml")
+    for each_scan in pd_scan.itertuples():
+        if not math.isnan(each_scan):
+            continue
 
-    # parsing diagnostic information
-    reading_sessions = xml.LidcReadMessage.find_all('readingSession')
+        # get node IDs
+        list_node_id = []
+        list_node_id.append(pd_scan['nodIDs'])
+        list_node_id.append(pd_scan['Unnamed: 10'])
+        list_node_id.append(pd_scan['Unnamed: 11'])
+        list_node_id.append(pd_scan['Unnamed: 12'])
+
+
+        # parse xml
+        with open(each_path_xml, 'r') as xml_file:
+            markup = xml_file.read()
+        xml = BeautifulSoup(markup, features="xml")
+
+        # parsing diagnostic information
+        flag_physician_1 = 0
+        flag_physician_2 = 0
+        flag_physician_3 = 0
+        flag_physician_4 = 0
+
+        reading_sessions = xml.LidcReadMessage.find_all('readingSession')

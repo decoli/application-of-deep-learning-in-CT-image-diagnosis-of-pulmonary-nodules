@@ -34,30 +34,108 @@ for each_path_xml in list_path_xml:
         continue
     print(pd_scan)
 
+    # parse xml
+    with open(each_path_xml, 'r') as xml_file:
+        markup = xml_file.read()
+    xml = BeautifulSoup(markup, features="xml")
+
+    # 在同一组结节中查询被标注的结节
     for each_scan in pd_scan.itertuples():
         if not math.isnan(each_scan['Unnamed: 13']): # 诊断太多， 大于医师人数
             continue
         if math.isnan(each_scan['Unnamed: 11']): # 诊断太少， 至少3个医师的诊断
         continue
 
-
-        # get node IDs
-        list_node_id = []
-        list_node_id.append(pd_scan['nodIDs']) # 第1个诊断
-        list_node_id.append(pd_scan['Unnamed: 10']) # 第2个诊断
-        list_node_id.append(pd_scan['Unnamed: 11']) # 第3个诊断
-        list_node_id.append(pd_scan['Unnamed: 12']) # 第4个诊断
-
-
-        # parse xml
-        with open(each_path_xml, 'r') as xml_file:
-            markup = xml_file.read()
-        xml = BeautifulSoup(markup, features="xml")
+        # get nodule IDs
+        list_nodule_id = []
+        list_nodule_id.append(each_scan['nodIDs']) # 第1个诊断
+        list_nodule_id.append(each_scan['Unnamed: 10']) # 第2个诊断
+        list_nodule_id.append(each_scan['Unnamed: 11']) # 第3个诊断
+        if not math.isnan(each_scan['Unnamed: 12']): # 可能第4个诊断为空
+            list_nodule_id.append(each_scan['Unnamed: 12']) # 第4个诊断
 
         # parsing diagnostic information
-        flag_physician_1 = 0
-        flag_physician_2 = 0
-        flag_physician_3 = 0
-        flag_physician_4 = 0
+        flag_malignant_physician_1 = 0
+        flag_malignant_physician_2 = 0
+        flag_malignant_physician_3 = 0
+        flag_malignant_physician_4 = 0
+
+        flag_benign_physician_1 = 0
+        flag_benign_physician_2 = 0
+        flag_benign_physician_3 = 0
+        flag_benign_physician_4 = 0
 
         reading_sessions = xml.LidcReadMessage.find_all('readingSession')
+
+        for diagnostic_index, reading_session in enumerate(reading_sessions, 1): # 循环不同医师的诊断结果
+            nodules = reading_session.find_all("unblindedReadNodule")
+
+            for nodule in nodules:
+                if nodule.characteristics:
+                    # 判定1.结节被诊断医师人数 >= 3； 判定2.结节良恶性。
+                    nodule_id = nodule.noduleID.text
+                    malignancy = int(nodule.characteristics.malignancy.text)
+                    if  (not nodule_id in list_nodule_id) or malignancy == 3:
+                        continue
+
+                    if malignancy > 3: # 判定为恶性
+                        if diagnostic_index == 1:
+                            flag_malignant_physician_1 += 1
+                            dic_malignant_1 = get_characteristics_dic(nodule)
+
+                        elif diagnostic_index == 2:
+                            flag_malignant_physician_2 += 1
+                            dic_malignant_2 = get_characteristics_dic(nodule)
+
+                        elif diagnostic_index == 3:
+                            flag_malignant_physician_3 += 1
+                            dic_malignant_3 = get_characteristics_dic(nodule)
+                            
+                        elif diagnostic_index == 4:
+                            flag_malignant_physician_4 += 1
+                            dic_malignant_4 = get_characteristics_dic(nodule)
+                        
+                    if malignancy < 3: # 判定为良性
+                        if diagnostic_index == 1:
+                            flag_malignant_physician_1 += 1
+                            dic_benign_1 = get_characteristics_dic(nodule)
+
+                        elif diagnostic_index == 2:
+                            flag_malignant_physician_2 += 1
+                            dic_benign_2 = get_characteristics_dic(nodule)
+
+                        elif diagnostic_index == 3:
+                            flag_malignant_physician_3 += 1
+                            dic_benign_3 = get_characteristics_dic(nodule)
+                            
+                        elif diagnostic_index == 4:
+                            flag_malignant_physician_4 += 1
+                            dic_benign_4 = get_characteristics_dic(nodule)
+        
+        if flag_malignant_physician_1 + flag_malignant_physician_2 + flag_malignant_physician_3 + flag_malignant_physician_4 >= 3:
+            # write info at new_annotation.csv 判定为恶性
+            class_malignant = 1
+
+        if flag_benign_physician_1 + flag_benign_physician_2 + flag_benign_physician_3 + flag_benign_physician_4 >= 3:
+            # write info at new_annotation.csv 判定为良性
+            class_malignant = 0
+
+def get_mean_dic_3(dic_1, dic_2, dic_3):
+
+
+def get_mean_dic_4(dic_1, dic_2, dic_3, dic_4):
+
+
+def get_characteristics_dic(nodule):
+    characteristics_dic = {
+        'subtlety': int(nodule.characteristics.subtlety.text),
+        'internalStructure': int(nodule.characteristics.internalStructure.text),
+        'calcification': int(nodule.characteristics.calcification.text),
+        'sphericity': int(nodule.characteristics.sphericity.text),
+        'margin': int(nodule.characteristics.margin.text),
+        'lobulation': int(nodule.characteristics.lobulation.text),
+        'spiculation': int(nodule.characteristics.spiculation.text),
+        'texture': int(nodule.characteristics.texture.text),
+        'malignancy': int(nodule.characteristics.malignancy.text),
+        }
+    return characteristics_dic

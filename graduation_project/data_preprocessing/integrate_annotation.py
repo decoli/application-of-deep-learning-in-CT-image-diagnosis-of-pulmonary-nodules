@@ -35,15 +35,18 @@ for each_path_xml in list_path_xml:
     print(pd_scan)
 
     for each_scan in pd_scan.itertuples():
-        if not math.isnan(each_scan):
+        if not math.isnan(each_scan['Unnamed: 13']): # 诊断太多， 大于医师人数
             continue
+        if math.isnan(each_scan['Unnamed: 11']): # 诊断太少， 至少3个医师的诊断
+        continue
+
 
         # get node IDs
         list_node_id = []
-        list_node_id.append(pd_scan['nodIDs'])
-        list_node_id.append(pd_scan['Unnamed: 10'])
-        list_node_id.append(pd_scan['Unnamed: 11'])
-        list_node_id.append(pd_scan['Unnamed: 12'])
+        list_node_id.append(pd_scan['nodIDs']) # 第1个诊断
+        list_node_id.append(pd_scan['Unnamed: 10']) # 第2个诊断
+        list_node_id.append(pd_scan['Unnamed: 11']) # 第3个诊断
+        list_node_id.append(pd_scan['Unnamed: 12']) # 第4个诊断
 
 
         # parse xml

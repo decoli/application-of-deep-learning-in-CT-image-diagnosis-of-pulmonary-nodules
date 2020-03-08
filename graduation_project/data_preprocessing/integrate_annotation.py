@@ -19,7 +19,6 @@ print(pd_3_2)
 recursive_path_xml = os.path.join(test_root_lidc, '**', '*.xml')
 list_path_xml = glob.glob(recursive_path_xml, recursive=True)
 
-
 def get_mean_dic_3(dic_1, dic_2, dic_3):
     dic_characteristics = {
         'subtlety': (dic_1['subtlety'] + dic_2['subtlety'] + dic_3['subtlety']) / 3,
@@ -61,7 +60,6 @@ def get_dic_characteristics(nodule):
         'malignancy': int(nodule.characteristics.malignancy.text),
         }
     return dic_characteristics
-
 
 for each_path_xml in list_path_xml:
     lidc_no = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(each_path_xml))))

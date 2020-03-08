@@ -106,7 +106,13 @@ for each_path_xml in list_path_xml:
     series_number = dicom.SeriesNumber
 
     # serch series number in list_3_2
-    pd_scan = pd_3_2[pd_3_2['scan'] == int(series_number)]
+    try:
+        pd_scan = pd_3_2[pd_3_2['scan'] == int(series_number)]
+    except TypeError:
+        continue
+    else:
+        pd_scan = pd_3_2[pd_3_2['scan'] == int(series_number)]
+
     if pd_scan.empty:
         continue
     print(pd_scan)

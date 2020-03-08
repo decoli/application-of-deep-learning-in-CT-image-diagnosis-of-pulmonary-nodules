@@ -124,6 +124,7 @@ for each_path_xml in list_path_xml:
         flag_benign_physician_3 = 0
         flag_benign_physician_4 = 0
 
+        list_dic_characteristics = []
         reading_sessions = xml.LidcReadMessage.find_all('readingSession')
 
         for diagnostic_index, reading_session in enumerate(reading_sessions, 1): # 循环不同医师的诊断结果
@@ -140,52 +141,61 @@ for each_path_xml in list_path_xml:
                     if malignancy > 3: # 判定为恶性
                         if diagnostic_index == 1:
                             flag_malignant_physician_1 += 1
-                            dic_characteristics_1 = get_dic_characteristics(nodule)
+                            dic_characteristics = get_dic_characteristics(nodule)
+                            list_dic_characteristics.append(dic_characteristics)
 
                         elif diagnostic_index == 2:
                             flag_malignant_physician_2 += 1
-                            dic_characteristics_2 = get_dic_characteristics(nodule)
+                            dic_characteristics = get_dic_characteristics(nodule)
+                            list_dic_characteristics.append(dic_characteristics)
 
                         elif diagnostic_index == 3:
                             flag_malignant_physician_3 += 1
-                            dic_characteristics_3 = get_dic_characteristics(nodule)
-                            
+                            dic_characteristics = get_dic_characteristics(nodule)
+                            list_dic_characteristics.append(dic_characteristics)
+
                         elif diagnostic_index == 4:
                             flag_malignant_physician_4 += 1
-                            dic_characteristics_4 = get_dic_characteristics(nodule)
-                        
+                            dic_characteristics = get_dic_characteristics(nodule)
+                            list_dic_characteristics.append(dic_characteristics)
+
                     if malignancy < 3: # 判定为良性
                         if diagnostic_index == 1:
                             flag_benign_physician_1 += 1
-                            dic_characteristics_1 = get_dic_characteristics(nodule)
+                            dic_characteristics = get_dic_characteristics(nodule)
+                            list_dic_characteristics.append(dic_characteristics)
 
                         elif diagnostic_index == 2:
                             flag_benign_physician_2 += 1
-                            dic_characteristics_2 = get_dic_characteristics(nodule)
-
+                            dic_characteristics = get_dic_characteristics(nodule)
+                            list_dic_characteristics.append(dic_characteristics)
+                            
                         elif diagnostic_index == 3:
                             flag_benign_physician_3 += 1
-                            dic_characteristics_3 = get_dic_characteristics(nodule)
-                            
+                            dic_characteristics = get_dic_characteristics(nodule)
+                            list_dic_characteristics.append(dic_characteristics)
+
                         elif diagnostic_index == 4:
                             flag_benign_physician_4 += 1
-                            dic_characteristics_4 = get_dic_characteristics(nodule)
-        
+                            dic_characteristics = get_dic_characteristics(nodule)
+                            list_dic_characteristics.append(dic_characteristics)
+                            
         count_malignant_physician = flag_malignant_physician_1 + flag_malignant_physician_2 + flag_malignant_physician_3 + flag_malignant_physician_4
         count_benign_physician = flag_benign_physician_1 + flag_benign_physician_2 + flag_benign_physician_3 + flag_benign_physician_4
 
         if count_malignant_physician >= 3:
             # 判定为恶性
             class_malignant = 1
-
-        if count_benign_physician >= 3:
+        elif count_benign_physician >= 3:
             # 判定为良性
             class_malignant = 0
+        else:
+            continue
 
         if count_malignant_physician + count_benign_physician == 3:
-            mean_dic = get_mean_dic_3(dic_characteristics_1, dic_characteristics_2, dic_characteristics_3)
+            mean_dic = get_mean_dic_3(list_dic_characteristics[0], list_dic_characteristics[1], list_dic_characteristics[2])
         if count_malignant_physician + count_benign_physician == 4:
-            mean_dic = get_mean_dic_4(dic_characteristics_1, dic_characteristics_2, dic_characteristics_3, dic_characteristics_4)
+            mean_dic = get_mean_dic_4(list_dic_characteristics[0], list_dic_characteristics[1], list_dic_characteristics[2], list_dic_characteristics[3])
 
         # write info at new_annotation.csv 
-        print(each_path_xml)
+        print(each_path_xml) # class_malignant, mean_dic

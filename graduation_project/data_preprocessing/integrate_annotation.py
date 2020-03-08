@@ -220,7 +220,7 @@ for each_path_xml in list_path_xml:
             # 判定为良性
             class_malignant = 0
         else:
-            continue
+            continue # 医师对该结节没有诊断
 
         if count_malignant_physician + count_benign_physician == 3:
             mean_dic = get_mean_dic_3(list_dic_characteristics[0], list_dic_characteristics[1], list_dic_characteristics[2])

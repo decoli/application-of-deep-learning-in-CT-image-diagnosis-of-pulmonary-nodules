@@ -162,7 +162,13 @@ for each_path_xml in list_path_xml:
         flag_benign_physician_4 = 0
 
         list_dic_characteristics = []
-        reading_sessions = xml.LidcReadMessage.find_all('readingSession')
+
+        try:
+            xml.LidcReadMessage.find_all('readingSession')
+        except AttributeError:
+            continue
+        else:
+            reading_sessions = xml.LidcReadMessage.find_all('readingSession')
 
         for diagnostic_index, reading_session in enumerate(reading_sessions, 1): # 循环不同医师的诊断结果
             nodules = reading_session.find_all("unblindedReadNodule")

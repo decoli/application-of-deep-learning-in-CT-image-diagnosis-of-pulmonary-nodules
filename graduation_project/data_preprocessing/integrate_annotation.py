@@ -89,9 +89,15 @@ for each_path_xml in list_path_xml:
     for index_row, each_row in pd_scan.iterrows():
         print(each_row)
 
-        if not math.isnan(each_row['Unnamed: 13']): # 诊断太多， 大于医师人数
-            continue
-
+        #####
+        try:
+            math.isnan(each_row['Unnamed: 13'])
+        except TypeError:
+            None
+        else:
+            if not math.isnan(each_row['Unnamed: 13']): # 诊断太多， 大于医师人数
+                continue
+        
         try:
             math.isnan(each_row['Unnamed: 11'])
         except TypeError:

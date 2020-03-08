@@ -1,6 +1,7 @@
 path_list_3_2 = '/Users/shirui/study/tianjin-university-study/application-of-deep-learning-in-CT-image-diagnosis-of-pulmonary-nodules/data/dataset_lidc/list3.2.csv'
 root_lidc = '/Volumes/shirui_WD_2/lung_image/LIDC-IDRI'
 test_root_lidc = '/Users/shirui/study/tianjin-university-study/application-of-deep-learning-in-CT-image-diagnosis-of-pulmonary-nodules/data/dataset_lidc/image/LIDC-IDRI'
+path_list_3_2_integrated = 'data/dataset_lidc/list3.2_integrated.csv'
 
 import csv
 import glob
@@ -60,6 +61,35 @@ def get_dic_characteristics(nodule):
         'malignancy': int(nodule.characteristics.malignancy.text),
         }
     return dic_characteristics
+
+
+with open(path_list_3_2_integrated, 'w') as f:
+    writer = csv.writer(f)
+    writer.writerow(
+        [
+        'case',
+        'scan',
+        'roi',
+        'volume',
+        'eq. diam.',
+        'x loc.',
+        'y loc.',
+        'slice no.',
+
+        'subtlety',
+        'internalStructure',
+        'calcification',
+        'sphericity',
+        'margin',
+        'lobulation',
+        'spiculation',
+        'texture',
+        'malignancy',
+
+        'class_malignant',
+        'dir_dicom',
+        ]
+    )
 
 for each_path_xml in list_path_xml:
     lidc_no = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(each_path_xml))))
@@ -199,3 +229,30 @@ for each_path_xml in list_path_xml:
 
         # write info at new_annotation.csv 
         print(each_path_xml) # class_malignant, mean_dic
+
+        write_row = []
+        write_row.append(each_row['case'])
+        write_row.append(each_row['scan'])
+        write_row.append(each_row['roi'])
+        write_row.append(each_row['volume'])
+        write_row.append(each_row['eq. diam.'])
+        write_row.append(each_row['x loc.'])
+        write_row.append(each_row['y loc.'])
+        write_row.append(each_row['slice no.'])
+
+        write_row.append(mean_dic['subtlety'])
+        write_row.append(mean_dic['internalStructure'])
+        write_row.append(mean_dic['calcification'])
+        write_row.append(mean_dic['sphericity'])
+        write_row.append(mean_dic['margin'])
+        write_row.append(mean_dic['lobulation'])
+        write_row.append(mean_dic['spiculation'])
+        write_row.append(mean_dic['texture'])
+        write_row.append(mean_dic['malignancy'])
+
+        write_row.append(class_malignant)
+        write_row.append(os.path.join(lidc_no, lidc_sub, lidc_sub_sub))
+        
+        with open(path_list_3_2_integrated, 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(write_row)

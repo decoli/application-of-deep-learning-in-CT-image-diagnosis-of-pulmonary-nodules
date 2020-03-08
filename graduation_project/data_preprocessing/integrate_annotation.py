@@ -194,7 +194,7 @@ for each_path_xml in list_path_xml:
 
         if count_malignant_physician + count_benign_physician == 3:
             mean_dic = get_mean_dic_3(list_dic_characteristics[0], list_dic_characteristics[1], list_dic_characteristics[2])
-        if count_malignant_physician + count_benign_physician == 4:
+        elif count_malignant_physician + count_benign_physician == 4:
             mean_dic = get_mean_dic_4(list_dic_characteristics[0], list_dic_characteristics[1], list_dic_characteristics[2], list_dic_characteristics[3])
 
         # write info at new_annotation.csv 

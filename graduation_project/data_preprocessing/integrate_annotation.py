@@ -222,9 +222,9 @@ for each_path_xml in list_path_xml:
         else:
             continue # 医师对该结节没有诊断
 
-        if count_malignant_physician + count_benign_physician == 3:
+        if ((count_malignant_physician ==3) or (count_benign_physician == 3)):
             mean_dic = get_mean_dic_3(list_dic_characteristics[0], list_dic_characteristics[1], list_dic_characteristics[2])
-        elif count_malignant_physician + count_benign_physician == 4:
+        elif ((count_malignant_physician ==3) or (count_benign_physician == 4)):
             mean_dic = get_mean_dic_4(list_dic_characteristics[0], list_dic_characteristics[1], list_dic_characteristics[2], list_dic_characteristics[3])
 
         # write info at new_annotation.csv 

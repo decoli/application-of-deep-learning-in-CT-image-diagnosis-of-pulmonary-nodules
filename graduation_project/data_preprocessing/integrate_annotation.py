@@ -36,15 +36,15 @@ def get_mean_dic_3(dic_1, dic_2, dic_3):
 
 def get_mean_dic_4(dic_1, dic_2, dic_3, dic_4):
     dic_characteristics = {
-        'subtlety': (dic_1['subtlety'] + dic_2['subtlety'] + dic_3['subtlety'] + dic_3['subtlety']) / 4,
-        'internalStructure': (dic_1['internalStructure'] + dic_2['internalStructure'] + dic_3['internalStructure'] + dic_3['internalStructure']) / 4,
-        'calcification': (dic_1['calcification'] + dic_2['calcification'] + dic_3['calcification'] + dic_3['calcification']) / 4,
-        'sphericity': (dic_1['sphericity'] + dic_2['sphericity'] + dic_3['sphericity'] + dic_3['sphericity']) / 4,
-        'margin': (dic_1['margin'] + dic_2['margin'] + dic_3['margin'] + dic_3['margin']) / 4,
-        'lobulation': (dic_1['lobulation'] + dic_2['lobulation'] + dic_3['lobulation'] + dic_3['lobulation']) / 4,
-        'spiculation': (dic_1['spiculation'] + dic_2['spiculation'] + dic_3['spiculation'] + dic_3['spiculation']) / 4,
-        'texture': (dic_1['texture'] + dic_2['texture'] + dic_3['texture'] + dic_3['texture']) / 4,
-        'malignancy': (dic_1['malignancy'] + dic_2['malignancy'] + dic_3['malignancy'] + dic_3['malignancy']) / 4,
+        'subtlety': (dic_1['subtlety'] + dic_2['subtlety'] + dic_3['subtlety'] + dic_4['subtlety']) / 4,
+        'internalStructure': (dic_1['internalStructure'] + dic_2['internalStructure'] + dic_3['internalStructure'] + dic_4['internalStructure']) / 4,
+        'calcification': (dic_1['calcification'] + dic_2['calcification'] + dic_3['calcification'] + dic_4['calcification']) / 4,
+        'sphericity': (dic_1['sphericity'] + dic_2['sphericity'] + dic_3['sphericity'] + dic_4['sphericity']) / 4,
+        'margin': (dic_1['margin'] + dic_2['margin'] + dic_3['margin'] + dic_4['margin']) / 4,
+        'lobulation': (dic_1['lobulation'] + dic_2['lobulation'] + dic_3['lobulation'] + dic_4['lobulation']) / 4,
+        'spiculation': (dic_1['spiculation'] + dic_2['spiculation'] + dic_3['spiculation'] + dic_4['spiculation']) / 4,
+        'texture': (dic_1['texture'] + dic_2['texture'] + dic_3['texture'] + dic_4['texture']) / 4,
+        'malignancy': (dic_1['malignancy'] + dic_2['malignancy'] + dic_3['malignancy'] + dic_4['malignancy']) / 4,
     }
     return dic_characteristics
 

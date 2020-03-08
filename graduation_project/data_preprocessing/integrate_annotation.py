@@ -3,6 +3,8 @@ root_lidc = '/Volumes/shirui_WD_2/lung_image/LIDC-IDRI'
 test_root_lidc = '/Users/shirui/study/tianjin-university-study/application-of-deep-learning-in-CT-image-diagnosis-of-pulmonary-nodules/data/dataset_lidc/image/LIDC-IDRI'
 path_list_3_2_integrated = 'data/dataset_lidc/list3.2_integrated.csv'
 
+root = root_lidc
+
 import csv
 import glob
 import math
@@ -17,7 +19,7 @@ pd_3_2 = pd.read_csv(path_list_3_2)
 pd_3_2.index += 1
 print(pd_3_2)
 
-recursive_path_xml = os.path.join(test_root_lidc, '**', '*.xml')
+recursive_path_xml = os.path.join(root, '**', '*.xml')
 list_path_xml = glob.glob(recursive_path_xml, recursive=True)
 
 def get_mean_dic_3(dic_1, dic_2, dic_3):
@@ -98,7 +100,7 @@ for each_path_xml in list_path_xml:
     name_xml = os.path.basename(each_path_xml)
 
     # get dcm
-    path_dicom = os.path.join(test_root_lidc, lidc_no, lidc_sub, lidc_sub_sub, '000001.dcm')
+    path_dicom = os.path.join(root, lidc_no, lidc_sub, lidc_sub_sub, '000001.dcm')
     dicom = pydicom.read_file(path_dicom)
     series_number = dicom.SeriesNumber
 

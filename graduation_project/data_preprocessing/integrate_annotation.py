@@ -100,8 +100,9 @@ for each_path_xml in list_path_xml:
     name_xml = os.path.basename(each_path_xml)
 
     # get dcm
-    path_dicom = os.path.join(root, lidc_no, lidc_sub, lidc_sub_sub, '000001.dcm')
-    dicom = pydicom.read_file(path_dicom)
+    path_dicom = os.path.join(root, lidc_no, lidc_sub, lidc_sub_sub, '*.dcm')
+    list_path_dicom = glob.glob(path_dicom)
+    dicom = pydicom.read_file(list_path_dicom[0])
     series_number = dicom.SeriesNumber
 
     # serch series number in list_3_2

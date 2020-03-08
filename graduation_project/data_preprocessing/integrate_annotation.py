@@ -149,43 +149,39 @@ for each_path_xml in list_path_xml:
                             flag_malignant_physician_1 += 1
                             dic_characteristics = get_dic_characteristics(nodule)
                             list_dic_characteristics.append(dic_characteristics)
-
                         elif diagnostic_index == 2:
                             flag_malignant_physician_2 += 1
                             dic_characteristics = get_dic_characteristics(nodule)
                             list_dic_characteristics.append(dic_characteristics)
-
                         elif diagnostic_index == 3:
                             flag_malignant_physician_3 += 1
                             dic_characteristics = get_dic_characteristics(nodule)
                             list_dic_characteristics.append(dic_characteristics)
-
                         elif diagnostic_index == 4:
                             flag_malignant_physician_4 += 1
                             dic_characteristics = get_dic_characteristics(nodule)
                             list_dic_characteristics.append(dic_characteristics)
+                        break
 
-                    if malignancy < 3: # 判定为良性
+                    elif malignancy < 3: # 判定为良性
                         if diagnostic_index == 1:
                             flag_benign_physician_1 += 1
                             dic_characteristics = get_dic_characteristics(nodule)
                             list_dic_characteristics.append(dic_characteristics)
-
                         elif diagnostic_index == 2:
                             flag_benign_physician_2 += 1
                             dic_characteristics = get_dic_characteristics(nodule)
                             list_dic_characteristics.append(dic_characteristics)
-                            
                         elif diagnostic_index == 3:
                             flag_benign_physician_3 += 1
                             dic_characteristics = get_dic_characteristics(nodule)
                             list_dic_characteristics.append(dic_characteristics)
-
                         elif diagnostic_index == 4:
                             flag_benign_physician_4 += 1
                             dic_characteristics = get_dic_characteristics(nodule)
                             list_dic_characteristics.append(dic_characteristics)
-                            
+                        break
+
         count_malignant_physician = flag_malignant_physician_1 + flag_malignant_physician_2 + flag_malignant_physician_3 + flag_malignant_physician_4
         count_benign_physician = flag_benign_physician_1 + flag_benign_physician_2 + flag_benign_physician_3 + flag_benign_physician_4
 

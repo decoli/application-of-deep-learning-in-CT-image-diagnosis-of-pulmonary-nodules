@@ -1,5 +1,8 @@
 path_annotation = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui.csv'
 root_luna16 = '/Volumes/shirui_WD_2/lung_image/all_LUNA16/LUNA16'
+root_save_npy = 'data/dataset_deep_lung/data_sample/npy'
+root_save_png = 'data/dataset_deep_lung/data_sample/png'
+
 s = 32 # size_cutting
 s = int(s / 2 + 0.5)
 
@@ -87,4 +90,12 @@ for index, each_annotation in annotation_pd.iterrows():
     z = int(z + 0.5)
     
     location_nodule = ct_scan[z][y - s: y + s, x - s: x + s]
-    cv2.imwrite('test.png', location_nodule * 255)
+
+    # save .png
+    name_png = '{index}.png'.format(index=index)
+    path_png = os.path.join(root_save_png, name_png)
+    cv2.imwrite(path_png, location_nodule * 255)
+
+    # save .numpy
+    # name_npy = '{index}.npy'.format(index=index)
+    # path_png = os.path.join(root_save_npy, name_npy)

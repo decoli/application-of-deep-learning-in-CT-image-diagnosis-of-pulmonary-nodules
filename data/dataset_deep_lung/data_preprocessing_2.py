@@ -97,5 +97,6 @@ for index, each_annotation in annotation_pd.iterrows():
     cv2.imwrite(path_png, location_nodule * 255)
 
     # save .numpy
-    # name_npy = '{index}.npy'.format(index=index)
-    # path_png = os.path.join(root_save_npy, name_npy)
+    name_npy = '{index}.npy'.format(index=index)
+    path_png = os.path.join(root_save_npy, name_npy)
+    np.save(path_png, location_nodule)

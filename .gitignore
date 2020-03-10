@@ -22,3 +22,4 @@ origin/
 data/lidc/*
 data/dataset_lidc/image/*
 data/dataset_deep_lung/mhd/*
+pandas/_libs/parsers.pyx

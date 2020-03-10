@@ -35,6 +35,11 @@ def load_itk(path_mhd):
 
     return ct_scan, offset_x, offset_y, offset_z, spacing_x, spacing_y, spacing_z
 
+def world2voxel_coord(world_coord, origin, spacing):
+    stretched_voxel_coord = np.absolute(world_coord - origin)
+    voxel_coord = stretched_voxel_coord / spacing
+    return voxel_coord
+
 annotation_pd = pd.read_csv(path_annotation)
 annotation_pd.index += 1
 print(annotation_pd)
@@ -45,4 +50,20 @@ for index, each_annotation in annotation_pd.iterrows():
     path_mhd = path_mhd[0]
 
     ct_scan, offset_x, offset_y, offset_z, spacing_x, spacing_y, spacing_z = load_itk(path_mhd)
+    voxel_coord_x = world2voxel_coord(
+        each_annotation['coordX'],
+        offset_x,
+        spacing_x,
+        )
+    voxel_coord_y = world2voxel_coord(
+        each_annotation['coordY'],
+        offset_y,
+        spacing_y,
+        )
+    voxel_coord_z = world2voxel_coord(
+        each_annotation['coordZ'],
+        offset_z,
+        spacing_z,
+        )
     print('dd')
+    

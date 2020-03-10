@@ -1,9 +1,12 @@
 path_annotation = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui.csv'
 root_luna16 = '/Volumes/shirui_WD_2/lung_image/all_LUNA16/LUNA16'
+s = 32 # size_cutting
+s = int(s / 2 + 0.5)
 
 import glob
 import os
 
+import cv2
 import numpy as np
 import pandas as pd
 import SimpleITK as sitk
@@ -40,30 +43,48 @@ def world2voxel_coord(world_coord, origin, spacing):
     voxel_coord = stretched_voxel_coord / spacing
     return voxel_coord
 
+def normalizePlanes(npzarray):
+     
+    maxHU = 400.
+    minHU = -1000.
+ 
+    npzarray = (npzarray - minHU) / (maxHU - minHU)
+    npzarray[npzarray>1] = 1.
+    npzarray[npzarray<0] = 0.
+    return npzarray
+
 annotation_pd = pd.read_csv(path_annotation)
 annotation_pd.index += 1
 print(annotation_pd)
 for index, each_annotation in annotation_pd.iterrows():
-    name_mhd = each_annotation['seriesuid'] + '.mhd'
-    path_mhd = os.path.join(root_luna16, '**', name_mhd)
+    file_mhd = each_annotation['seriesuid'] + '.mhd'
+    path_mhd = os.path.join(root_luna16, '**', file_mhd)
     path_mhd = glob.glob(path_mhd, recursive=True)
     path_mhd = path_mhd[0]
 
     ct_scan, offset_x, offset_y, offset_z, spacing_x, spacing_y, spacing_z = load_itk(path_mhd)
-    voxel_coord_x = world2voxel_coord(
+    ct_scan = normalizePlanes(ct_scan)
+
+    x = world2voxel_coord(
         each_annotation['coordX'],
         offset_x,
         spacing_x,
         )
-    voxel_coord_y = world2voxel_coord(
+    x = int(x + 0.5)
+
+    y = world2voxel_coord(
         each_annotation['coordY'],
         offset_y,
         spacing_y,
         )
-    voxel_coord_z = world2voxel_coord(
+    y = int(y + 0.5)
+
+    z = world2voxel_coord(
         each_annotation['coordZ'],
         offset_z,
         spacing_z,
         )
-    print('dd')
+    z = int(z + 0.5)
     
+    location_nodule = ct_scan[z][y - s: y + s, x - s: x + s]
+    cv2.imwrite('test.png', location_nodule * 255)

@@ -21,3 +21,4 @@ utility/model/test/*
 origin/
 data/lidc/*
 data/dataset_lidc/image/*
+data/dataset_deep_lung/mhd/*

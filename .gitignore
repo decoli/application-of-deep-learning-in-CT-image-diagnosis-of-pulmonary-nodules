@@ -23,3 +23,4 @@ data/lidc/*
 data/dataset_lidc/image/*
 data/dataset_deep_lung/mhd/*
 pandas/_libs/parsers.pyx
+data/dataset_deep_lung/data_sample/png/*

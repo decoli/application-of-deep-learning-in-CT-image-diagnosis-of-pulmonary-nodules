@@ -8,6 +8,7 @@ import glob
 import os
 
 import pandas as pd
+from bs4 import BeautifulSoup
 
 # get annotation_shirui
 pd_annotation_1 = pd.read_csv(path_annotation_shirui_1)
@@ -61,3 +62,66 @@ for index, each_annotation in pd_annotation_1.iterrows():
 
     # map the date (800 of cases)
     path_xml = list_path_xml[0]
+    with open(path_xml, 'r') as file_xml:
+        markup = file_xml.read()
+    xml = BeautifulSoup(markup, features='xml')
+
+    reading_sessions = xml.LidcReadMessage.find_all('readingSession')
+    list_dic = []
+    for each_reading in reading_sessions:
+        nodules = each_reading.find_all('unblindedReadNodule') # 每个 unblindedReadNodule 表示一个（大或小）结节
+        for nodule in nodules:
+            rois = nodule.find_all('roi')
+            for each_roi in rois:
+                if int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ']):
+                    if nodule.characteristics:
+                        characteristics_dic = {
+                            'subtlety': int(nodule.characteristics.subtlety.text),
+                            'internalStructure': int(nodule.characteristics.internalStructure.text),
+                            'calcification': int(nodule.characteristics.calcification.text),
+                            'sphericity': int(nodule.characteristics.sphericity.text),
+                            'margin': int(nodule.characteristics.margin.text),
+                            'lobulation': int(nodule.characteristics.lobulation.text),
+                            'spiculation': int(nodule.characteristics.spiculation.text),
+                            'texture': int(nodule.characteristics.texture.text),
+                            'malignancy': int(nodule.characteristics.malignancy.text),
+                            }
+                        list_dic.append(characteristics_dic)
+                        continue
+                    else:
+                        continue
+            continue
+        if len(list_dic) == 0:
+            print('small nodule: {path_xml}'.format(path_xml=path_xml))
+        
+        # get mean value
+        sum_subtlety = 0
+        sum_internalStructure = 0
+        sum_calcification = 0
+        sum_sphericity  = 0
+        sum_margin = 0
+        sum_lobulation = 0
+        sum_spiculation = 0
+        sum_texture = 0
+        sum_malignancy = 0
+        for each_dic in list_dic:
+            sum_subtlety += each_dic['subtlety']
+            sum_internalStructure += each_dic['internalStructure']
+            sum_calcification += each_dic['calcification']
+            sum_sphericity += each_dic['sphericity']
+            sum_margin += each_dic['margin']
+            sum_lobulation += each_dic['lobulation']
+            sum_spiculation += each_dic['spiculation']
+            sum_texture += each_dic['texture']
+            sum_malignancy += each_dic['malignancy']
+        mean_subtlety = sum_subtlety / len(list_dic)
+        mean_internalStructure = sum_internalStructure / len(list_dic)
+        mean_calcification = sum_calcification / len(list_dic)
+        mean_sphericity = sum_sphericity / len(list_dic)
+        mean_margin = sum_margin / len(list_dic)
+        mean_lobulation = sum_lobulation / len(list_dic)
+        mean_spiculation = sum_spiculation / len(list_dic)
+        mean_texture = sum_texture / len(list_dic)
+        mean_malignancy = sum_malignancy / len(list_dic)
+
+    # write into v2.csv 

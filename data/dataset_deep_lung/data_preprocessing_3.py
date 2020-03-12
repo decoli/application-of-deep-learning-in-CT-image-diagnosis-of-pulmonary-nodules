@@ -23,7 +23,10 @@ pd_mapping.index += 1
 # serch for the .xml file
 count_no_file = 0
 count_too_long = 0
+count = 0
 for index, each_annotation in pd_annotation_1.iterrows():
+    count += 1
+
     # print(each_annotation)
     seriesuid = each_annotation['seriesuid']
     # print(seriesuid)
@@ -124,4 +127,5 @@ for index, each_annotation in pd_annotation_1.iterrows():
         mean_texture = sum_texture / len(list_dic)
         mean_malignancy = sum_malignancy / len(list_dic)
 
+    print(count)
     # write into v2.csv 

@@ -23,6 +23,7 @@ pd_mapping.index += 1
 # serch for the .xml file
 count_no_file = 0
 count_too_long = 0
+count_small_nodule = 0
 count = 0
 for index, each_annotation in pd_annotation_1.iterrows():
     count += 1
@@ -76,7 +77,13 @@ for index, each_annotation in pd_annotation_1.iterrows():
         for nodule in nodules:
             rois = nodule.find_all('roi')
             for each_roi in rois:
-                if int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ']):
+                condition_1 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] - 2)
+                condition_2 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] - 1)
+                condition_3 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'])
+                condition_4 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] + 1)
+                condition_5 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] + 2)
+
+                if condition_1 or condition_2 or condition_3 or condition_4 or condition_5: # 应该有一个允许范围
                     if nodule.characteristics:
                         characteristics_dic = {
                             'subtlety': int(nodule.characteristics.subtlety.text),
@@ -91,41 +98,43 @@ for index, each_annotation in pd_annotation_1.iterrows():
                             }
                         list_dic.append(characteristics_dic)
                         continue
-                    else:
-                        continue
-            continue
-        if len(list_dic) == 0:
-            print('small nodule: {path_xml}'.format(path_xml=path_xml))
-        
-        # get mean value
-        sum_subtlety = 0
-        sum_internalStructure = 0
-        sum_calcification = 0
-        sum_sphericity  = 0
-        sum_margin = 0
-        sum_lobulation = 0
-        sum_spiculation = 0
-        sum_texture = 0
-        sum_malignancy = 0
-        for each_dic in list_dic:
-            sum_subtlety += each_dic['subtlety']
-            sum_internalStructure += each_dic['internalStructure']
-            sum_calcification += each_dic['calcification']
-            sum_sphericity += each_dic['sphericity']
-            sum_margin += each_dic['margin']
-            sum_lobulation += each_dic['lobulation']
-            sum_spiculation += each_dic['spiculation']
-            sum_texture += each_dic['texture']
-            sum_malignancy += each_dic['malignancy']
-        mean_subtlety = sum_subtlety / len(list_dic)
-        mean_internalStructure = sum_internalStructure / len(list_dic)
-        mean_calcification = sum_calcification / len(list_dic)
-        mean_sphericity = sum_sphericity / len(list_dic)
-        mean_margin = sum_margin / len(list_dic)
-        mean_lobulation = sum_lobulation / len(list_dic)
-        mean_spiculation = sum_spiculation / len(list_dic)
-        mean_texture = sum_texture / len(list_dic)
-        mean_malignancy = sum_malignancy / len(list_dic)
+
+    if len(list_dic) == 0:
+        print('small nodule: {path_xml}'.format(path_xml=path_xml))
+        count_small_nodule += 1
+        continue
+    
+    # get mean value
+    sum_subtlety = 0
+    sum_internalStructure = 0
+    sum_calcification = 0
+    sum_sphericity  = 0
+    sum_margin = 0
+    sum_lobulation = 0
+    sum_spiculation = 0
+    sum_texture = 0
+    sum_malignancy = 0
+    for each_dic in list_dic:
+        sum_subtlety += each_dic['subtlety']
+        sum_internalStructure += each_dic['internalStructure']
+        sum_calcification += each_dic['calcification']
+        sum_sphericity += each_dic['sphericity']
+        sum_margin += each_dic['margin']
+        sum_lobulation += each_dic['lobulation']
+        sum_spiculation += each_dic['spiculation']
+        sum_texture += each_dic['texture']
+        sum_malignancy += each_dic['malignancy']
+    mean_subtlety = sum_subtlety / len(list_dic)
+    mean_internalStructure = sum_internalStructure / len(list_dic)
+    mean_calcification = sum_calcification / len(list_dic)
+    mean_sphericity = sum_sphericity / len(list_dic)
+    mean_margin = sum_margin / len(list_dic)
+    mean_lobulation = sum_lobulation / len(list_dic)
+    mean_spiculation = sum_spiculation / len(list_dic)
+    mean_texture = sum_texture / len(list_dic)
+    mean_malignancy = sum_malignancy / len(list_dic)
 
     print(count)
-    # write into v2.csv 
+    # write into v2.csv
+
+print(count_small_nodule)

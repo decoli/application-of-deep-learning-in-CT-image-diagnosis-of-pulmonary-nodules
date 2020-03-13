@@ -30,6 +30,7 @@ count = 0
 with open(path_annotation_shirui_2, 'w') as f:
     writer = csv.writer(f)
     writer.writerow([
+        'index',
         'seriesuid',
         ##
         'coordX',
@@ -178,6 +179,7 @@ for index, each_annotation in pd_annotation_1.iterrows():
     # write into v2.csv
     writer_row = []
     ##
+    writer_row.append(index)
     writer_row.append(each_annotation['seriesuid'])
     writer_row.append(each_annotation['coordX'])
     writer_row.append(each_annotation['coordY'])

@@ -25,6 +25,38 @@ count_no_file = 0
 count_too_long = 0
 count_small_nodule = 0
 count = 0
+
+with open(path_annotation_shirui_2, 'w') as f:
+    writer = csv.writer(f)
+    writer.writerow([
+        'seriesuid',
+        ##
+        'coordX',
+        'coordY',
+        'coordZ',
+        ##
+        'OffsetX',
+        'OffsetY',
+        'OffsetZ',
+        ##
+        'ElementSpacingX',
+        'ElementSpacingY',
+        'ElementSpacingZ',
+        ##
+        'diameter_mm',
+        'malignant',
+        ##
+        'subtlety',
+        'internalStructure',
+        'calcification',
+        'sphericity',
+        'margin',
+        'lobulation',
+        'spiculation',
+        'texture',
+        'malignancy',
+        ])
+
 for index, each_annotation in pd_annotation_1.iterrows():
     count += 1
 
@@ -141,6 +173,37 @@ for index, each_annotation in pd_annotation_1.iterrows():
     mean_malignancy = sum_malignancy / len(list_dic)
 
     print(count)
+
     # write into v2.csv
+    writer_row = []
+    ##
+    writer_row.append(each_annotation['seriesuid'])
+    writer_row.append(each_annotation['coordX'])
+    writer_row.append(each_annotation['coordY'])
+    writer_row.append(each_annotation['coordZ'])
+    ##
+    writer_row.append(each_annotation['OffsetX'])
+    writer_row.append(each_annotation['OffsetY'])
+    writer_row.append(each_annotation['OffsetZ'])
+    ##
+    writer_row.append(each_annotation['ElementSpacingX'])
+    writer_row.append(each_annotation['ElementSpacingY'])
+    writer_row.append(each_annotation['ElementSpacingZ'])
+    ##
+    writer_row.append(each_annotation['diameter_mm'])
+    writer_row.append(each_annotation['malignant'])
+    ##
+    writer_row.append(each_annotation[mean_subtlety])
+    writer_row.append(each_annotation[mean_internalStructure])
+    writer_row.append(each_annotation[mean_calcification])
+    writer_row.append(each_annotation[mean_sphericity])
+    writer_row.append(each_annotation[mean_margin])
+    writer_row.append(each_annotation[mean_lobulation])
+    writer_row.append(each_annotation[mean_spiculation])
+    writer_row.append(each_annotation[mean_texture])
+    writer_row.append(each_annotation[mean_malignancy])
+    with open(path_annotation_shirui_2, 'a') as f:
+        writer = csv.writer(f)
+        writer.writerow(writer_row)
 
 print(count_small_nodule)

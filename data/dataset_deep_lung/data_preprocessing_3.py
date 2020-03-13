@@ -74,6 +74,8 @@ for index, each_annotation in pd_annotation_1.iterrows():
     list_dic = []
     for each_reading in reading_sessions:
         nodules = each_reading.find_all('unblindedReadNodule') # 每个 unblindedReadNodule 表示一个（大或小）结节
+
+        flag_read = False
         for nodule in nodules:
             rois = nodule.find_all('roi')
             for each_roi in rois:
@@ -97,7 +99,11 @@ for index, each_annotation in pd_annotation_1.iterrows():
                             'malignancy': int(nodule.characteristics.malignancy.text),
                             }
                         list_dic.append(characteristics_dic)
-                        continue
+                        flag_read = True
+                        break
+
+            if flag_read:
+                break
 
     if len(list_dic) == 0:
         print('small nodule: {path_xml}'.format(path_xml=path_xml))

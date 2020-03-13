@@ -4,6 +4,7 @@ path_mapping_csv = 'data/dataset_deep_lung/LIDC-IDRI-mappingLUNA16.csv'
 
 root_lidc = '/Volumes/shirui_WD_2/lung_image/all_LIDC/LIDC-IDRI'
 
+import csv
 import glob
 import os
 
@@ -193,15 +194,15 @@ for index, each_annotation in pd_annotation_1.iterrows():
     writer_row.append(each_annotation['diameter_mm'])
     writer_row.append(each_annotation['malignant'])
     ##
-    writer_row.append(each_annotation[mean_subtlety])
-    writer_row.append(each_annotation[mean_internalStructure])
-    writer_row.append(each_annotation[mean_calcification])
-    writer_row.append(each_annotation[mean_sphericity])
-    writer_row.append(each_annotation[mean_margin])
-    writer_row.append(each_annotation[mean_lobulation])
-    writer_row.append(each_annotation[mean_spiculation])
-    writer_row.append(each_annotation[mean_texture])
-    writer_row.append(each_annotation[mean_malignancy])
+    writer_row.append(mean_subtlety)
+    writer_row.append(mean_internalStructure)
+    writer_row.append(mean_calcification)
+    writer_row.append(mean_sphericity)
+    writer_row.append(mean_margin)
+    writer_row.append(mean_lobulation)
+    writer_row.append(mean_spiculation)
+    writer_row.append(mean_texture)
+    writer_row.append(mean_malignancy)
     with open(path_annotation_shirui_2, 'a') as f:
         writer = csv.writer(f)
         writer.writerow(writer_row)

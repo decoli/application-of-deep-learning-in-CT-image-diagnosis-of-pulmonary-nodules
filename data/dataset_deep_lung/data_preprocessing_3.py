@@ -45,8 +45,8 @@ for index, each_annotation in pd_annotation_1.iterrows():
         '*.xml',
         )
 
-    list_path_xml = glob.glob(glob_path_xml) # 文件夹中找不到.xml文件
-    if len(list_path_xml) == 0:
+    list_path_xml = glob.glob(glob_path_xml)
+    if len(list_path_xml) == 0: # 文件夹中找不到.xml文件
         # print('no file')
         # print(glob_path_xml)
         count_no_file += 1

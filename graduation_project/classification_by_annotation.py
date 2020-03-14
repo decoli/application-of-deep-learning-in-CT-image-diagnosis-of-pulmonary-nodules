@@ -9,7 +9,7 @@ import torch.optim as optim
 import torch.utils.data as data
 from torch.utils.data import DataLoader
 
-BATCH_SIZE=4 #大概需要2G的显存
+BATCH_SIZE=200 #大概需要2G的显存
 EPOCHS=2 # 总共训练批次
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 
@@ -149,21 +149,13 @@ class AnnotationNet(nn.Module):
 
         out = F.dropout(out)
         out = self.fc_3(out)
-        out = F.log_softmax(out)
+        out = F.log_softmax(x, dim=0)
 
         return out
 
 model = AnnotationNet().to(DEVICE)
-optimizer = optim.Adam(model.parameters())
-
-def train(model):
-    model.train()
-    for _, (characteristics, label) in enumerate(data_loader_training):
-        pred = model(characteristics.float())
-
-
-def test(model):
-    model.eval()
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(model.parameters(), lr=0.01)
 
 data_training = DataTraining(list_data)
 # data_validation = DataValidation(list_data_validation)
@@ -171,6 +163,17 @@ data_training = DataTraining(list_data)
 data_loader_training = DataLoader(data_training, batch_size=BATCH_SIZE, shuffle=True)
 # data_loader_validation = DataLoader(data_validation, batch_size=args.size_batch, shuffle=True)
 
-for eopch in range(1, EPOCHS + 1):
-    train(model)
-    test(model)
+####
+model.train()
+for epoch in range(1, EPOCHS + 1):
+    total_loss = 0
+    for _, (characteristics, label) in enumerate(data_loader_training):
+        optimizer.zero_grad()
+        output = model(characteristics.float())
+        loss = criterion(output, label.long())
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item() 
+    if epoch % 20 == 0:
+        print(total_loss)
+

@@ -139,16 +139,16 @@ class AnnotationNet(nn.Module):
         self.fc_3 = nn.Linear(10, 2)
 
     def forward(self, x):
-        size_in = x.size(0)
+        size_in = x.size(0) # batch size
 
         out = self.fc_1(x)
         out = F.relu(out)
 
-        out = self.fc_2(x)
+        out = self.fc_2(out)
         out = F.relu(out)
 
-        out = nn.Dropout(out)
-        out = self.fc_3(x)
+        out = F.dropout(out)
+        out = self.fc_3(out)
         out = F.log_softmax(out)
 
         return out
@@ -159,9 +159,8 @@ optimizer = optim.Adam(model.parameters())
 def train(model):
     model.train()
     for _, (characteristics, label) in enumerate(data_loader_training):
-        print(characteristics)
-        print(label)
-        print('ddd')
+        pred = model(characteristics.float())
+
 
 def test(model):
     model.eval()

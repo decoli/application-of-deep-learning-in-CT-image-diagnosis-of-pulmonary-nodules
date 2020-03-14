@@ -9,30 +9,13 @@ import torch.optim as optim
 import torch.utils.data as data
 from torch.utils.data import DataLoader
 
-BATCH_SIZE=200 #大概需要2G的显存
-EPOCHS=2 # 总共训练批次
+BATCH_SIZE=200
+EPOCHS=2
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 
 path_annotation_v2 = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui_v2.csv'
 pd_annotation = pd.read_csv(path_annotation_v2)
 list_data = []
-
-for index, each_annotation in pd_annotation.iterrows():
-    characteristics_dic = {
-        # 'diameter_mm': each_annotation['diameter_mm'],
-        ##
-        'subtlety': each_annotation['subtlety'],
-        'internalStructure': each_annotation['internalStructure'],
-        'calcification': each_annotation['calcification'],
-        'sphericity': each_annotation['sphericity'],
-        'margin': each_annotation['margin'],
-        'lobulation': each_annotation['lobulation'],
-        'spiculation': each_annotation['spiculation'],
-        'texture': each_annotation['texture'],
-        ##
-        'malignant': each_annotation['malignant'],
-    }
-    list_data.append(characteristics_dic)
 
 class DataTraining(data.Dataset):
     def __init__(self, list_data):
@@ -130,6 +113,29 @@ class DataTraining(data.Dataset):
 
         return return_characteristics, return_malignant
 
+for index, each_annotation in pd_annotation.iterrows():
+    characteristics_dic = {
+        # 'diameter_mm': each_annotation['diameter_mm'],
+        ##
+        'subtlety': each_annotation['subtlety'],
+        'internalStructure': each_annotation['internalStructure'],
+        'calcification': each_annotation['calcification'],
+        'sphericity': each_annotation['sphericity'],
+        'margin': each_annotation['margin'],
+        'lobulation': each_annotation['lobulation'],
+        'spiculation': each_annotation['spiculation'],
+        'texture': each_annotation['texture'],
+        ##
+        'malignant': each_annotation['malignant'],
+    }
+    list_data.append(characteristics_dic)
+
+data_training = DataTraining(list_data)
+# data_validation = DataValidation(list_data_validation)
+
+data_loader_training = DataLoader(data_training, batch_size=BATCH_SIZE, shuffle=True)
+# data_loader_validation = DataLoader(data_validation, batch_size=args.size_batch, shuffle=True)
+
 class AnnotationNet(nn.Module):
     def __init__(self):
         super().__init__()
@@ -157,23 +163,32 @@ model = AnnotationNet().to(DEVICE)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
-data_training = DataTraining(list_data)
-# data_validation = DataValidation(list_data_validation)
-
-data_loader_training = DataLoader(data_training, batch_size=BATCH_SIZE, shuffle=True)
-# data_loader_validation = DataLoader(data_validation, batch_size=args.size_batch, shuffle=True)
-
 ####
-model.train()
+# model.train()
 for epoch in range(1, EPOCHS + 1):
     total_loss = 0
-    for _, (characteristics, label) in enumerate(data_loader_training):
+
+    for characteristics, label in data_loader_training:
+
+        # input data
+        input_data = characteristics.to(dtype=torch.float, device=DEVICE)
+
+        # label
+        label = label.to(dtype=torch.long, device=DEVICE)
+        label = torch.squeeze(label)
+
+        # optimizer
         optimizer.zero_grad()
-        output = model(characteristics.float())
-        loss = criterion(output, label.long())
+
+        # model predict
+        output = model(input_data)
+
+        # get loss
+        loss = criterion(output, label)
         loss.backward()
         optimizer.step()
-        total_loss += loss.item() 
+        total_loss += loss.item()
+
     if epoch % 20 == 0:
         print(total_loss)
 

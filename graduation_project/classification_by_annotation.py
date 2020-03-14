@@ -9,8 +9,8 @@ import torch.optim as optim
 import torch.utils.data as data
 from torch.utils.data import DataLoader
 
-BATCH_SIZE=512 #大概需要2G的显存
-EPOCHS=20 # 总共训练批次
+BATCH_SIZE=4 #大概需要2G的显存
+EPOCHS=2 # 总共训练批次
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 
 path_annotation_v2 = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui_v2.csv'
@@ -125,8 +125,8 @@ class DataTraining(data.Dataset):
         return_characteristics = np.array(list_characteristics)
 
         ## malignant
-        malignant = [current_item['malignant']]
-        return_malignant = np.array(malignant)
+        malignant = current_item['malignant']
+        return_malignant = np.array([malignant])
 
         return return_characteristics, return_malignant
 

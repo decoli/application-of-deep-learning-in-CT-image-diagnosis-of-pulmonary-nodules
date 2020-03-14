@@ -1,5 +1,6 @@
 import math
 
+import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
@@ -17,7 +18,7 @@ list_data = []
 
 for index, each_annotation in pd_annotation.iterrows():
     characteristics_dic = {
-        'diameter_mm': each_annotation['diameter_mm'],
+        # 'diameter_mm': each_annotation['diameter_mm'],
         ##
         'subtlety': each_annotation['subtlety'],
         'internalStructure': each_annotation['internalStructure'],
@@ -43,7 +44,7 @@ class DataTraining(data.Dataset):
         current_item = self.list_data[idx]
 
         ## diameter_mm
-        diameter_mm = current_item['diameter_mm']
+        # diameter_mm = current_item['diameter_mm']
 
         ## subtlety
         list_subtlety = [0] * 5
@@ -110,20 +111,23 @@ class DataTraining(data.Dataset):
             list_texture[integer] = 1
 
         ## return
-        list_return = []
-        list_return.append(diameter_mm)
-        list_return.extend(list_subtlety)
+        list_characteristics = []
+        # list_characteristics.append(diameter_mm) # 长度不是语义特征
+        list_characteristics.extend(list_subtlety)
         list_internalStructure.extend(list_internalStructure)
         list_calcification.extend(list_calcification)
         list_sphericity.extend(list_sphericity)
-        list_return.extend(list_margin)
-        list_return.extend(list_lobulation)
-        list_return.extend(list_spiculation)
-        list_return.extend(list_texture)
-        
+        list_characteristics.extend(list_margin)
+        list_characteristics.extend(list_lobulation)
+        list_characteristics.extend(list_spiculation)
+        list_characteristics.extend(list_texture)
+        return_characteristics = np.array(list_characteristics)
+
         ## malignant
-        malignant = current_item['malignant']
-        
+        malignant = [current_item['malignant']]
+        return_malignant = np.array(malignant)
+
+        return return_characteristics, return_malignant
 
 class AnnotationNet(nn.Module):
     def __init__(self):

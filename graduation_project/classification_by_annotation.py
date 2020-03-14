@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data as data
+from torch.utils.data import DataLoader
 
 BATCH_SIZE=512 #大概需要2G的显存
 EPOCHS=20 # 总共训练批次
@@ -49,74 +50,74 @@ class DataTraining(data.Dataset):
         ## subtlety
         list_subtlety = [0] * 5
         fractional, integer = math.modf(current_item['subtlety'])
-        list_subtlety[integer - 1] = 1
+        list_subtlety[int(integer) - 1] = 1
 
         if fractional > 0:
-            list_subtlety[integer] = 1
+            list_subtlety[int(integer)] = 1
 
         ## internalStructure
         list_internalStructure = [0] * 4
         fractional, integer = math.modf(current_item['internalStructure'])
-        list_internalStructure[integer - 1] = 1
+        list_internalStructure[int(integer) - 1] = 1
 
         if fractional > 0:
-            list_internalStructure[integer] = 1
+            list_internalStructure[int(integer)] = 1
 
         ## calcification
         list_calcification = [0] * 6
         fractional, integer = math.modf(current_item['calcification'])
-        list_calcification[integer - 1] = 1
+        list_calcification[int(integer) - 1] = 1
 
         if fractional > 0:
-            list_calcification[integer] = 1
+            list_calcification[int(integer)] = 1
 
         ## sphericity
         list_sphericity = [0] * 5
         fractional, integer = math.modf(current_item['sphericity'])
-        list_sphericity[integer - 1] = 1
+        list_sphericity[int(integer) - 1] = 1
 
         if fractional > 0:
-            list_sphericity[integer] = 1
+            list_sphericity[int(integer)] = 1
 
         ## margin
         list_margin = [0] * 5
         fractional, integer = math.modf(current_item['margin'])
-        list_margin[integer - 1] = 1
+        list_margin[int(integer) - 1] = 1
 
         if fractional > 0:
-            list_margin[integer] = 1
+            list_margin[int(integer)] = 1
  
         ## lobulation
         list_lobulation = [0] * 5
         fractional, integer = math.modf(current_item['lobulation'])
-        list_lobulation[integer - 1] = 1
+        list_lobulation[int(integer) - 1] = 1
 
         if fractional > 0:
-            list_lobulation[integer] = 1
+            list_lobulation[int(integer)] = 1
 
         ## spiculation
         list_spiculation = [0] * 5
         fractional, integer = math.modf(current_item['spiculation'])
-        list_spiculation[integer - 1] = 1
+        list_spiculation[int(integer) - 1] = 1
 
         if fractional > 0:
-            list_spiculation[integer] = 1
+            list_spiculation[int(integer)] = 1
 
         ## texture
         list_texture = [0] * 5
         fractional, integer = math.modf(current_item['texture'])
-        list_texture[integer - 1] = 1
+        list_texture[int(integer) - 1] = 1
 
         if fractional > 0:
-            list_texture[integer] = 1
+            list_texture[int(integer)] = 1
 
         ## return
         list_characteristics = []
         # list_characteristics.append(diameter_mm) # 长度不是语义特征
         list_characteristics.extend(list_subtlety)
-        list_internalStructure.extend(list_internalStructure)
-        list_calcification.extend(list_calcification)
-        list_sphericity.extend(list_sphericity)
+        list_characteristics.extend(list_internalStructure)
+        list_characteristics.extend(list_calcification)
+        list_characteristics.extend(list_sphericity)
         list_characteristics.extend(list_margin)
         list_characteristics.extend(list_lobulation)
         list_characteristics.extend(list_spiculation)
@@ -155,13 +156,21 @@ class AnnotationNet(nn.Module):
 model = AnnotationNet().to(DEVICE)
 optimizer = optim.Adam(model.parameters())
 
-def train():
+def train(model):
     model.train()
+    for _, (characteristics, label) in enumerate(data_loader_training):
+        print(characteristics)
+        print(label)
+        print('ddd')
 
-
-def test():
+def test(model):
     model.eval()
 
+data_training = DataTraining(list_data)
+# data_validation = DataValidation(list_data_validation)
+
+data_loader_training = DataLoader(data_training, batch_size=BATCH_SIZE, shuffle=True)
+# data_loader_validation = DataLoader(data_validation, batch_size=args.size_batch, shuffle=True)
 
 for eopch in range(1, EPOCHS + 1):
     train(model)

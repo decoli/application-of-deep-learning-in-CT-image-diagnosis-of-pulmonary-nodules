@@ -10,7 +10,7 @@ import torch.utils.data as data
 from torch.utils.data import DataLoader
 
 BATCH_SIZE=200
-EPOCHS=2
+EPOCHS=2000
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 
 path_annotation_v2 = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui_v2.csv'
@@ -138,25 +138,26 @@ data_loader_training = DataLoader(data_training, batch_size=BATCH_SIZE, shuffle=
 
 class AnnotationNet(nn.Module):
     def __init__(self):
-        super().__init__()
+        super(AnnotationNet, self).__init__()
 
-        self.fc_1 = nn.Linear(40, 20)
-        self.fc_2 = nn.Linear(20, 10)
-        self.fc_3 = nn.Linear(10, 2)
+        self.fc_1 = nn.Linear(40, 128)
+        self.fc_2 = nn.Linear(128, 128)
+        self.fc_3 = nn.Linear(128, 128)
+        self.fc_4 = nn.Linear(128, 128)
+        self.fc_5 = nn.Linear(128, 128)
+        self.fc_6 = nn.Linear(128, 2)
 
     def forward(self, x):
         size_in = x.size(0) # batch size
 
-        out = self.fc_1(x)
-        out = F.relu(out)
-
-        out = self.fc_2(out)
-        out = F.relu(out)
+        out = F.relu(self.fc_1(x))
+        out = F.relu(self.fc_2(out))
+        out = F.relu(self.fc_3(out))
+        out = F.relu(self.fc_4(out))
+        out = F.relu(self.fc_5(out))
 
         out = F.dropout(out)
-        out = self.fc_3(out)
-        out = F.log_softmax(x, dim=0)
-
+        out = self.fc_6(out)
         return out
 
 model = AnnotationNet().to(DEVICE)
@@ -189,6 +190,6 @@ for epoch in range(1, EPOCHS + 1):
         optimizer.step()
         total_loss += loss.item()
 
-    if epoch % 20 == 0:
+    if epoch % 60 == 0:
         print(total_loss)
 

@@ -12,12 +12,109 @@ from torch.utils.data import DataLoader
 BATCH_SIZE=200
 EPOCHS=2000
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
+RATE_TRAIN = 0.8
 
 path_annotation_v2 = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui_v2.csv'
 pd_annotation = pd.read_csv(path_annotation_v2)
 list_data = []
 
 class DataTraining(data.Dataset):
+    def __init__(self, list_data):
+        self.list_data = list_data
+
+    def __len__(self):
+        return len(self.list_data)
+
+    def __getitem__(self, idx):
+        current_item = self.list_data[idx]
+
+        ## diameter_mm
+        # diameter_mm = current_item['diameter_mm']
+
+        ## subtlety
+        list_subtlety = [0] * 5
+        fractional, integer = math.modf(current_item['subtlety'])
+        list_subtlety[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_subtlety[int(integer)] = 1
+
+        ## internalStructure
+        list_internalStructure = [0] * 4
+        fractional, integer = math.modf(current_item['internalStructure'])
+        list_internalStructure[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_internalStructure[int(integer)] = 1
+
+        ## calcification
+        list_calcification = [0] * 6
+        fractional, integer = math.modf(current_item['calcification'])
+        list_calcification[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_calcification[int(integer)] = 1
+
+        ## sphericity
+        list_sphericity = [0] * 5
+        fractional, integer = math.modf(current_item['sphericity'])
+        list_sphericity[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_sphericity[int(integer)] = 1
+
+        ## margin
+        list_margin = [0] * 5
+        fractional, integer = math.modf(current_item['margin'])
+        list_margin[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_margin[int(integer)] = 1
+ 
+        ## lobulation
+        list_lobulation = [0] * 5
+        fractional, integer = math.modf(current_item['lobulation'])
+        list_lobulation[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_lobulation[int(integer)] = 1
+
+        ## spiculation
+        list_spiculation = [0] * 5
+        fractional, integer = math.modf(current_item['spiculation'])
+        list_spiculation[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_spiculation[int(integer)] = 1
+
+        ## texture
+        list_texture = [0] * 5
+        fractional, integer = math.modf(current_item['texture'])
+        list_texture[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_texture[int(integer)] = 1
+
+        ## return
+        list_characteristics = []
+        # list_characteristics.append(diameter_mm) # 长度不是语义特征
+        list_characteristics.extend(list_subtlety)
+        list_characteristics.extend(list_internalStructure)
+        list_characteristics.extend(list_calcification)
+        list_characteristics.extend(list_sphericity)
+        list_characteristics.extend(list_margin)
+        list_characteristics.extend(list_lobulation)
+        list_characteristics.extend(list_spiculation)
+        list_characteristics.extend(list_texture)
+        return_characteristics = np.array(list_characteristics)
+
+        ## malignant
+        malignant = current_item['malignant']
+        return_malignant = np.array([malignant])
+
+        return return_characteristics, return_malignant
+
+class DataTesting(data.Dataset):
     def __init__(self, list_data):
         self.list_data = list_data
 
@@ -130,12 +227,6 @@ for index, each_annotation in pd_annotation.iterrows():
     }
     list_data.append(characteristics_dic)
 
-data_training = DataTraining(list_data)
-# data_validation = DataValidation(list_data_validation)
-
-data_loader_training = DataLoader(data_training, batch_size=BATCH_SIZE, shuffle=True)
-# data_loader_validation = DataLoader(data_validation, batch_size=args.size_batch, shuffle=True)
-
 class AnnotationNet(nn.Module):
     def __init__(self):
         super(AnnotationNet, self).__init__()
@@ -160,15 +251,26 @@ class AnnotationNet(nn.Module):
         out = self.fc_6(out)
         return out
 
+# get train and test data
+num_training = int(len(list_data) * RATE_TRAIN)
+list_data_training = list_data[: num_training]
+list_data_testing = list_data[num_training: ]
+
+data_training = DataTraining(list_data_training)
+data_testing = DataTesting(list_data_testing)
+
+data_loader_training = DataLoader(data_training, batch_size=BATCH_SIZE, shuffle=True)
+data_loader_testing = DataLoader(data_testing, batch_size=BATCH_SIZE, shuffle=True)
+
+# get model
 model = AnnotationNet().to(DEVICE)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
 ####
-# model.train()
 for epoch in range(1, EPOCHS + 1):
-    total_loss = 0
-
+    total_loss_training = 0
+    model.train()
     for characteristics, label in data_loader_training:
 
         # input data
@@ -188,8 +290,28 @@ for epoch in range(1, EPOCHS + 1):
         loss = criterion(output, label)
         loss.backward()
         optimizer.step()
-        total_loss += loss.item()
+        total_loss_training += loss.item()
 
     if epoch % 60 == 0:
-        print(total_loss)
+        print('training loss:')
+        print(total_loss_training / len(list_data_training))
+        # 模型测试
+        total_loss_testing = 0
+        model.eval()
+        with torch.no_grad():
+            for characteristics, label in data_loader_testing:
+                # input data
+                input_data = characteristics.to(dtype=torch.float, device=DEVICE)
 
+                # label
+                label = label.to(dtype=torch.long, device=DEVICE)
+                label = torch.squeeze(label)
+
+                # model predict
+                output = model(input_data)
+
+                # get loss
+                loss = criterion(output, label)
+                total_loss_testing += loss.item()
+        print('testing loss:')
+        print(total_loss_testing / len(list_data_testing))

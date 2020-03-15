@@ -341,4 +341,4 @@ for epoch in range(1, EPOCHS + 1):
         print('testing loss:')
         print(loss_testing)
         print('testing acc:')
-        print(loss_testing)
+        print(acc_testing)

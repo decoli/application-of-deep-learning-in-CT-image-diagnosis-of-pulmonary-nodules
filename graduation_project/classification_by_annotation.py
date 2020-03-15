@@ -9,7 +9,7 @@ import torch.optim as optim
 import torch.utils.data as data
 from torch.utils.data import DataLoader
 
-BATCH_SIZE=200
+BATCH_SIZE=4
 EPOCHS=2000
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 RATE_TRAIN = 0.8
@@ -241,11 +241,13 @@ class AnnotationNet(nn.Module):
     def forward(self, x):
         size_in = x.size(0) # batch size
 
-        out = F.relu(self.fc_1(x))
-        out = F.relu(self.fc_2(out))
-        out = F.relu(self.fc_3(out))
-        out = F.relu(self.fc_4(out))
-        out = F.relu(self.fc_5(out))
+        out = self.fc_1(x)
+        out = self.fc_2(out)
+        out = F.relu(out)
+
+        out = self.fc_3(out)
+        out = self.fc_4(out)
+        out = F.relu(out)
 
         out = F.dropout(out)
         out = self.fc_6(out)
@@ -269,8 +271,11 @@ optimizer = optim.SGD(model.parameters(), lr=0.01)
 
 ####
 for epoch in range(1, EPOCHS + 1):
+
     total_loss_training = 0
+    total_acc_training = 0
     model.train()
+
     for characteristics, label in data_loader_training:
 
         # input data
@@ -292,12 +297,25 @@ for epoch in range(1, EPOCHS + 1):
         optimizer.step()
         total_loss_training += loss.item()
 
+        # get acc
+        result = torch.max(output, 1)[1].numpy()
+        total_acc_training += sum(result == label.data.numpy())
+
+    acc_training = total_acc_training / len(list_data_training)
+    loss_training = total_loss_training / len(list_data_training)
+
     if epoch % 60 == 0:
         print('training loss:')
-        print(total_loss_training / len(list_data_training))
+        print(loss_training)
+
+        print('training acc')
+        print(acc_training)
+
         # 模型测试
         total_loss_testing = 0
+        total_acc_testing = 0
         model.eval()
+
         with torch.no_grad():
             for characteristics, label in data_loader_testing:
                 # input data
@@ -313,5 +331,14 @@ for epoch in range(1, EPOCHS + 1):
                 # get loss
                 loss = criterion(output, label)
                 total_loss_testing += loss.item()
+
+                # get acc
+                result = torch.max(output, 1)[1].numpy()
+                total_acc_testing += sum(result ==label.data.numpy())
+
+        acc_testing = total_acc_testing / len(list_data_testing)
+        loss_testing = total_loss_testing / len(list_data_testing)
         print('testing loss:')
-        print(total_loss_testing / len(list_data_testing))
+        print(loss_testing)
+        print('testing acc:')
+        print(loss_testing)

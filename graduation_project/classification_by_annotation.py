@@ -9,7 +9,7 @@ import torch.optim as optim
 import torch.utils.data as data
 from torch.utils.data import DataLoader
 
-BATCH_SIZE=4
+BATCH_SIZE=1024
 EPOCHS=2000
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 RATE_TRAIN = 0.8
@@ -242,10 +242,15 @@ class AnnotationNet(nn.Module):
         size_in = x.size(0) # batch size
 
         out = self.fc_1(x)
+        out = F.relu(out)
         out = self.fc_2(out)
         out = F.relu(out)
 
         out = self.fc_3(out)
+        out = F.relu(out)
+
+        # out = F.dropout(out)
+
         out = self.fc_4(out)
         out = F.relu(out)
 

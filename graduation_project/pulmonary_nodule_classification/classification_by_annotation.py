@@ -252,11 +252,11 @@ class AnnotationNet(nn.Module):
         # out = F.dropout(out)
 
         out = self.fc_4(out)
-        out = F.relu(out)
+        out_ = F.relu(out)
 
-        out = F.dropout(out)
+        out = F.dropout(out_)
         out = self.fc_6(out)
-        return out
+        return out, out_
 
 # get train and test data
 num_training = int(len(list_data) * RATE_TRAIN)
@@ -294,7 +294,7 @@ for epoch in range(1, EPOCHS + 1):
         optimizer.zero_grad()
 
         # model predict
-        output = model(input_data)
+        output, output_ = model(input_data)
 
         # get loss
         loss = criterion(output, label)
@@ -309,41 +309,40 @@ for epoch in range(1, EPOCHS + 1):
     acc_training = total_acc_training / len(list_data_training)
     loss_training = total_loss_training / len(list_data_training)
 
-    if epoch % 60 == 0:
-        print('training loss:')
-        print(loss_training)
+    print('training loss:')
+    print(loss_training)
 
-        print('training acc')
-        print(acc_training)
+    print('training acc')
+    print(acc_training)
 
-        # 模型测试
-        total_loss_testing = 0
-        total_acc_testing = 0
-        model.eval()
+    # 模型测试
+    total_loss_testing = 0
+    total_acc_testing = 0
+    model.eval()
 
-        with torch.no_grad():
-            for characteristics, label in data_loader_testing:
-                # input data
-                input_data = characteristics.to(dtype=torch.float, device=DEVICE)
+    with torch.no_grad():
+        for characteristics, label in data_loader_testing:
+            # input data
+            input_data = characteristics.to(dtype=torch.float, device=DEVICE)
 
-                # label
-                label = label.to(dtype=torch.long, device=DEVICE)
-                label = torch.squeeze(label)
+            # label
+            label = label.to(dtype=torch.long, device=DEVICE)
+            label = torch.squeeze(label)
 
-                # model predict
-                output = model(input_data)
+            # model predict
+            output, output_ = model(input_data)
 
-                # get loss
-                loss = criterion(output, label)
-                total_loss_testing += loss.item()
+            # get loss
+            loss = criterion(output, label)
+            total_loss_testing += loss.item()
 
-                # get acc
-                result = torch.max(output, 1)[1].numpy()
-                total_acc_testing += sum(result ==label.data.numpy())
+            # get acc
+            result = torch.max(output, 1)[1].numpy()
+            total_acc_testing += sum(result ==label.data.numpy())
 
-        acc_testing = total_acc_testing / len(list_data_testing)
-        loss_testing = total_loss_testing / len(list_data_testing)
-        print('testing loss:')
-        print(loss_testing)
-        print('testing acc:')
-        print(acc_testing)
+    acc_testing = total_acc_testing / len(list_data_testing)
+    loss_testing = total_loss_testing / len(list_data_testing)
+    print('testing loss:')
+    print(loss_testing)
+    print('testing acc:')
+    print(acc_testing)

@@ -102,6 +102,85 @@ class DataTraining(data.Dataset):
     def __getitem__(self, idx):
         current_item = self.list_data[idx]
 
+        # Annotation Net
+        ## subtlety
+        list_subtlety = [0] * 5
+        fractional, integer = math.modf(current_item['subtlety'])
+        list_subtlety[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_subtlety[int(integer)] = 1
+
+        ## internalStructure
+        list_internalStructure = [0] * 4
+        fractional, integer = math.modf(current_item['internalStructure'])
+        list_internalStructure[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_internalStructure[int(integer)] = 1
+
+        ## calcification
+        list_calcification = [0] * 6
+        fractional, integer = math.modf(current_item['calcification'])
+        list_calcification[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_calcification[int(integer)] = 1
+
+        ## sphericity
+        list_sphericity = [0] * 5
+        fractional, integer = math.modf(current_item['sphericity'])
+        list_sphericity[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_sphericity[int(integer)] = 1
+
+        ## margin
+        list_margin = [0] * 5
+        fractional, integer = math.modf(current_item['margin'])
+        list_margin[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_margin[int(integer)] = 1
+ 
+        ## lobulation
+        list_lobulation = [0] * 5
+        fractional, integer = math.modf(current_item['lobulation'])
+        list_lobulation[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_lobulation[int(integer)] = 1
+
+        ## spiculation
+        list_spiculation = [0] * 5
+        fractional, integer = math.modf(current_item['spiculation'])
+        list_spiculation[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_spiculation[int(integer)] = 1
+
+        ## texture
+        list_texture = [0] * 5
+        fractional, integer = math.modf(current_item['texture'])
+        list_texture[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_texture[int(integer)] = 1
+
+        ## return
+        list_characteristics = []
+        # list_characteristics.append(diameter_mm) # 长度不是语义特征
+        list_characteristics.extend(list_subtlety)
+        list_characteristics.extend(list_internalStructure)
+        list_characteristics.extend(list_calcification)
+        list_characteristics.extend(list_sphericity)
+        list_characteristics.extend(list_margin)
+        list_characteristics.extend(list_lobulation)
+        list_characteristics.extend(list_spiculation)
+        list_characteristics.extend(list_texture)
+        return_characteristics = np.array(list_characteristics)
+
+        # CNN
         # image
         path_image = os.path.join(
             root_image,
@@ -136,7 +215,7 @@ class DataTraining(data.Dataset):
         label = current_item['malignant']
         return_label = np.array(label)
 
-        return image_original, image_1, image_2, return_label
+        return return_characteristics, image_original, image_1, image_2, return_label
 
 class DataTesting(data.Dataset):
     def __init__(self, list_data):
@@ -148,6 +227,85 @@ class DataTesting(data.Dataset):
     def __getitem__(self, idx):
         current_item = self.list_data[idx]
 
+        # Annotation Net
+        ## subtlety
+        list_subtlety = [0] * 5
+        fractional, integer = math.modf(current_item['subtlety'])
+        list_subtlety[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_subtlety[int(integer)] = 1
+
+        ## internalStructure
+        list_internalStructure = [0] * 4
+        fractional, integer = math.modf(current_item['internalStructure'])
+        list_internalStructure[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_internalStructure[int(integer)] = 1
+
+        ## calcification
+        list_calcification = [0] * 6
+        fractional, integer = math.modf(current_item['calcification'])
+        list_calcification[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_calcification[int(integer)] = 1
+
+        ## sphericity
+        list_sphericity = [0] * 5
+        fractional, integer = math.modf(current_item['sphericity'])
+        list_sphericity[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_sphericity[int(integer)] = 1
+
+        ## margin
+        list_margin = [0] * 5
+        fractional, integer = math.modf(current_item['margin'])
+        list_margin[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_margin[int(integer)] = 1
+ 
+        ## lobulation
+        list_lobulation = [0] * 5
+        fractional, integer = math.modf(current_item['lobulation'])
+        list_lobulation[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_lobulation[int(integer)] = 1
+
+        ## spiculation
+        list_spiculation = [0] * 5
+        fractional, integer = math.modf(current_item['spiculation'])
+        list_spiculation[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_spiculation[int(integer)] = 1
+
+        ## texture
+        list_texture = [0] * 5
+        fractional, integer = math.modf(current_item['texture'])
+        list_texture[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_texture[int(integer)] = 1
+
+        ## return
+        list_characteristics = []
+        # list_characteristics.append(diameter_mm) # 长度不是语义特征
+        list_characteristics.extend(list_subtlety)
+        list_characteristics.extend(list_internalStructure)
+        list_characteristics.extend(list_calcification)
+        list_characteristics.extend(list_sphericity)
+        list_characteristics.extend(list_margin)
+        list_characteristics.extend(list_lobulation)
+        list_characteristics.extend(list_spiculation)
+        list_characteristics.extend(list_texture)
+        return_characteristics = np.array(list_characteristics)
+
+        # CNN
         # image
         path_image = os.path.join(
             root_image,
@@ -182,7 +340,7 @@ class DataTesting(data.Dataset):
         label = current_item['malignant']
         return_label = np.array(label)
 
-        return image_original, image_1, image_2, return_label
+        return return_characteristics, image_original, image_1, image_2, return_label
 
 class PriorKnowledgeNet(nn.Module):
     def __init__(self):
@@ -243,7 +401,7 @@ class PriorKnowledgeNet(nn.Module):
         self.fc_fusion_1 = nn.Linear(4, 4)
         self.fc_fusion_2 = nn.Linear(4, 2)
 
-    def forward(self, x_1, x_2, x_3):
+    def forward(self, x, x_1, x_2, x_3):
         size_in = x_1.size(0)
 
         # Annotation Net
@@ -380,12 +538,13 @@ for epoch in range(1, EPOCHS + 1):
     model.train()
 
     count_train = 0
-    for x_1, x_2, x_3, label in data_loader_training:
+    for x, x_1, x_2, x_3, label in data_loader_training:
 
         count_train += 1
         print(count_train)
 
         # input data
+        input_data = x.to(dtype=torch.float, device=DEVICE)
         input_data_1 = x_1.to(dtype=torch.float, device=DEVICE)
         input_data_2 = x_2.to(dtype=torch.float, device=DEVICE)
         input_data_3 = x_3.to(dtype=torch.float, device=DEVICE)
@@ -398,7 +557,7 @@ for epoch in range(1, EPOCHS + 1):
         optimizer.zero_grad()
 
         # model predict
-        output = model(input_data_1, input_data_2, input_data_3)
+        output = model(input_data, input_data_1, input_data_2, input_data_3)
 
         # get loss
         loss = criterion(output, label)

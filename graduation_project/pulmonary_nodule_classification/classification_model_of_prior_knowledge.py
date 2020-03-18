@@ -86,7 +86,7 @@ class DataTesting(data.Dataset):
         image = torch.unsqueeze(image, 0)
 
         # label
-        label = current_item['malignancy']
+        label = current_item['malignant']
         return_label = np.array(label)
 
         return image, return_label
@@ -280,36 +280,34 @@ for epoch in range(1, EPOCHS + 1):
     print('training acc')
     print(acc_training)
 
-    if epoch % 60 == 0:
-        # 模型测试
-        pass
-        total_loss_testing = 0
-        total_acc_testing = 0
-        model.eval()
+    # 模型测试
+    total_loss_testing = 0
+    total_acc_testing = 0
+    model.eval()
 
-        with torch.no_grad():
-            for characteristics, label in data_loader_testing:
-                # input data
-                input_data = characteristics.to(dtype=torch.float, device=DEVICE)
+    with torch.no_grad():
+        for characteristics, label in data_loader_testing:
+            # input data
+            input_data = characteristics.to(dtype=torch.float, device=DEVICE)
 
-                # label
-                label = label.to(dtype=torch.long, device=DEVICE)
-                label = torch.squeeze(label)
+            # label
+            label = label.to(dtype=torch.long, device=DEVICE)
+            label = torch.squeeze(label)
 
-                # model predict
-                output = model(input_data)
+            # model predict
+            output = model(input_data)
 
-                # get loss
-                loss = criterion(output, label)
-                total_loss_testing += loss.item()
+            # get loss
+            loss = criterion(output, label)
+            total_loss_testing += loss.item()
 
-                # get acc
-                result = torch.max(output, 1)[1].numpy()
-                total_acc_testing += sum(result ==label.data.numpy())
+            # get acc
+            result = torch.max(output, 1)[1].cpu().numpy()
+            total_acc_testing += sum(result ==label.data.cpu().numpy())
 
-        acc_testing = total_acc_testing / len(list_data_testing)
-        loss_testing = total_loss_testing / len(list_data_testing)
-        print('testing loss:')
-        print(loss_testing)
-        print('testing acc:')
-        print(acc_testing)
+    acc_testing = total_acc_testing / len(list_data_testing)
+    loss_testing = total_loss_testing / len(list_data_testing)
+    print('testing loss:')
+    print(loss_testing)
+    print('testing acc:')
+    print(acc_testing)

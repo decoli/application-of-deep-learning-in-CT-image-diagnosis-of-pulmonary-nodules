@@ -139,8 +139,9 @@ class PriorKnowledgeNet(nn.Module):
         self.fc_7_1 = nn.Linear(2048, 512)
 
         # all
-        self.fc_all_1 = nn.Linear(1536, 256)
-        self.fc_all_2 = nn.Linear(256, 2)
+        self.fc_all_1 = nn.Linear(1536, 1536)
+        self.fc_all_2 = nn.Linear(1536, 256)
+        self.fc_all_3 = nn.Linear(256, 2)
 
     def forward(self, x):
         size_in = x.size(0)
@@ -217,9 +218,11 @@ class PriorKnowledgeNet(nn.Module):
         # all
         out_all = torch.cat([out_3, out_5, out_7], dim=1)
         out_all = self.fc_all_1(out_all)
+        out_all = F.dropout(out_all)
+        out_all = self.fc_all_2(out_all)
         out_all = F.relu(out_all)
 
-        out_all = self.fc_all_2(out_all)
+        out_all = self.fc_all_3(out_all)
 
         #
         return out_all

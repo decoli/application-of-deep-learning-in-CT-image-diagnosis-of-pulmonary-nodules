@@ -591,8 +591,9 @@ for epoch in range(1, EPOCHS + 1):
     model.eval()
 
     with torch.no_grad():
-        for x_1, x_2, x_3, label in data_loader_testing:
+        for x, x_1, x_2, x_3, label in data_loader_testing:
             # input data
+            input_data = x.to(dtype=torch.float, device=DEVICE)
             input_data_1 = x_1.to(dtype=torch.float, device=DEVICE)
             input_data_2 = x_2.to(dtype=torch.float, device=DEVICE)
             input_data_3 = x_3.to(dtype=torch.float, device=DEVICE)
@@ -602,7 +603,7 @@ for epoch in range(1, EPOCHS + 1):
             label = torch.squeeze(label)
 
             # model predict
-            output = model(input_data_1, input_data_2, input_data_3)
+            output = model(input_data, input_data_1, input_data_2, input_data_3)
 
             # get loss
             loss = criterion(output, label)

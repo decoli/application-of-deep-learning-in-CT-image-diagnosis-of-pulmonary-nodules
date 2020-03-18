@@ -107,28 +107,29 @@ class DataTraining(data.Dataset):
             root_image,
             '{index}{image_format}'.format(
                 index=current_item['index'], image_format='.png'))
-        image = cv2.imread(path_image, flags=2)
+        image_original = cv2.imread(path_image, flags=2)
+        image_copy_1 = image_original.copy()
+        image_copy_2 = image_original.copy()
 
         # region grow
-        image_get_mask = cv2.imread(path_image, 0)
         seeds = [Point(15,15), Point(16,15), Point(15,16), Point(16,16)]
-        mask_10 = regionGrow(image_get_mask, seeds, 10)
-        mask_20 = regionGrow(image_get_mask, seeds, 20)
+        mask_1 = regionGrow(image_copy_1, seeds, 10)
+        mask_2 = regionGrow(image_copy_2, seeds, 20)
 
         # get image masked (and transfered to Tensor)
-        image_10 = image[mask_10==0] = [0]
-        image_10 = torch.Tensor(image_10)
-        image_10 = torch.unsqueeze(image_10, 0)
+        image_copy_1[mask_1==0] = [0]
+        image_1 = torch.Tensor(image_copy_1)
+        image_1 = torch.unsqueeze(image_1, 0)
 
-        image_20 = image[mask_20==0] = [0]
-        image_20 = torch.Tensor(image_20)
-        image_20 = torch.unsqueeze(image_20, 0)
+        image_copy_2[mask_2==0] = [0]
+        image_2 = torch.Tensor(image_copy_2)
+        image_2 = torch.unsqueeze(image_2, 0)
 
         # label
         label = current_item['malignant']
         return_label = np.array(label)
 
-        return image, image_10, image_20, return_label
+        return image_original, image_1, image_2, return_label
 
 class DataTesting(data.Dataset):
     def __init__(self, list_data):
@@ -145,28 +146,29 @@ class DataTesting(data.Dataset):
             root_image,
             '{index}{image_format}'.format(
                 index=current_item['index'], image_format='.png'))
-        image = cv2.imread(path_image, flags=2)
+        image_original = cv2.imread(path_image, flags=2)
+        image_copy_1 = image_original.copy()
+        image_copy_2 = image_original.copy()
 
         # region grow
-        image_get_mask = cv2.imread(path_image, 0)
         seeds = [Point(15,15), Point(16,15), Point(15,16), Point(16,16)]
-        mask_10 = regionGrow(image_get_mask, seeds, 10)
-        mask_20 = regionGrow(image_get_mask, seeds, 20)
+        mask_1 = regionGrow(image_copy_1, seeds, 10)
+        mask_2 = regionGrow(image_copy_2, seeds, 20)
 
         # get image masked (and transfered to Tensor)
-        image_10 = image[mask_10==0] = [0]
-        image_10 = torch.Tensor(image_10)
-        image_10 = torch.unsqueeze(image_10, 0)
+        image_copy_1[mask_1==0] = [0]
+        image_1 = torch.Tensor(image_copy_1)
+        image_1 = torch.unsqueeze(image_1, 0)
 
-        image_20 = image[mask_20==0] = [0]
-        image_20 = torch.Tensor(image_20)
-        image_20 = torch.unsqueeze(image_20, 0)
+        image_copy_2[mask_2==0] = [0]
+        image_2 = torch.Tensor(image_copy_2)
+        image_2 = torch.unsqueeze(image_2, 0)
 
         # label
         label = current_item['malignant']
         return_label = np.array(label)
 
-        return image, image_10, image_20, return_label
+        return image_original, image_1, image_2, return_label
 
 class PriorKnowledgeNet(nn.Module):
     def __init__(self):

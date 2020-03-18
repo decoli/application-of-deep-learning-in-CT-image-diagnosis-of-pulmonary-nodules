@@ -263,8 +263,8 @@ for epoch in range(1, EPOCHS + 1):
         total_loss_training += loss.item()
 
         # get acc
-        result = torch.max(output, 1)[1].numpy()
-        total_acc_training += sum(result == label.data.numpy())
+        result = torch.max(output, 1)[1].cpu().numpy()
+        total_acc_training += sum(result == label.data.cpu().numpy())
 
     acc_training = total_acc_training / len(list_data_training)
     loss_training = total_loss_training / len(list_data_training)

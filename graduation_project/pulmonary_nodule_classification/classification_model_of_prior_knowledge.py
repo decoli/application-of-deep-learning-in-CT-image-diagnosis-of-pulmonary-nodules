@@ -14,7 +14,7 @@ import torch.optim as optim
 import torch.utils.data as data
 from torch.utils.data import DataLoader
 
-BATCH_SIZE=4
+BATCH_SIZE=256
 EPOCHS=2000
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 RATE_TRAIN = 0.8
@@ -237,7 +237,11 @@ for epoch in range(1, EPOCHS + 1):
     total_acc_training = 0
     model.train()
 
+    count_train = 0
     for characteristics, label in data_loader_training:
+
+        count_train += 1
+        print(count_train)
 
         # input data
         input_data = characteristics.to(dtype=torch.float, device=DEVICE)
@@ -265,16 +269,15 @@ for epoch in range(1, EPOCHS + 1):
     acc_training = total_acc_training / len(list_data_training)
     loss_training = total_loss_training / len(list_data_training)
 
+    print('training loss:')
+    print(loss_training)
+
+    print('training acc')
+    print(acc_training)
+
     if epoch % 60 == 0:
-        pass
-
-        print('training loss:')
-        print(loss_training)
-
-        print('training acc')
-        print(acc_training)
-
         # 模型测试
+        pass
         total_loss_testing = 0
         total_acc_testing = 0
         model.eval()

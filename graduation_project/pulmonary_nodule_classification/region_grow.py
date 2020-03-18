@@ -45,9 +45,9 @@ def regionGrow(img,seeds,thresh,p = 1):
                 seedList.append(Point(tmpX,tmpY))
     return seedMark
 
- 
-img = cv2.imread('data/dataset_deep_lung/data_sample/png/21.png',0)
-seeds = [Point(16,16)]
-binaryImg = regionGrow(img,seeds,10)
-cv2.imshow(' ',binaryImg)
+
+img = cv2.imread('data/dataset_deep_lung/data_sample/png/437.png',0)
+seeds = [Point(15,15), Point(16,15), Point(15,16), Point(16,16)]
+binaryImg = regionGrow(img,seeds, 10)
+cv2.imshow('test',binaryImg)
 cv2.waitKey(0)

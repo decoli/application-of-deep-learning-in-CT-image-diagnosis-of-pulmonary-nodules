@@ -116,10 +116,10 @@ class DataTraining(data.Dataset):
         mask_20 = regionGrow(image_get_mask, seeds, 20)
 
         # get image masked (and transfered to Tensor)
-        image_10 = torch.Tensor(image[mask_10] == 0] = [0])
+        image_10 = torch.Tensor(image[mask_10==0] = [0])
         image_10 = torch.unsqueeze(image_10, 0)
 
-        image_20 = torch.Tensor(image[mask_20] == 0] = [0])
+        image_20 = torch.Tensor(image[mask_20==0] = [0])
         image_20 = torch.unsqueeze(image_20, 0)
 
         # label
@@ -152,10 +152,10 @@ class DataTesting(data.Dataset):
         mask_20 = regionGrow(image_get_mask, seeds, 20)
 
         # get image masked (and transfered to Tensor)
-        image_10 = torch.Tensor(image[mask_10] == 0] = [0])
+        image_10 = torch.Tensor(image[mask_10==0] = [0])
         image_10 = torch.unsqueeze(image_10, 0)
 
-        image_20 = torch.Tensor(image[mask_20] == 0] = [0])
+        image_20 = torch.Tensor(image[mask_20==0] = [0])
         image_20 = torch.unsqueeze(image_20, 0)
 
         # label

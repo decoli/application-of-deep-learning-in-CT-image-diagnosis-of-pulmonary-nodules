@@ -93,45 +93,36 @@ class PriorKnowledgeNet(nn.Module):
         ## kernel = 3*3
         self.conv_3_1 = nn.Conv2d(1, 32, 3, padding=1)
         self.conv_3_2 = nn.Conv2d(32, 32, 3, padding=1)
-        self.pool_3_ = nn.MaxPool2d(kernel_size=2, stride=1)
         #
         self.conv_3_3 = nn.Conv2d(32, 64, 3, padding=1)
         self.conv_3_4 = nn.Conv2d(64, 64, 3, padding=1)
-        self.pool_3__ = nn.MaxPool2d(kernel_size=2, stride=1)
         #
         self.conv_3_5 = nn.Conv2d(64, 128, 3, padding=1)
         self.conv_3_6 = nn.Conv2d(128, 128, 3, padding=1)
-        self.pool_3___ = nn.MaxPool2d(kernel_size=2, stride=1)
         #
         self.fc_3_1 = nn.Linear(2048, 512)
 
         ## kernel = 5*5
         self.conv_5_1 = nn.Conv2d(1, 32, 5, padding=2)
         self.conv_5_2 = nn.Conv2d(32, 32, 5, padding=2)
-        self.pool_5_ = nn.MaxPool2d(kernel_size=2, stride=1)
         #
         self.conv_5_3 = nn.Conv2d(32, 64, 5, padding=2)
         self.conv_5_4 = nn.Conv2d(64, 64, 5, padding=2)
-        self.pool_5__ = nn.MaxPool2d(kernel_size=2, stride=1)
         #
         self.conv_5_5 = nn.Conv2d(64, 128, 5, padding=2)
         self.conv_5_6 = nn.Conv2d(128, 128, 5, padding=2)
-        self.pool_5___ = nn.MaxPool2d(kernel_size=2, stride=1)
         #
         self.fc_5_1 = nn.Linear(2048, 512)
 
         ## kernel = 7*7
         self.conv_7_1 = nn.Conv2d(1, 32, 7, padding=3)
         self.conv_7_2 = nn.Conv2d(32, 32, 7, padding=3)
-        self.pool_7_ = nn.MaxPool2d(kernel_size=2, stride=1)
         #
         self.conv_7_3 = nn.Conv2d(32, 64, 7, padding=3)
         self.conv_7_4 = nn.Conv2d(64, 64, 7, padding=3)
-        self.pool_7__ = nn.MaxPool2d(kernel_size=2, stride=1)
         #
         self.conv_7_5 = nn.Conv2d(64, 128, 7, padding=3)
-        self.conv_7_7 = nn.Conv2d(128, 128, 7, padding=3)
-        self.pool_7___ = nn.MaxPool2d(kernel_size=2, stride=1)
+        self.conv_7_6 = nn.Conv2d(128, 128, 7, padding=3)
         #
         self.fc_7_1 = nn.Linear(2048, 512)
 
@@ -145,69 +136,69 @@ class PriorKnowledgeNet(nn.Module):
         ## kernel=3*3
         out_3 = self.conv_3_1(x)
         out_3 = self.conv_3_2(out_3)
-        out_3 = self.pool_3_(out_3)
+        out_3 = F.max_pool2d(out_3, 2, 2)
         out_3 = F.relu(out_3)
 
         #
         out_3 = self.conv_3_3(out_3)
         out_3 = self.conv_3_4(out_3)
-        out_3 = self.pool_3__(out_3)
+        out_3 = F.max_pool2d(out_3, 2, 2)
         out_3 = F.relu(out_3)
 
         #
         out_3 = self.conv_3_5(out_3)
         out_3 = self.conv_3_6(out_3)
-        out_3 = self.pool_3___(out_3)
+        out_3 = F.max_pool2d(out_3, 2, 2)
         out_3 = F.relu(out_3)
 
         #
-        out_3 = out_3.view(-1)
+        out_3 = out_3.view(size_in, -1)
         out_3 = F.dropout(out_3)
         out_3 = self.fc_3_1(out_3)
 
         ## kernel=5*5
         out_5 = self.conv_5_1(x)
         out_5 = self.conv_5_2(out_5)
-        out_5 = self.pool_5_(out_5)
+        out_5 = F.max_pool2d(out_5, 2, 2)
         out_5 = F.relu(out_5)
 
         #
         out_5 = self.conv_5_3(out_5)
         out_5 = self.conv_5_4(out_5)
-        out_5 = self.pool_5__(out_5)
+        out_5 = F.max_pool2d(out_5, 2, 2)
         out_5 = F.relu(out_5)
 
         #
         out_5 = self.conv_5_5(out_5)
         out_5 = self.conv_5_6(out_5)
-        out_5 = self.pool_5___(out_5)
+        out_5 = F.max_pool2d(out_5, 2, 2)
         out_5 = F.relu(out_5)
 
         #
-        out_5 = out_5.view(-1)
+        out_5 = out_5.view(size_in, -1)
         out_5 = F.dropout(out_5)
         out_5 = self.fc_5_1(out_5)
         
         ## kernel=7*7
         out_7 = self.conv_7_1(x)
         out_7 = self.conv_7_2(out_7)
-        out_7 = self.pool_7_(out_7)
+        out_7 = F.max_pool2d(out_7, 2, 2)
         out_7 = F.relu(out_7)
 
         #
         out_7 = self.conv_7_3(out_7)
         out_7 = self.conv_7_4(out_7)
-        out_7 = self.pool_7__(out_7)
+        out_7 = F.max_pool2d(out_7, 2, 2)
         out_7 = F.relu(out_7)
 
         #
         out_7 = self.conv_7_5(out_7)
         out_7 = self.conv_7_6(out_7)
-        out_7 = self.pool_7___(out_7)
+        out_7 = F.max_pool2d(out_7, 2, 2)
         out_7 = F.relu(out_7)
 
         #
-        out_7 = out_7.view(-1)
+        out_7 = out_7.view(size_in, -1)
         out_7 = F.dropout(out_7)
         out_7 = self.fc_7_1(out_7)
 

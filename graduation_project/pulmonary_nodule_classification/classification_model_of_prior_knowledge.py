@@ -343,6 +343,7 @@ class PriorKnowledgeNet(nn.Module):
         # fusion
         out_fusion = torch.cat([out, out_all], dim=1)
         out_fusion = self.fc_fusion_1(out_fusion)
+        out_fusion = F.relu(out_fusion)
         out_fusion = self.fc_fusion_2(out_fusion)
 
         # return out_all

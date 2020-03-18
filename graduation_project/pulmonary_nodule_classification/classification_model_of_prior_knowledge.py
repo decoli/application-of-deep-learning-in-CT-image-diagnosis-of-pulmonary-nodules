@@ -30,6 +30,50 @@ path_annotation_v2 = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui_v
 pd_annotation = pd.read_csv(path_annotation_v2)
 list_data = []
 
+class Point(object):
+    def __init__(self,x,y):
+        self.x = x
+        self.y = y
+ 
+    def getX(self):
+        return self.x
+    def getY(self):
+        return self.y
+ 
+def getGrayDiff(img,currentPoint,tmpPoint):
+    return abs(int(img[currentPoint.x,currentPoint.y]) - int(img[tmpPoint.x,tmpPoint.y]))
+ 
+def selectConnects(p):
+    if p != 0:
+        connects = [Point(-1, -1), Point(0, -1), Point(1, -1), Point(1, 0), Point(1, 1), \
+                    Point(0, 1), Point(-1, 1), Point(-1, 0)]
+    else:
+        connects = [ Point(0, -1),  Point(1, 0),Point(0, 1), Point(-1, 0)]
+    return connects
+ 
+def regionGrow(img,seeds,thresh,p = 1):
+    height, weight = img.shape
+    seedMark = np.zeros(img.shape)
+    seedList = []
+    for seed in seeds:
+        seedList.append(seed)
+    label = 1
+    connects = selectConnects(p)
+    while(len(seedList)>0):
+        currentPoint = seedList.pop(0)
+ 
+        seedMark[currentPoint.x,currentPoint.y] = label
+        for i in range(8):
+            tmpX = currentPoint.x + connects[i].x
+            tmpY = currentPoint.y + connects[i].y
+            if tmpX < 0 or tmpY < 0 or tmpX >= height or tmpY >= weight:
+                continue
+            grayDiff = getGrayDiff(img,currentPoint,Point(tmpX,tmpY))
+            if grayDiff < thresh and seedMark[tmpX,tmpY] == 0:
+                seedMark[tmpX,tmpY] = label
+                seedList.append(Point(tmpX,tmpY))
+    return seedMark
+
 for index, each_annotation in pd_annotation.iterrows():
     characteristics_dic = {
         # 'diameter_mm': each_annotation['diameter_mm'],
@@ -64,6 +108,17 @@ class DataTraining(data.Dataset):
             '{index}{image_format}'.format(
                 index=current_item['index'], image_format='.png'))
         image = cv2.imread(path_image, flags=2)
+
+        # region grow
+
+        image_get_mask = cv2.imread(path_image, 0)
+        seeds = [Point(15,15), Point(16,15), Point(15,16), Point(16,16)]
+        binaryImg = regionGrow(image_get_mask, seeds, 10)
+        cv2.imwrite('original.png', image_get_mask)
+        # cv2.imshow('test',binaryImg)
+        cv2.waitKey(0)
+        cv2.imwrite('mask.png', (binaryImg * 255).astype(np.uint8))
+
         image = torch.Tensor(image)
         image = torch.unsqueeze(image, 0)
 

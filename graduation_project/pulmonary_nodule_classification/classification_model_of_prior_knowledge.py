@@ -188,6 +188,16 @@ class PriorKnowledgeNet(nn.Module):
     def __init__(self):
         super(PriorKnowledgeNet, self).__init__()
 
+        ## Annotation Net
+        # full connettion
+        self.fc_1 = nn.Linear(40, 128)
+        self.fc_2 = nn.Linear(128, 128)
+        self.fc_3 = nn.Linear(128, 128)
+        self.fc_4 = nn.Linear(128, 128)
+        self.fc_5 = nn.Linear(128, 128)
+        self.fc_6 = nn.Linear(128, 2)
+
+        ## CNN
         ## kernel = 3*3
         self.conv_3_1 = nn.Conv2d(1, 32, 3, padding=1)
         self.conv_3_2 = nn.Conv2d(32, 32, 3, padding=1)
@@ -229,9 +239,29 @@ class PriorKnowledgeNet(nn.Module):
         self.fc_all_2 = nn.Linear(1536, 256)
         self.fc_all_3 = nn.Linear(256, 2)
 
+        # fusion
+        self.fc_fusion_1 = nn.Linear(4, 4)
+        self.fc_fusion_2 = nn.Linear(4, 2)
+
     def forward(self, x_1, x_2, x_3):
         size_in = x_1.size(0)
 
+        # Annotation Net
+        out = self.fc_1(x)
+        out = F.relu(out)
+        out = self.fc_2(out)
+        out = F.relu(out)
+
+        out = self.fc_3(out)
+        out = F.relu(out)
+
+        out = self.fc_4(out)
+        out = F.relu(out)
+
+        out = F.dropout(out)
+        out = self.fc_6(out)
+
+        ## CNN
         ## kernel=3*3
         out_3 = self.conv_3_1(x_1)
         out_3 = self.conv_3_2(out_3)
@@ -310,8 +340,13 @@ class PriorKnowledgeNet(nn.Module):
 
         out_all = self.fc_all_3(out_all)
 
-        #
-        return out_all
+        # fusion
+        out_fusion = torch.cat([out, out_all], dim=1)
+        out_fusion = self.fc_fusion_1(out_fusion)
+        out_fusion = self.fc_fusion_2(out_fusion)
+
+        # return out_all
+        return out_fusion
 
 model = PriorKnowledgeNet()
 print('ddd')

@@ -151,6 +151,8 @@ class DataTesting(data.Dataset):
         image_original = cv2.imread(path_image, flags=2)
         image_copy_1 = image_original.copy()
         image_copy_2 = image_original.copy()
+        image_original = torch.Tensor(image_original)
+        image_original = torch.unsqueeze(image_original, 0)
 
         # region grow
         seeds = [Point(15,15), Point(16,15), Point(15,16), Point(16,16)]

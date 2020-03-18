@@ -77,12 +77,17 @@ class DataTesting(data.Dataset):
         current_item = self.list_data[idx]
 
         # image
-        path_image = os.path.join(root_image, current_item['index'])
-        image = cv2.imread(path_image)
+        path_image = os.path.join(
+            root_image,
+            '{index}{image_format}'.format(
+                index=current_item['index'], image_format='.png'))
+        image = cv2.imread(path_image, flags=2)
+        image = torch.Tensor(image)
+        image = torch.unsqueeze(image, 0)
 
         # label
         label = current_item['malignancy']
-        return_label = np.array(lalbe)
+        return_label = np.array(label)
 
         return image, return_label
 

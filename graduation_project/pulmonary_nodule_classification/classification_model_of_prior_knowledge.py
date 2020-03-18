@@ -110,23 +110,23 @@ class DataTraining(data.Dataset):
         image = cv2.imread(path_image, flags=2)
 
         # region grow
-
         image_get_mask = cv2.imread(path_image, 0)
         seeds = [Point(15,15), Point(16,15), Point(15,16), Point(16,16)]
-        binaryImg = regionGrow(image_get_mask, seeds, 10)
-        cv2.imwrite('original.png', image_get_mask)
-        # cv2.imshow('test',binaryImg)
-        cv2.waitKey(0)
-        cv2.imwrite('mask.png', (binaryImg * 255).astype(np.uint8))
+        mask_10 = regionGrow(image_get_mask, seeds, 10)
+        mask_20 = regionGrow(image_get_mask, seeds, 20)
 
-        image = torch.Tensor(image)
-        image = torch.unsqueeze(image, 0)
+        # get image masked (and transfered to Tensor)
+        image_10 = torch.Tensor(image[mask_10 == 0] = [0])
+        image_10 = torch.unsqueeze(image_10, 0)
+
+        image_20 = torch.Tensor(image[mask_20 == 0] = [0])
+        image_20 = torch.unsqueeze(image_20, 0)
 
         # label
         label = current_item['malignant']
         return_label = np.array(label)
 
-        return image, return_label
+        return image, image_10, image_20, return_label
 
 class DataTesting(data.Dataset):
     def __init__(self, list_data):
@@ -144,14 +144,25 @@ class DataTesting(data.Dataset):
             '{index}{image_format}'.format(
                 index=current_item['index'], image_format='.png'))
         image = cv2.imread(path_image, flags=2)
-        image = torch.Tensor(image)
-        image = torch.unsqueeze(image, 0)
+
+        # region grow
+        image_get_mask = cv2.imread(path_image, 0)
+        seeds = [Point(15,15), Point(16,15), Point(15,16), Point(16,16)]
+        mask_10 = regionGrow(image_get_mask, seeds, 10)
+        mask_20 = regionGrow(image_get_mask, seeds, 20)
+
+        # get image masked (and transfered to Tensor)
+        image_10 = torch.Tensor(image[mask_10 == 0] = [0])
+        image_10 = torch.unsqueeze(image_10, 0)
+
+        image_20 = torch.Tensor(image[mask_20 == 0] = [0])
+        image_20 = torch.unsqueeze(image_20, 0)
 
         # label
         label = current_item['malignant']
         return_label = np.array(label)
 
-        return image, return_label
+        return image, image_10, image_20, return_label
 
 class PriorKnowledgeNet(nn.Module):
     def __init__(self):
@@ -198,11 +209,11 @@ class PriorKnowledgeNet(nn.Module):
         self.fc_all_2 = nn.Linear(1536, 256)
         self.fc_all_3 = nn.Linear(256, 2)
 
-    def forward(self, x):
+    def forward(self, x_1, x_2, x_3):
         size_in = x.size(0)
 
         ## kernel=3*3
-        out_3 = self.conv_3_1(x)
+        out_3 = self.conv_3_1(x_1)
         out_3 = self.conv_3_2(out_3)
         out_3 = F.max_pool2d(out_3, 2, 2)
         out_3 = F.relu(out_3)
@@ -225,7 +236,7 @@ class PriorKnowledgeNet(nn.Module):
         out_3 = self.fc_3_1(out_3)
 
         ## kernel=5*5
-        out_5 = self.conv_5_1(x)
+        out_5 = self.conv_5_1(x_2)
         out_5 = self.conv_5_2(out_5)
         out_5 = F.max_pool2d(out_5, 2, 2)
         out_5 = F.relu(out_5)
@@ -248,7 +259,7 @@ class PriorKnowledgeNet(nn.Module):
         out_5 = self.fc_5_1(out_5)
         
         ## kernel=7*7
-        out_7 = self.conv_7_1(x)
+        out_7 = self.conv_7_1(x_3)
         out_7 = self.conv_7_2(out_7)
         out_7 = F.max_pool2d(out_7, 2, 2)
         out_7 = F.relu(out_7)
@@ -313,13 +324,15 @@ for epoch in range(1, EPOCHS + 1):
     model.train()
 
     count_train = 0
-    for characteristics, label in data_loader_training:
+    for x_1, x_2, x_3, label in data_loader_training:
 
         count_train += 1
         print(count_train)
 
         # input data
-        input_data = characteristics.to(dtype=torch.float, device=DEVICE)
+        input_data_1 = x_1.to(dtype=torch.float, device=DEVICE)
+        input_data_2 = x_2.to(dtype=torch.float, device=DEVICE)
+        input_data_3 = x_3.to(dtype=torch.float, device=DEVICE)
 
         # label
         label = label.to(dtype=torch.long, device=DEVICE)
@@ -329,7 +342,7 @@ for epoch in range(1, EPOCHS + 1):
         optimizer.zero_grad()
 
         # model predict
-        output = model(input_data)
+        output = model(input_data_1, input_data_2, input_data_3)
 
         # get loss
         loss = criterion(output, label)
@@ -362,16 +375,18 @@ for epoch in range(1, EPOCHS + 1):
     model.eval()
 
     with torch.no_grad():
-        for characteristics, label in data_loader_testing:
+        for x_1, x_2, x_3, label in data_loader_testing:
             # input data
-            input_data = characteristics.to(dtype=torch.float, device=DEVICE)
+            input_data_1 = x_1.to(dtype=torch.float, device=DEVICE)
+            input_data_2 = x_2.to(dtype=torch.float, device=DEVICE)
+            input_data_3 = x_3.to(dtype=torch.float, device=DEVICE)
 
             # label
             label = label.to(dtype=torch.long, device=DEVICE)
             label = torch.squeeze(label)
 
             # model predict
-            output = model(input_data)
+            output = model(input_data_1, input_data_2, input_data_3)
 
             # get loss
             loss = criterion(output, label)

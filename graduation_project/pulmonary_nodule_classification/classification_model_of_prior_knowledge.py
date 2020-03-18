@@ -214,7 +214,7 @@ class PriorKnowledgeNet(nn.Module):
         self.fc_all_3 = nn.Linear(256, 2)
 
     def forward(self, x_1, x_2, x_3):
-        size_in = x.size(0)
+        size_in = x_1.size(0)
 
         ## kernel=3*3
         out_3 = self.conv_3_1(x_1)

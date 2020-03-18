@@ -12,7 +12,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data as data
+from visdom import Visdom
 from torch.utils.data import DataLoader
+
+# append sys.path
+sys.path.append(os.getcwd())
+from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
+                            visdom_sp)
 
 BATCH_SIZE=256
 EPOCHS=2000
@@ -235,6 +241,11 @@ model = PriorKnowledgeNet().to(DEVICE)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
+##
+# if args.visdom:
+visdom = Visdom(
+    env='prior_knowledge')
+
 ####
 for epoch in range(1, EPOCHS + 1):
 
@@ -274,6 +285,12 @@ for epoch in range(1, EPOCHS + 1):
     acc_training = total_acc_training / len(list_data_training)
     loss_training = total_loss_training / len(list_data_training)
 
+    # visdom
+    visdom_acc(
+        visdom, epoch, acc_training, win='acc', name='training')
+    visdom_loss(
+        visdom, epoch, loss_training, win='loss', name='training')
+
     print('training loss:')
     print(loss_training)
 
@@ -307,6 +324,12 @@ for epoch in range(1, EPOCHS + 1):
 
     acc_testing = total_acc_testing / len(list_data_testing)
     loss_testing = total_loss_testing / len(list_data_testing)
+
+    # visdom
+    visdom_acc(
+        visdom, epoch, acc_testing, win='acc', name='testing')
+    visdom_loss(
+        visdom, epoch, loss_testing, win='loss', name='testing')
     print('testing loss:')
     print(loss_testing)
     print('testing acc:')

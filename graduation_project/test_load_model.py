@@ -1,5 +1,16 @@
-import torch
+import math
+import os
+import sys
 
+import cv2
+import numpy as np
+import pandas as pd
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+import torch.utils.data as data
+from torch.utils.data import DataLoader
 
 class ExtractingSemanticsModel(nn.Module):
     def __init__(self):
@@ -129,6 +140,6 @@ class ExtractingSemanticsModel(nn.Module):
         return out_all
 
 model = ExtractingSemanticsModel()
-model.load_state_dict(torch.load('model_extracting_semantics.py'))
+model.load_state_dict(torch.load('model_extracting_semantics.pt'))
 print('dd')
 print(model)

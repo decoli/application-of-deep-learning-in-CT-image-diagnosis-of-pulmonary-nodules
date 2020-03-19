@@ -111,7 +111,7 @@ class DataTraining(data.Dataset):
         image_original = cv2.imread(path_image, flags=2)
         image_copy_1 = image_original.copy()
         image_copy_2 = image_original.copy()
-        cv2.imwrite('image_oririnal.png', image_original)
+        # cv2.imwrite('image_oririnal.png', image_original)
         image_original = torch.Tensor(image_original)
         image_original = torch.unsqueeze(image_original, 0)
 
@@ -119,17 +119,17 @@ class DataTraining(data.Dataset):
         seeds = [Point(15,15), Point(16,15), Point(15,16), Point(16,16)]
         mask_1 = regionGrow(image_copy_1, seeds, 10)
         mask_2 = regionGrow(image_copy_2, seeds, 20)
-        cv2.imwrite('mask_1.png', mask_1 * 255)
-        cv2.imwrite('mask_2.png', mask_2 * 255)
+        # cv2.imwrite('mask_1.png', mask_1 * 255)
+        # cv2.imwrite('mask_2.png', mask_2 * 255)
 
         # get image masked (and transfered to Tensor)
         image_copy_1[mask_1==0] = [0]
-        cv2.imwrite('image_copy_1.png', np.array(image_copy_1))
+        # cv2.imwrite('image_copy_1.png', np.array(image_copy_1))
         image_1 = torch.Tensor(image_copy_1)
         image_1 = torch.unsqueeze(image_1, 0)
 
         image_copy_2[mask_2==0] = [0]
-        cv2.imwrite('image_copy_2.png', np.array(image_copy_2))
+        # cv2.imwrite('image_copy_2.png', np.array(image_copy_2))
         image_2 = torch.Tensor(image_copy_2)
         image_2 = torch.unsqueeze(image_2, 0)
 
@@ -232,7 +232,7 @@ class DataTesting(data.Dataset):
         image_original = cv2.imread(path_image, flags=2)
         image_copy_1 = image_original.copy()
         image_copy_2 = image_original.copy()
-        cv2.imwrite('image_oririnal.png', image_original)
+        # cv2.imwrite('image_oririnal.png', image_original)
         image_original = torch.Tensor(image_original)
         image_original = torch.unsqueeze(image_original, 0)
 
@@ -240,17 +240,17 @@ class DataTesting(data.Dataset):
         seeds = [Point(15,15), Point(16,15), Point(15,16), Point(16,16)]
         mask_1 = regionGrow(image_copy_1, seeds, 10)
         mask_2 = regionGrow(image_copy_2, seeds, 20)
-        cv2.imwrite('mask_1.png', mask_1 * 255)
-        cv2.imwrite('mask_2.png', mask_2 * 255)
+        # cv2.imwrite('mask_1.png', mask_1 * 255)
+        # cv2.imwrite('mask_2.png', mask_2 * 255)
 
         # get image masked (and transfered to Tensor)
         image_copy_1[mask_1==0] = [0]
-        cv2.imwrite('image_copy_1.png', np.array(image_copy_1))
+        # cv2.imwrite('image_copy_1.png', np.array(image_copy_1))
         image_1 = torch.Tensor(image_copy_1)
         image_1 = torch.unsqueeze(image_1, 0)
 
         image_copy_2[mask_2==0] = [0]
-        cv2.imwrite('image_copy_2.png', np.array(image_copy_2))
+        # cv2.imwrite('image_copy_2.png', np.array(image_copy_2))
         image_2 = torch.Tensor(image_copy_2)
         image_2 = torch.unsqueeze(image_2, 0)
 
@@ -517,34 +517,3 @@ for epoch in range(1, EPOCHS + 1):
         visdom, epoch, loss_training, win='loss', name='training')
     print('training loss:')
     print(loss_training)
-
-    # 模型测试
-    total_loss_testing = 0
-    total_acc_testing = 0
-    model.eval()
-
-    with torch.no_grad():
-        for x_1, x_2, x_3, label in data_loader_testing:
-            # input data
-            input_data_1 = x_1.to(dtype=torch.float, device=DEVICE)
-            input_data_2 = x_2.to(dtype=torch.float, device=DEVICE)
-            input_data_3 = x_3.to(dtype=torch.float, device=DEVICE)
-
-            # label
-            label = label.to(dtype=torch.long, device=DEVICE)
-
-            # model predict
-            output = model(input_data_1, input_data_2, input_data_3)
-            output = torch.sigmoid(output)
-
-            # get loss
-            loss = criterion(output, label)
-            total_loss_testing += loss.item()
-
-    loss_testing = total_loss_testing / len(list_data_testing)
-
-    # visdom
-    visdom_loss(
-        visdom, epoch, loss_testing, win='loss', name='testing')
-    print('testing loss:')
-    print(loss_testing)

@@ -406,18 +406,18 @@ class PriorKnowledgeNet(nn.Module):
         size_in = x_1.size(0)
 
         # Annotation Net
-        out = self.fc_1(x)
-        out = F.relu(out)
-        out = self.fc_2(out)
-        out = F.relu(out)
+        out_ano = self.fc_1(x)
+        out_ano = F.relu(out_ano)
+        out_ano = self.fc_2(out_ano)
+        out_ano = F.relu(out_ano)
 
-        out = self.fc_3(out)
-        out = F.relu(out)
+        out_ano = self.fc_3(out_ano)
+        out_ano = F.relu(out_ano)
 
-        out = self.fc_4(out)
-        out = F.relu(out)
+        out_ano = self.fc_4(out_ano)
+        out_ano = F.relu(out_ano)
 
-        out = F.dropout(out)
+        out_ano = F.dropout(out_ano)
 
         ## CNN
         ## kernel=3*3
@@ -489,22 +489,22 @@ class PriorKnowledgeNet(nn.Module):
         out_7 = F.dropout(out_7)
         out_7 = self.fc_7_1(out_7)
 
-        # all
-        out_all = torch.cat([out_3, out_5, out_7], dim=1)
-        out_all = self.fc_all_1(out_all)
-        out_all = F.dropout(out_all)
-        out_all = self.fc_all_2(out_all)
-        out_all = F.relu(out_all)
+        # out cnn
+        out_cnn = torch.cat([out_3, out_5, out_7], dim=1)
+        out_cnn = self.fc_all_1(out_cnn)
+        out_cnn = F.dropout(out_cnn)
+        out_cnn = self.fc_all_2(out_cnn)
+        out_cnn = F.relu(out_cnn)
 
-        # out_all = self.fc_all_3(out_all)
+        # out_cnn = self.fc_all_3(out_cnn)
 
         # fusion
-        out_fusion = torch.cat([out, out_all], dim=1)
+        out_fusion = torch.cat([out_ano, out_cnn], dim=1)
         out_fusion = self.fc_fusion_1(out_fusion)
         out_fusion = F.relu(out_fusion)
         out_fusion = self.fc_fusion_2(out_fusion)
 
-        # return out_all
+        # return out
         return out_fusion
 
 print('ddd')

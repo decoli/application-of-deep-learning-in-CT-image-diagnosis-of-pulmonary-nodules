@@ -507,7 +507,6 @@ class PriorKnowledgeNet(nn.Module):
         # return out_all
         return out_fusion
 
-model = PriorKnowledgeNet()
 print('ddd')
 # get train and test data
 num_training = int(len(list_data) * RATE_TRAIN)

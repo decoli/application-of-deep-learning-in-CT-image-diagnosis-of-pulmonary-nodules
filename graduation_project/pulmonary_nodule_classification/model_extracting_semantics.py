@@ -1,7 +1,7 @@
-import os
 import math
-
+import os
 import sys
+
 import cv2
 import numpy as np
 import pandas as pd
@@ -10,11 +10,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data as data
-from visdom import Visdom
 from torch.utils.data import DataLoader
-
-
-BATCH_SIZE=4
+from visdom import Visdom
+# append sys.path
+sys.path.append(os.getcwd())
+from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
+                            visdom_sp)
+BATCH_SIZE=256
 EPOCHS=200
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 RATE_TRAIN = 0.8
@@ -22,6 +24,11 @@ root_image = 'data/dataset_deep_lung/data_sample/png'
 path_annotation_v2 = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui_v2.csv'
 pd_annotation = pd.read_csv(path_annotation_v2)
 list_data = []
+
+##
+# if args.visdom:
+visdom = Visdom(
+    env='extracting_semantics')
 
 class Point(object):
     def __init__(self,x,y):
@@ -489,14 +496,13 @@ for epoch in range(1, EPOCHS + 1):
 
         # label
         label = label.to(dtype=torch.float, device=DEVICE)
-        label = torch.squeeze(label)
 
         # optimizer
         optimizer.zero_grad()
 
         # model predict
         output = model(input_data_1, input_data_2, input_data_3)
-        output = F.sigmoid(output)
+        output = torch.sigmoid(output)
 
         # get loss
         loss = criterion(output, label)
@@ -504,24 +510,13 @@ for epoch in range(1, EPOCHS + 1):
         optimizer.step()
         total_loss_training += loss.item()
 
-        # get acc
-        result = torch.max(output, 1)[1].cpu().numpy()
-        total_acc_training += sum(result == label.data.cpu().numpy())
-
-    acc_training = total_acc_training / len(list_data_training)
     loss_training = total_loss_training / len(list_data_training)
 
     # visdom
-    visdom_acc(
-        visdom, epoch, acc_training, win='acc', name='training')
     visdom_loss(
         visdom, epoch, loss_training, win='loss', name='training')
-
     print('training loss:')
     print(loss_training)
-
-    print('training acc')
-    print(acc_training)
 
     # 模型测试
     total_loss_testing = 0
@@ -537,28 +532,19 @@ for epoch in range(1, EPOCHS + 1):
 
             # label
             label = label.to(dtype=torch.long, device=DEVICE)
-            label = torch.squeeze(label)
 
             # model predict
-            output = model(input_data, input_data_1, input_data_2, input_data_3)
+            output = model(input_data_1, input_data_2, input_data_3)
+            output = torch.sigmoid(output)
 
             # get loss
             loss = criterion(output, label)
             total_loss_testing += loss.item()
 
-            # get acc
-            result = torch.max(output, 1)[1].cpu().numpy()
-            total_acc_testing += sum(result ==label.data.cpu().numpy())
-
-    acc_testing = total_acc_testing / len(list_data_testing)
     loss_testing = total_loss_testing / len(list_data_testing)
 
     # visdom
-    visdom_acc(
-        visdom, epoch, acc_testing, win='acc', name='testing')
     visdom_loss(
         visdom, epoch, loss_testing, win='loss', name='testing')
     print('testing loss:')
     print(loss_testing)
-    print('testing acc:')
-    print(acc_testing)

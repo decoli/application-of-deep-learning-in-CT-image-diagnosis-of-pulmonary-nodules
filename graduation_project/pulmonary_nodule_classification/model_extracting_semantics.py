@@ -14,7 +14,7 @@ from visdom import Visdom
 from torch.utils.data import DataLoader
 
 
-BATCH_SIZE=256
+BATCH_SIZE=4
 EPOCHS=200
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 RATE_TRAIN = 0.8
@@ -371,7 +371,7 @@ class ExtractingSemanticsModel(nn.Module):
         # all
         self.fc_all_1 = nn.Linear(1536, 1536)
         self.fc_all_2 = nn.Linear(1536, 256)
-        self.fc_all_3 = nn.Linear(256, 8)
+        self.fc_all_3 = nn.Linear(256, 40)
 
     def forward(self, x_1, x_2, x_3):
         size_in = x_1.size(0)
@@ -450,6 +450,7 @@ class ExtractingSemanticsModel(nn.Module):
         out_all = F.dropout(out_all)
         out_all = self.fc_all_2(out_all)
         out_all = F.relu(out_all)
+        out_all = self.fc_all_3(out_all)
 
         return out_all
 
@@ -465,7 +466,7 @@ data_testing = DataTesting(list_data_testing)
 data_loader_training = DataLoader(data_training, batch_size=BATCH_SIZE, shuffle=True)
 data_loader_testing = DataLoader(data_testing, batch_size=BATCH_SIZE, shuffle=True)
 
-criterion = nn.CrossEntropyLoss()
+criterion = nn.BCELoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
 ####
@@ -487,7 +488,7 @@ for epoch in range(1, EPOCHS + 1):
         input_data_3 = x_3.to(dtype=torch.float, device=DEVICE)
 
         # label
-        label = label.to(dtype=torch.long, device=DEVICE)
+        label = label.to(dtype=torch.float, device=DEVICE)
         label = torch.squeeze(label)
 
         # optimizer
@@ -495,6 +496,7 @@ for epoch in range(1, EPOCHS + 1):
 
         # model predict
         output = model(input_data_1, input_data_2, input_data_3)
+        output = F.sigmoid(output)
 
         # get loss
         loss = criterion(output, label)

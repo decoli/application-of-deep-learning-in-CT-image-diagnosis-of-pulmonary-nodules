@@ -453,7 +453,7 @@ class ExtractingSemanticsModel(nn.Module):
 
         return out_all
 
-model = ExtractingSemanticsModel()
+model = ExtractingSemanticsModel().to(DEVICE)
 # get train and test data
 num_training = int(len(list_data) * RATE_TRAIN)
 list_data_training = list_data[: num_training]
@@ -465,8 +465,6 @@ data_testing = DataTesting(list_data_testing)
 data_loader_training = DataLoader(data_training, batch_size=BATCH_SIZE, shuffle=True)
 data_loader_testing = DataLoader(data_testing, batch_size=BATCH_SIZE, shuffle=True)
 
-# get model
-model = PriorKnowledgeNet().to(DEVICE)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 

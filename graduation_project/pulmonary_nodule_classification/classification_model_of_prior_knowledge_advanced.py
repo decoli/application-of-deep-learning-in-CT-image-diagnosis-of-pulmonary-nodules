@@ -667,7 +667,7 @@ optimizer = optim.SGD(model.parameters(), lr=0.01)
 ##
 # if args.visdom:
 visdom = Visdom(
-    env='prior_knowledge')
+    env='prior_knowledge_advanced')
 
 ####
 for epoch in range(1, EPOCHS + 1):

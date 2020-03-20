@@ -696,7 +696,7 @@ for epoch in range(1, EPOCHS + 1):
         optimizer.zero_grad()
 
         # model predict
-        output = model(input_data, input_data_1, input_data_2, input_data_3)
+        output = model(input_data_1, input_data_2, input_data_3)
 
         # get loss
         loss = criterion(output, label)
@@ -741,7 +741,7 @@ for epoch in range(1, EPOCHS + 1):
             label = torch.squeeze(label)
 
             # model predict
-            output = model(input_data, input_data_1, input_data_2, input_data_3)
+            output = model(input_data_1, input_data_2, input_data_3)
 
             # get loss
             loss = criterion(output, label)

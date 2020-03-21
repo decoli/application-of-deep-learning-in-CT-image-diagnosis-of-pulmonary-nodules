@@ -592,7 +592,7 @@ for epoch in range(1, EPOCHS + 1):
     tpr_training = count_tp / len(list_data_training)
     tnr_training = count_tn / len(list_data_training)
 
-    fpr, tpr, thresholds = roc_curve(list_label, list_output_softmax, pos_label=1)
+    fpr, tpr, thresholds = roc_curve(list_label, list_output_softmax, pos_label=0)
     roc_auc_training = auc(fpr, tpr)
     print(roc_auc_training)
 
@@ -673,7 +673,7 @@ for epoch in range(1, EPOCHS + 1):
     tpr_testing = count_tp / len(list_data_training)
     tnr_testing = count_tn / len(list_data_training)
 
-    fpr, tpr, thresholds = roc_curve(list_label, list_output_softmax, pos_label=1)
+    fpr, tpr, thresholds = roc_curve(list_label, list_output_softmax, pos_label=0)
     roc_auc_testing = auc(fpr, tpr)
     print(roc_auc_testing)
 
@@ -687,7 +687,7 @@ for epoch in range(1, EPOCHS + 1):
     visdom_sp(
         visdom, epoch, tnr_testing, win='sp', name='testing')
     visdom_roc_auc(
-        visdom, epoch, roc_auc, win='aur', name='testing')
+        visdom, epoch, roc_auc_testing, win='aur', name='testing')
 
     print('testing loss:')
     print(loss_testing)

@@ -537,6 +537,7 @@ for epoch in range(1, EPOCHS + 1):
 
     count_train = 0
     list_output_softmax = []
+    list_label = []
 
     for x_1, x_2, x_3, label in data_loader_training:
 
@@ -550,6 +551,7 @@ for epoch in range(1, EPOCHS + 1):
 
         # label
         label = label.to(dtype=torch.long, device=DEVICE)
+        list_label.extend(list(label.data.cpu().numpy()))
 
         # optimizer
         optimizer.zero_grad()
@@ -590,9 +592,9 @@ for epoch in range(1, EPOCHS + 1):
     tpr_training = count_tp / len(list_data_training)
     tnr_training = count_tn / len(list_data_training)
 
-    fpr, tpr, thresholds = roc_curve(list(label.data.cpu().numpy()), list_output_softmax, pos_label=1)
+    fpr, tpr, thresholds = roc_curve(list_label, list_output_softmax, pos_label=1)
     roc_auc_training = auc(fpr, tpr)
-    print(roc_auc)
+    print(roc_auc_training)
 
     # visdom
     visdom_acc(
@@ -617,6 +619,15 @@ for epoch in range(1, EPOCHS + 1):
     total_acc_testing = 0
     model.eval()
 
+    count_tp = 0
+    count_fn = 0
+    count_fp = 0
+    count_tn = 0
+
+    count_train = 0
+    list_output_softmax = []
+    list_label = []
+
     with torch.no_grad():
         for x_1, x_2, x_3, label in data_loader_testing:
 
@@ -627,6 +638,7 @@ for epoch in range(1, EPOCHS + 1):
 
             # label
             label = label.to(dtype=torch.long, device=DEVICE)
+            list_label.extend(list(label.data.cpu().numpy()))
 
             # model predict
             output = model(input_data_1, input_data_2, input_data_3)
@@ -661,9 +673,9 @@ for epoch in range(1, EPOCHS + 1):
     tpr_testing = count_tp / len(list_data_training)
     tnr_testing = count_tn / len(list_data_training)
 
-    fpr, tpr, thresholds = roc_curve(list(label.data.cpu().numpy()), list_output_softmax, pos_label=1)
-    roc_auc = auc(fpr, tpr)
-    print(roc_auc)
+    fpr, tpr, thresholds = roc_curve(list_label, list_output_softmax, pos_label=1)
+    roc_auc_testing = auc(fpr, tpr)
+    print(roc_auc_testing)
 
     # visdom
     visdom_acc(

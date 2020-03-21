@@ -692,8 +692,9 @@ for epoch in range(1, EPOCHS + 1):
         visdom, epoch, roc_auc_testing, win='auc', name='testing')
 
     # save the best performance
-    if (acc_testing >= 0.85) and (tpr_testing >= 0.85) and (tnr_testing >= 0.85) and (roc_auc_testing >= 0.85):
+    if (acc_testing >= acc_training) and (acc_testing >= 0.82) and (tpr_testing >= 0.82) and (tnr_testing >= 0.82) and (roc_auc_testing >= 0.82):
         writer_row = []
+        writer_row.append(epoch)
         writer_row.append(acc_testing)
         writer_row.append(tpr_testing)
         writer_row.append(tnr_testing)
@@ -702,6 +703,7 @@ for epoch in range(1, EPOCHS + 1):
         with open(path_performance_csv, 'w') as f:
             writer = csv.writer(f)
             writer.writerow([
+                'epoch',
                 'acc',
                 'se',
                 'sp',

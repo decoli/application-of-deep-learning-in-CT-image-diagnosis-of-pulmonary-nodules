@@ -708,7 +708,7 @@ for epoch in range(1, EPOCHS + 1):
         visdom, epoch, roc_auc_testing, win='auc', name='testing')
 
     # save the best performance
-    if (acc_testing >= acc_training) and (acc_testing >= 0.82) and (tpr_testing >= 0.82) and (tnr_testing >= 0.82) and (roc_auc_testing >= 0.82):
+    if (acc_testing >= acc_training) and (acc_testing >= 0.82) and (tpr_testing >= 0.77) and (tnr_testing >= 0.77):
         writer_row = []
         writer_row.append(epoch)
         writer_row.append(acc_testing)

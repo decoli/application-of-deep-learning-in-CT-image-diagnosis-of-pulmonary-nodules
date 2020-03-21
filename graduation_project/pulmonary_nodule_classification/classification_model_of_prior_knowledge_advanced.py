@@ -530,13 +530,14 @@ for epoch in range(1, EPOCHS + 1):
     total_acc_training = 0
     model.train()
 
-
     count_tp = 0
     count_fn = 0
     count_fp = 0
     count_tn = 0
 
     count_train = 0
+    list_output_softmax = []
+
     for x_1, x_2, x_3, label in data_loader_training:
 
         count_train += 1
@@ -580,24 +581,30 @@ for epoch in range(1, EPOCHS + 1):
         # get ROC
         output_softmax = F.softmax(output, dim=1)
         output_softmax = output_softmax.detach().numpy()
-        list_output_softmax = []
         for each_output_softmax in output_softmax:
             list_output_softmax.append(each_output_softmax[0])
 
-        fpr, tpr, thresholds = roc_curve(list(label.data.cpu().numpy()), list_output_softmax, pos_label=1)
-        roc_auc = auc(fpr, tpr)
-        print(roc_auc)
 
     acc_training = total_acc_training / len(list_data_training)
     loss_training = total_loss_training / len(list_data_training)
-    tpr = count_tp / len(list_data_training)
-    tnr = count_tn / len(list_data_training)
+    tpr_training = count_tp / len(list_data_training)
+    tnr_training = count_tn / len(list_data_training)
+
+    fpr, tpr, thresholds = roc_curve(list(label.data.cpu().numpy()), list_output_softmax, pos_label=1)
+    roc_auc_training = auc(fpr, tpr)
+    print(roc_auc)
 
     # visdom
     visdom_acc(
         visdom, epoch, acc_training, win='acc', name='training')
     visdom_loss(
         visdom, epoch, loss_training, win='loss', name='training')
+    visdom_se(
+        visdom, epoch, tpr_training, win='se', name='training')
+    visdom_sp(
+        visdom, epoch, tnr_training, win='sp', name='training')
+    visdom_roc_auc(
+        visdom, epoch, roc_auc_training, win='aur', name='training')
 
     print('training loss:')
     print(loss_training)
@@ -632,14 +639,44 @@ for epoch in range(1, EPOCHS + 1):
             result = torch.max(output, 1)[1].cpu().numpy()
             total_acc_testing += sum(result ==label.data.cpu().numpy())
 
+            # get tpr, tnr
+            for each_pred, each_label in zip(list(pred), list(label.data.cpu().numpy())):
+                if each_pred == 1 and each_label == 1:
+                    count_tp += 1
+                if each_pred == 0 and each_label == 0:
+                    count_tn += 1
+                if each_pred == 1 and each_label == 0:
+                    count_fp += 1
+                if each_pred == 0 and each_label == 1:
+                    count_fn += 1
+
+            # get ROC
+            output_softmax = F.softmax(output, dim=1)
+            output_softmax = output_softmax.detach().numpy()
+            for each_output_softmax in output_softmax:
+                list_output_softmax.append(each_output_softmax[0])
+
     acc_testing = total_acc_testing / len(list_data_testing)
     loss_testing = total_loss_testing / len(list_data_testing)
+    tpr_testing = count_tp / len(list_data_training)
+    tnr_testing = count_tn / len(list_data_training)
+
+    fpr, tpr, thresholds = roc_curve(list(label.data.cpu().numpy()), list_output_softmax, pos_label=1)
+    roc_auc = auc(fpr, tpr)
+    print(roc_auc)
 
     # visdom
     visdom_acc(
         visdom, epoch, acc_testing, win='acc', name='testing')
     visdom_loss(
         visdom, epoch, loss_testing, win='loss', name='testing')
+    visdom_se(
+        visdom, epoch, tpr_testing, win='se', name='testing')
+    visdom_sp(
+        visdom, epoch, tnr_testing, win='sp', name='testing')
+    visdom_roc_auc(
+        visdom, epoch, roc_auc, win='aur', name='testing')
+
     print('testing loss:')
     print(loss_testing)
     print('testing acc:')

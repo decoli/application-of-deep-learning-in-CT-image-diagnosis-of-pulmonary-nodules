@@ -589,8 +589,8 @@ for epoch in range(1, EPOCHS + 1):
 
     acc_training = total_acc_training / len(list_data_training)
     loss_training = total_loss_training / len(list_data_training)
-    tpr_training = count_tp / len(list_data_training)
-    tnr_training = count_tn / len(list_data_training)
+    tpr_training = count_tp / (count_tp + count_fn)
+    tnr_training = count_tn / (count_tn + count_fp)
 
     fpr, tpr, thresholds = roc_curve(list_label, list_output_softmax, pos_label=0)
     roc_auc_training = auc(fpr, tpr)
@@ -670,8 +670,8 @@ for epoch in range(1, EPOCHS + 1):
 
     acc_testing = total_acc_testing / len(list_data_testing)
     loss_testing = total_loss_testing / len(list_data_testing)
-    tpr_testing = count_tp / len(list_data_training)
-    tnr_testing = count_tn / len(list_data_training)
+    tpr_testing = count_tp / (count_tp + count_fn)
+    tnr_testing = count_tn / (count_tn + count_fp)
 
     fpr, tpr, thresholds = roc_curve(list_label, list_output_softmax, pos_label=0)
     roc_auc_testing = auc(fpr, tpr)

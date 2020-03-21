@@ -648,8 +648,8 @@ for epoch in range(1, EPOCHS + 1):
             total_loss_testing += loss.item()
 
             # get acc
-            result = torch.max(output, 1)[1].cpu().numpy()
-            total_acc_testing += sum(result ==label.data.cpu().numpy())
+            pred = torch.max(output, 1)[1].cpu().numpy()
+            total_acc_testing += sum(pred ==label.data.cpu().numpy())
 
             # get tpr, tnr
             for each_pred, each_label in zip(list(pred), list(label.data.cpu().numpy())):

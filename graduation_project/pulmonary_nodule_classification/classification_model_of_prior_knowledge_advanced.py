@@ -606,7 +606,7 @@ for epoch in range(1, EPOCHS + 1):
     visdom_sp(
         visdom, epoch, tnr_training, win='sp', name='training')
     visdom_roc_auc(
-        visdom, epoch, roc_auc_training, win='aur', name='training')
+        visdom, epoch, roc_auc_training, win='auc', name='training')
 
     print('training loss:')
     print(loss_training)
@@ -687,7 +687,7 @@ for epoch in range(1, EPOCHS + 1):
     visdom_sp(
         visdom, epoch, tnr_testing, win='sp', name='testing')
     visdom_roc_auc(
-        visdom, epoch, roc_auc_testing, win='aur', name='testing')
+        visdom, epoch, roc_auc_testing, win='auc', name='testing')
 
     print('testing loss:')
     print(loss_testing)

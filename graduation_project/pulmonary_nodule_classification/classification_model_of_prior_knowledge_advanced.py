@@ -18,6 +18,7 @@ from sklearn.metrics import auc, confusion_matrix, roc_curve
 from torch.utils.data import DataLoader
 from visdom import Visdom
 
+import csv
 # append sys.path
 sys.path.append(os.getcwd())
 from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
@@ -28,6 +29,7 @@ BATCH_SIZE=256
 EPOCHS=200
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 RATE_TRAIN = 0.8
+path_performance_csv = 'advanced.csv'
 root_image = 'data/dataset_deep_lung/data_sample/png'
 path_annotation_v2 = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui_v2.csv'
 pd_annotation = pd.read_csv(path_annotation_v2)
@@ -688,6 +690,24 @@ for epoch in range(1, EPOCHS + 1):
         visdom, epoch, tnr_testing, win='sp', name='testing')
     visdom_roc_auc(
         visdom, epoch, roc_auc_testing, win='auc', name='testing')
+
+    # save the best performance
+    if (acc_testing >= 0.85) and (tpr_testing >= 0.85) and (tnr_testing >= 0.85) and (roc_auc_testing >= 0.85):
+        writer_row = []
+        writer_row.append(acc_testing)
+        writer_row.append(tpr_testing)
+        writer_row.append(tnr_testing)
+        writer_row.append(roc_auc_testing)
+
+        with open(path_performance_csv, 'w') as f:
+            writer = csv.writer(f)
+            writer.writerow([
+                'acc',
+                'se',
+                'sp',
+                'auc',
+            ])
+            writer.writerow(writer_row)
 
     print('testing loss:')
     print(loss_testing)

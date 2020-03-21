@@ -2,8 +2,11 @@
 融合先验知识（如医师标注的各结节征象），进行良恶性分类的模型
 '''
 
+import argparse
+import csv
 import math
 import os
+import random
 import sys
 
 import cv2
@@ -18,9 +21,9 @@ from sklearn.metrics import auc, confusion_matrix, roc_curve
 from torch.utils.data import DataLoader
 from visdom import Visdom
 
-import csv
 # append sys.path
 sys.path.append(os.getcwd())
+from utility.pre_processing import cross_validation
 from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
                             visdom_sp)
 
@@ -490,11 +493,25 @@ class ExtractingSemanticsModel(nn.Module):
         return out_all
 
 
+def argument():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--num-cross', default=5, type=int)
+    parser.add_argument('--use-cross', type=int)
+
+    args = parser.parse_args()
+    return args
+
 print('ddd')
+
+#
+# random.shuffle(list_data)
+
 # get train and test data
-num_training = int(len(list_data) * RATE_TRAIN)
-list_data_training = list_data[: num_training]
-list_data_testing = list_data[num_training: ]
+# num_training = int(len(list_data) * RATE_TRAIN)
+# list_data_training = list_data[: num_training]
+# list_data_testing = list_data[num_training: ]
+args = argument()
+list_data_training, list_data_testing = cross_validation(args, list_data)
 
 data_training = DataTraining(list_data_training)
 data_testing = DataTesting(list_data_testing)

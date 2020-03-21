@@ -24,7 +24,7 @@ from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
                             visdom_sp)
 
 
-BATCH_SIZE=4
+BATCH_SIZE=256
 EPOCHS=200
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 RATE_TRAIN = 0.8
@@ -580,7 +580,7 @@ for epoch in range(1, EPOCHS + 1):
 
         # get ROC
         output_softmax = F.softmax(output, dim=1)
-        output_softmax = output_softmax.detach().numpy()
+        output_softmax = output_softmax.cpu().detach().numpy()
         for each_output_softmax in output_softmax:
             list_output_softmax.append(each_output_softmax[0])
 
@@ -652,7 +652,7 @@ for epoch in range(1, EPOCHS + 1):
 
             # get ROC
             output_softmax = F.softmax(output, dim=1)
-            output_softmax = output_softmax.detach().numpy()
+            output_softmax = output_softmax.cpu().detach().numpy()
             for each_output_softmax in output_softmax:
                 list_output_softmax.append(each_output_softmax[0])
 

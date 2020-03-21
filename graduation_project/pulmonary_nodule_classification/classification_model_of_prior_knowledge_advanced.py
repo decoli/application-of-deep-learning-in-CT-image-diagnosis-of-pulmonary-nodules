@@ -2,10 +2,10 @@
 融合先验知识（如医师标注的各结节征象），进行良恶性分类的模型
 '''
 
-import os
 import math
-
+import os
 import sys
+
 import cv2
 import numpy as np
 import pandas as pd
@@ -14,15 +14,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data as data
-from visdom import Visdom
+from sklearn.metrics import auc, confusion_matrix, roc_curve
 from torch.utils.data import DataLoader
+from visdom import Visdom
 
 # append sys.path
 sys.path.append(os.getcwd())
 from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
                             visdom_sp)
 
-BATCH_SIZE=256
+
+BATCH_SIZE=4
 EPOCHS=200
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 RATE_TRAIN = 0.8
@@ -528,6 +530,12 @@ for epoch in range(1, EPOCHS + 1):
     total_acc_training = 0
     model.train()
 
+
+    count_tp = 0
+    count_fn = 0
+    count_fp = 0
+    count_tn = 0
+
     count_train = 0
     for x_1, x_2, x_3, label in data_loader_training:
 
@@ -541,7 +549,6 @@ for epoch in range(1, EPOCHS + 1):
 
         # label
         label = label.to(dtype=torch.long, device=DEVICE)
-        label = torch.squeeze(label)
 
         # optimizer
         optimizer.zero_grad()
@@ -556,11 +563,35 @@ for epoch in range(1, EPOCHS + 1):
         total_loss_training += loss.item()
 
         # get acc
-        result = torch.max(output, 1)[1].cpu().numpy()
-        total_acc_training += sum(result == label.data.cpu().numpy())
+        pred = torch.max(output, 1)[1].cpu().numpy()
+        total_acc_training += sum(pred == label.data.cpu().numpy())
+
+        # get tpr, tnr
+        for each_pred, each_label in zip(list(pred), list(label.data.cpu().numpy())):
+            if each_pred == 1 and each_label == 1:
+                count_tp += 1
+            if each_pred == 0 and each_label == 0:
+                count_tn += 1
+            if each_pred == 1 and each_label == 0:
+                count_fp += 1
+            if each_pred == 0 and each_label == 1:
+                count_fn += 1
+
+        # get ROC
+        output_softmax = F.softmax(output, dim=1)
+        output_softmax = output_softmax.detach().numpy()
+        list_output_softmax = []
+        for each_output_softmax in output_softmax:
+            list_output_softmax.append(each_output_softmax[0])
+
+        fpr, tpr, thresholds = roc_curve(list(label.data.cpu().numpy()), list_output_softmax, pos_label=1)
+        roc_auc = auc(fpr, tpr)
+        print(roc_auc)
 
     acc_training = total_acc_training / len(list_data_training)
     loss_training = total_loss_training / len(list_data_training)
+    tpr = count_tp / len(list_data_training)
+    tnr = count_tn / len(list_data_training)
 
     # visdom
     visdom_acc(
@@ -589,7 +620,6 @@ for epoch in range(1, EPOCHS + 1):
 
             # label
             label = label.to(dtype=torch.long, device=DEVICE)
-            label = torch.squeeze(label)
 
             # model predict
             output = model(input_data_1, input_data_2, input_data_3)

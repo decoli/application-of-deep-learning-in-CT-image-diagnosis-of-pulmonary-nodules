@@ -700,7 +700,7 @@ for epoch in range(1, EPOCHS + 1):
         writer_row.append(tnr_testing)
         writer_row.append(roc_auc_testing)
 
-        with open(path_performance_csv, 'w') as f:
+        with open(path_performance_csv, 'a') as f:
             writer = csv.writer(f)
             writer.writerow([
                 'epoch',

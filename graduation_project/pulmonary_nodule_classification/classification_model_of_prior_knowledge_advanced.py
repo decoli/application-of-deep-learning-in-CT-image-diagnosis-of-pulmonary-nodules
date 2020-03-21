@@ -496,7 +496,7 @@ class ExtractingSemanticsModel(nn.Module):
 def argument():
     parser = argparse.ArgumentParser()
     parser.add_argument('--num-cross', default=5, type=int)
-    parser.add_argument('--use-cross', type=int)
+    parser.add_argument('--use-cross', type=int, required=True)
 
     args = parser.parse_args()
     return args

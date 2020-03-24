@@ -2,10 +2,13 @@
 融合先验知识（如医师标注的各结节征象），进行良恶性分类的模型
 '''
 
-import os
+import argparse
+import csv
 import math
-
+import os
+import random
 import sys
+
 import cv2
 import numpy as np
 import pandas as pd
@@ -14,16 +17,18 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data as data
-from visdom import Visdom
+from sklearn.metrics import auc, confusion_matrix, roc_curve
 from torch.utils.data import DataLoader
+from visdom import Visdom
 
 # append sys.path
 sys.path.append(os.getcwd())
+from utility.pre_processing import cross_validation
 from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
                             visdom_sp)
 
 BATCH_SIZE=256
-EPOCHS=200
+EPOCHS=150
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 RATE_TRAIN = 0.8
 root_image = 'data/dataset_deep_lung/data_sample/png'
@@ -507,11 +512,21 @@ class PriorKnowledgeNet(nn.Module):
         # return out
         return out_fusion
 
+def argument():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--num-cross', default=5, type=int)
+    parser.add_argument('--use-cross', type=int, required=True)
+
+    args = parser.parse_args()
+    return args
+
 print('ddd')
 # get train and test data
-num_training = int(len(list_data) * RATE_TRAIN)
-list_data_training = list_data[: num_training]
-list_data_testing = list_data[num_training: ]
+# num_training = int(len(list_data) * RATE_TRAIN)
+# list_data_training = list_data[: num_training]
+# list_data_testing = list_data[num_training: ]
+args = argument()
+list_data_training, list_data_testing = cross_validation(args, list_data)
 
 data_training = DataTraining(list_data_training)
 data_testing = DataTesting(list_data_testing)
@@ -536,7 +551,14 @@ for epoch in range(1, EPOCHS + 1):
     total_acc_training = 0
     model.train()
 
+    count_tp = 0
+    count_fn = 0
+    count_fp = 0
+    count_tn = 0
+
     count_train = 0
+    list_output_softmax = []
+    list_label = []
     for x, x_1, x_2, x_3, label in data_loader_training:
 
         count_train += 1
@@ -550,7 +572,7 @@ for epoch in range(1, EPOCHS + 1):
 
         # label
         label = label.to(dtype=torch.long, device=DEVICE)
-        label = torch.squeeze(label)
+        list_label.extend(list(label.data.cpu().numpy()))
 
         # optimizer
         optimizer.zero_grad()
@@ -565,17 +587,42 @@ for epoch in range(1, EPOCHS + 1):
         total_loss_training += loss.item()
 
         # get acc
-        result = torch.max(output, 1)[1].cpu().numpy()
-        total_acc_training += sum(result == label.data.cpu().numpy())
+        pred = torch.max(output, 1)[1].cpu().numpy()
+        total_acc_training += sum(pred == label.data.cpu().numpy())
+
+        # get tpr, tnr
+        for each_pred, each_label in zip(list(pred), list(label.data.cpu().numpy())):
+            if each_pred == 1 and each_label == 1:
+                count_tp += 1
+            if each_pred == 0 and each_label == 0:
+                count_tn += 1
+            if each_pred == 1 and each_label == 0:
+                count_fp += 1
+            if each_pred == 0 and each_label == 1:
+                count_fn += 1
+
+        # get ROC
+        output_softmax = F.softmax(output, dim=1)
+        output_softmax = output_softmax.cpu().detach().numpy()
+        for each_output_softmax in output_softmax:
+            list_output_softmax.append(each_output_softmax[0])
 
     acc_training = total_acc_training / len(list_data_training)
     loss_training = total_loss_training / len(list_data_training)
+    tpr_training = count_tp / (count_tp + count_fn)
+    tnr_training = count_tn / (count_tn + count_fp)
 
     # visdom
     visdom_acc(
         visdom, epoch, acc_training, win='acc', name='training')
     visdom_loss(
         visdom, epoch, loss_training, win='loss', name='training')
+    visdom_se(
+        visdom, epoch, tpr_training, win='se', name='training')
+    visdom_sp(
+        visdom, epoch, tnr_training, win='sp', name='training')
+    visdom_roc_auc(
+        visdom, epoch, roc_auc_training, win='auc', name='training')
 
     print('training loss:')
     print(loss_training)
@@ -588,6 +635,14 @@ for epoch in range(1, EPOCHS + 1):
     total_acc_testing = 0
     model.eval()
 
+    count_tp = 0
+    count_fn = 0
+    count_fp = 0
+    count_tn = 0
+
+    list_output_softmax = []
+    list_label = []
+
     with torch.no_grad():
         for x, x_1, x_2, x_3, label in data_loader_testing:
             # input data
@@ -598,7 +653,7 @@ for epoch in range(1, EPOCHS + 1):
 
             # label
             label = label.to(dtype=torch.long, device=DEVICE)
-            label = torch.squeeze(label)
+            list_label.extend(list(label.data.cpu().numpy()))
 
             # model predict
             output = model(input_data, input_data_1, input_data_2, input_data_3)
@@ -608,17 +663,67 @@ for epoch in range(1, EPOCHS + 1):
             total_loss_testing += loss.item()
 
             # get acc
-            result = torch.max(output, 1)[1].cpu().numpy()
-            total_acc_testing += sum(result ==label.data.cpu().numpy())
+            pred = torch.max(output, 1)[1].cpu().numpy()
+            total_acc_testing += sum(pred ==label.data.cpu().numpy())
+
+            # get tpr, tnr
+            for each_pred, each_label in zip(list(pred), list(label.data.cpu().numpy())):
+                if each_pred == 1 and each_label == 1:
+                    count_tp += 1
+                if each_pred == 0 and each_label == 0:
+                    count_tn += 1
+                if each_pred == 1 and each_label == 0:
+                    count_fp += 1
+                if each_pred == 0 and each_label == 1:
+                    count_fn += 1
+
+            # get ROC
+            output_softmax = F.softmax(output, dim=1)
+            output_softmax = output_softmax.cpu().detach().numpy()
+            for each_output_softmax in output_softmax:
+                list_output_softmax.append(each_output_softmax[0])
 
     acc_testing = total_acc_testing / len(list_data_testing)
     loss_testing = total_loss_testing / len(list_data_testing)
+    tpr_testing = count_tp / (count_tp + count_fn)
+    tnr_testing = count_tn / (count_tn + count_fp)
+
+    fpr, tpr, thresholds = roc_curve(list_label, list_output_softmax, pos_label=0)
+    roc_auc_testing = auc(fpr, tpr)
+    print(roc_auc_testing)
 
     # visdom
     visdom_acc(
         visdom, epoch, acc_testing, win='acc', name='testing')
     visdom_loss(
         visdom, epoch, loss_testing, win='loss', name='testing')
+    visdom_se(
+        visdom, epoch, tpr_testing, win='se', name='testing')
+    visdom_sp(
+        visdom, epoch, tnr_testing, win='sp', name='testing')
+    visdom_roc_auc(
+        visdom, epoch, roc_auc_testing, win='auc', name='testing')
+
+    # save the best performance
+    if (acc_testing >= 0.82) and (tpr_testing >= 0.77) and (tnr_testing >= 0.77):
+        writer_row = []
+        writer_row.append(epoch)
+        writer_row.append(acc_testing)
+        writer_row.append(tpr_testing)
+        writer_row.append(tnr_testing)
+        writer_row.append(roc_auc_testing)
+        path_performance_csv = 'normal_{use_cross}.csv'.format(use_cross=args.use_cross)
+        with open(path_performance_csv, 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow([
+                'epoch',
+                'acc',
+                'se',
+                'sp',
+                'auc',
+            ])
+            writer.writerow(writer_row)
+
     print('testing loss:')
     print(loss_testing)
     print('testing acc:')

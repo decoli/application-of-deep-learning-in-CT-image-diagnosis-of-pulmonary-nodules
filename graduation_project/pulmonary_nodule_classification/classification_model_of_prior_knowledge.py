@@ -717,7 +717,7 @@ for epoch in range(1, EPOCHS + 1):
             writer_row.append(tpr_testing)
             writer_row.append(tnr_testing)
             writer_row.append(roc_auc_testing)
-            path_performance_csv = 'advanced_{use_cross}.csv'.format(use_cross=args.use_cross)
+            path_performance_csv = 'normal_{use_cross}.csv'.format(use_cross=args.use_cross)
             with open(path_performance_csv, 'a') as f:
                 writer = csv.writer(f)
                 writer.writerow([
@@ -737,7 +737,7 @@ for epoch in range(1, EPOCHS + 1):
             writer_row.append(tpr_testing)
             writer_row.append(tnr_testing)
             writer_row.append(roc_auc_testing)
-            path_performance_csv = 'advanced_{use_cross}.csv'.format(use_cross=args.use_cross)
+            path_performance_csv = 'normal_{use_cross}.csv'.format(use_cross=args.use_cross)
             with open(path_performance_csv, 'a') as f:
                 writer = csv.writer(f)
                 writer.writerow([

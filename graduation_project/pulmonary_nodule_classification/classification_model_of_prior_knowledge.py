@@ -612,6 +612,10 @@ for epoch in range(1, EPOCHS + 1):
     tpr_training = count_tp / (count_tp + count_fn)
     tnr_training = count_tn / (count_tn + count_fp)
 
+    fpr, tpr, thresholds = roc_curve(list_label, list_output_softmax, pos_label=0)
+    roc_auc_training = auc(fpr, tpr)
+    print(roc_auc_training)
+
     # visdom
     visdom_acc(
         visdom, epoch, acc_training, win='acc', name='training')

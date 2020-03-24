@@ -708,24 +708,45 @@ for epoch in range(1, EPOCHS + 1):
         visdom, epoch, roc_auc_testing, win='auc', name='testing')
 
     # save the best performance
-    if (acc_testing >= 0.82) and (tpr_testing >= 0.77) and (tnr_testing >= 0.77):
-        writer_row = []
-        writer_row.append(epoch)
-        writer_row.append(acc_testing)
-        writer_row.append(tpr_testing)
-        writer_row.append(tnr_testing)
-        writer_row.append(roc_auc_testing)
-        path_performance_csv = 'advanced_{use_cross}.csv'.format(use_cross=args.use_cross)
-        with open(path_performance_csv, 'a') as f:
-            writer = csv.writer(f)
-            writer.writerow([
-                'epoch',
-                'acc',
-                'se',
-                'sp',
-                'auc',
-            ])
-            writer.writerow(writer_row)
+    if not (args.use_cross == 1):
+        if (acc_testing >= 0.82) and (tpr_testing >= 0.77) and (tnr_testing >= 0.77):
+            writer_row = []
+            writer_row.append(epoch)
+            writer_row.append(acc_testing)
+            writer_row.append(tpr_testing)
+            writer_row.append(tnr_testing)
+            writer_row.append(roc_auc_testing)
+            path_performance_csv = 'advanced_{use_cross}.csv'.format(use_cross=args.use_cross)
+            with open(path_performance_csv, 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    'epoch',
+                    'acc',
+                    'se',
+                    'sp',
+                    'auc',
+                ])
+                writer.writerow(writer_row)
+
+    if (args.use_cross == 1):
+        if (acc_testing >= 0.80):
+            writer_row = []
+            writer_row.append(epoch)
+            writer_row.append(acc_testing)
+            writer_row.append(tpr_testing)
+            writer_row.append(tnr_testing)
+            writer_row.append(roc_auc_testing)
+            path_performance_csv = 'advanced_{use_cross}.csv'.format(use_cross=args.use_cross)
+            with open(path_performance_csv, 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    'epoch',
+                    'acc',
+                    'se',
+                    'sp',
+                    'auc',
+                ])
+                writer.writerow(writer_row)
 
     print('testing loss:')
     print(loss_testing)

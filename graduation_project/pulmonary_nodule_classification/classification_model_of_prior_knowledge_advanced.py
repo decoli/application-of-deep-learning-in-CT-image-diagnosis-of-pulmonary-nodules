@@ -20,6 +20,7 @@ import torch.utils.data as data
 from sklearn.metrics import auc, confusion_matrix, roc_curve
 from torch.utils.data import DataLoader
 from visdom import Visdom
+from torchvision import transforms
 
 # append sys.path
 sys.path.append(os.getcwd())
@@ -36,6 +37,10 @@ root_image = 'data/dataset_deep_lung/data_sample/png'
 path_annotation_v2 = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui_v2.csv'
 pd_annotation = pd.read_csv(path_annotation_v2)
 list_data = []
+
+transform_to_pil_image = transforms.ToPILImage()
+transform_random_affine = transforms.RandomAffine([-30, 30], scale=(0.8, 1.2))
+transform_to_tensor = transforms.ToTensor()
 
 class Point(object):
     def __init__(self,x,y):
@@ -102,7 +107,13 @@ for index, each_annotation in pd_annotation.iterrows():
 class DataTraining(data.Dataset):
     def __init__(self, list_data):
         self.list_data = list_data
-    
+        # self.transformations = transforms.Compose([
+        #     transforms.ToPILImage(),
+        #     # transforms.RandomErasing(),
+        #     # transforms.RandomHorizontalFlip(),
+        #     transforms.ToTensor(),
+        # ])
+
     def __len__(self):
         return len(self.list_data)
     
@@ -116,8 +127,10 @@ class DataTraining(data.Dataset):
             '{index}{image_format}'.format(
                 index=current_item['index'], image_format='.png'))
         image_original = cv2.imread(path_image, flags=2)
+
         image_copy_1 = image_original.copy()
         image_copy_2 = image_original.copy()
+
         # cv2.imwrite('image_oririnal.png', image_original)
         image_original = torch.Tensor(image_original)
         image_original = torch.unsqueeze(image_original, 0)
@@ -143,6 +156,23 @@ class DataTraining(data.Dataset):
         # label
         label = current_item['malignant']
         return_label = np.array(label)
+
+        ### torchvision transforms
+        image_original = transform_to_pil_image(image_original)
+        image_original = transform_random_affine(image_original)
+        image_original = transform_to_tensor(image_original)
+        
+        image_1 = transform_to_pil_image(image_1)
+        image_1 = transform_random_affine(image_1)
+        image_1 = transform_to_tensor(image_1)
+
+        image_2 = transform_to_pil_image(image_2)
+        image_2 = transform_random_affine(image_2)
+        image_2 = transform_to_tensor(image_2)
+
+        image_original = image_original * 255
+        image_1 = image_1 * 255
+        image_2 = image_2 * 255
 
         return image_original, image_1, image_2, return_label
 
@@ -163,8 +193,10 @@ class DataTesting(data.Dataset):
             '{index}{image_format}'.format(
                 index=current_item['index'], image_format='.png'))
         image_original = cv2.imread(path_image, flags=2)
+
         image_copy_1 = image_original.copy()
         image_copy_2 = image_original.copy()
+
         # cv2.imwrite('image_oririnal.png', image_original)
         image_original = torch.Tensor(image_original)
         image_original = torch.unsqueeze(image_original, 0)
@@ -190,6 +222,20 @@ class DataTesting(data.Dataset):
         # label
         label = current_item['malignant']
         return_label = np.array(label)
+
+        ### torchvision transforms
+        image_original = transform_to_pil_image(image_original)
+        image_original = transform_to_tensor(image_original)
+        
+        image_1 = transform_to_pil_image(image_1)
+        image_1 = transform_to_tensor(image_1)
+
+        image_2 = transform_to_pil_image(image_2)
+        image_2 = transform_to_tensor(image_2)
+
+        image_original = image_original * 255
+        image_1 = image_1 * 255
+        image_2 = image_2 * 255
 
         return image_original, image_1, image_2, return_label
 

@@ -30,7 +30,7 @@ from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
 
 
 BATCH_SIZE=256
-EPOCHS=300
+EPOCHS=500
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 RATE_TRAIN = 0.8
 root_image = 'data/dataset_deep_lung/data_sample/png'

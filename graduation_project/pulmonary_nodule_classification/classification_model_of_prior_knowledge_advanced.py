@@ -125,7 +125,7 @@ class DataTraining(data.Dataset):
         image_copy_1 = image_original.copy()
         image_copy_2 = image_original.copy()
 
-        # cv2.imwrite('image_oririnal.png', image_original)
+        cv2.imwrite('image_oririnal.png', image_original)
         image_original = torch.Tensor(image_original)
         image_original = torch.unsqueeze(image_original, 0)
 
@@ -154,8 +154,9 @@ class DataTraining(data.Dataset):
         ### torchvision transforms
         image_original = transform_to_pil_image(image_original)
         image_original = transform_random_affine(image_original)
+        image_original.save('tranform.png', quality=100)
         image_original = transform_to_tensor(image_original)
-        
+
         image_1 = transform_to_pil_image(image_1)
         image_1 = transform_random_affine(image_1)
         image_1 = transform_to_tensor(image_1)
@@ -165,6 +166,9 @@ class DataTraining(data.Dataset):
         image_2 = transform_to_tensor(image_2)
 
         image_original = image_original * 255
+        image_original = transform_to_pil_image(image_original)
+        image_original.save('tranform_.png', quality=100)
+
         image_1 = image_1 * 255
         image_2 = image_2 * 255
 

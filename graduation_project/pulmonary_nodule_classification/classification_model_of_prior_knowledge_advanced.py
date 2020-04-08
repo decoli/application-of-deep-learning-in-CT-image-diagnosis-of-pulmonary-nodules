@@ -154,7 +154,7 @@ class DataTraining(data.Dataset):
         ### torchvision transforms
         image_original = transform_to_pil_image(image_original)
         image_original = transform_random_affine(image_original)
-        image_original.save('tranform.png', quality=100)
+        # image_original.save('tranform.png', quality=100)
         image_original = transform_to_tensor(image_original)
 
         image_1 = transform_to_pil_image(image_1)
@@ -166,9 +166,8 @@ class DataTraining(data.Dataset):
         image_2 = transform_to_tensor(image_2)
 
         image_original = image_original * 255
-        image_original = transform_to_pil_image(image_original)
-        image_original.save('image_original_.png', quality=100)
-
+        # image_original = transform_to_pil_image(image_original)
+        # image_original.save('image_original_.png', quality=100)
         image_1 = image_1 * 255
         image_2 = image_2 * 255
 
@@ -550,11 +549,11 @@ print('ddd')
 # random.shuffle(list_data)
 
 # get train and test data
-# num_training = int(len(list_data) * RATE_TRAIN)
-# list_data_training = list_data[: num_training]
-# list_data_testing = list_data[num_training: ]
+num_training = int(len(list_data) * RATE_TRAIN)
+list_data_training = list_data[: num_training]
+list_data_testing = list_data[num_training: ]
 args = argument()
-list_data_training, list_data_testing = cross_validation(args, list_data)
+# list_data_training, list_data_testing = cross_validation(args, list_data)
 
 data_training = DataTraining(list_data_training)
 data_testing = DataTesting(list_data_testing)

@@ -167,7 +167,7 @@ class DataTraining(data.Dataset):
 
         image_original = image_original * 255
         image_original = transform_to_pil_image(image_original)
-        image_original.save('tranform_.png', quality=100)
+        image_original.save('image_original_.png', quality=100)
 
         image_1 = image_1 * 255
         image_2 = image_2 * 255

@@ -1,3 +1,4 @@
+import argparse
 import math
 import os
 import sys
@@ -12,10 +13,13 @@ import torch.optim as optim
 import torch.utils.data as data
 from torch.utils.data import DataLoader
 from visdom import Visdom
+
 # append sys.path
 sys.path.append(os.getcwd())
-from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
-                            visdom_sp)
+from utility.pre_processing import cross_validation
+from utility.visdom import (
+    visdom_acc, visdom_loss, visdom_roc_auc, visdom_se, visdom_sp)
+
 BATCH_SIZE=256
 EPOCHS=150
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
@@ -461,12 +465,24 @@ class ExtractingSemanticsModel(nn.Module):
 
         return out_all
 
-model = ExtractingSemanticsModel().to(DEVICE)
-# get train and test data
-num_training = int(len(list_data) * RATE_TRAIN)
-list_data_training = list_data[: num_training]
-list_data_testing = list_data[num_training: ]
+def argument():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--num-cross', default=5, type=int)
+    parser.add_argument('--use-cross', type=int, required=True)
 
+    args = parser.parse_args()
+    return args
+
+model = ExtractingSemanticsModel().to(DEVICE)
+
+# get train and test data
+# num_training = int(len(list_data) * RATE_TRAIN)
+# list_data_training = list_data[: num_training]
+# list_data_testing = list_data[num_training: ]
+
+args = argument()
+
+list_data_training, list_data_testing = cross_validation(args, list_data)
 data_training = DataTraining(list_data_training)
 data_testing = DataTesting(list_data_testing)
 
@@ -518,4 +534,7 @@ for epoch in range(1, EPOCHS + 1):
     print('training loss:')
     print(loss_training)
 
-torch.save(model.state_dict(), 'model_extracting_semantics.pt')
+torch.save(
+    model.state_dict(),
+    'model_extracting_semantics_{use_cross}.pt'.format(
+    use_cross=args.use_cross))

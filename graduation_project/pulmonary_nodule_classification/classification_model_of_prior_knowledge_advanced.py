@@ -549,11 +549,12 @@ print('ddd')
 # random.shuffle(list_data)
 
 # get train and test data
-num_training = int(len(list_data) * RATE_TRAIN)
-list_data_training = list_data[: num_training]
-list_data_testing = list_data[num_training: ]
+# num_training = int(len(list_data) * RATE_TRAIN)
+# list_data_training = list_data[: num_training]
+# list_data_testing = list_data[num_training: ]
+
 args = argument()
-# list_data_training, list_data_testing = cross_validation(args, list_data)
+list_data_training, list_data_testing = cross_validation(args, list_data)
 
 data_training = DataTraining(list_data_training)
 data_testing = DataTesting(list_data_testing)
@@ -564,10 +565,11 @@ data_loader_testing = DataLoader(data_testing, batch_size=BATCH_SIZE, shuffle=Tr
 # get ES model (extracting semantics model)
 model_es = ExtractingSemanticsModel()
 
+path_model_es_para = 'model_extracting_semantics_{use_cross}.pt'.format(use_cross=args.use_cross)
 if torch.cuda.is_available():
-    model_es.load_state_dict(torch.load('model_extracting_semantics.pt'))
+    model_es.load_state_dict(torch.load(path_model_es_para))
 else:
-    model_es.load_state_dict(torch.load('model_extracting_semantics.pt', map_location=torch.device('cpu')))
+    model_es.load_state_dict(torch.load(path_model_es_para, map_location=torch.device('cpu')))
 
 # get model
 model = PriorKnowledgeNet(model_es).to(DEVICE)

@@ -1,8 +1,10 @@
 path_annotation_shirui_1 = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui.csv'
-path_annotation_shirui_2 = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui_v2.csv'
+# path_annotation_shirui_2 = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui_v2.csv'
+path_annotation_shirui_2 = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui_v2_test.csv'
 path_mapping_csv = 'data/dataset_deep_lung/LIDC-IDRI-mappingLUNA16.csv'
 
-root_lidc = '/Volumes/shirui_WD_2/lung_image/all_LIDC/LIDC-IDRI'
+# root_lidc = '/Volumes/shirui_WD_2/lung_image/all_LIDC/LIDC-IDRI'
+root_lidc = 'G:/lung_image/all_LIDC/LIDC-IDRI'
 
 import csv
 import glob
@@ -21,7 +23,7 @@ pd_mapping = pd.read_csv(path_mapping_csv)
 pd_mapping.index += 1
 # print(pd_mapping)
 
-# serch for the .xml file
+# search for the .xml file
 count_no_file = 0
 count_too_long = 0
 count_small_nodule = 0
@@ -80,7 +82,7 @@ for index, each_annotation in pd_annotation_1.iterrows():
         )
 
     list_path_xml = glob.glob(glob_path_xml)
-    if len(list_path_xml) == 0: # 文件夹中找不到.xml文件
+    if len(list_path_xml) == 0: # 文件夹中找不到.xml文件.
         # print('no file')
         # print(glob_path_xml)
         count_no_file += 1
@@ -113,13 +115,19 @@ for index, each_annotation in pd_annotation_1.iterrows():
         for nodule in nodules:
             rois = nodule.find_all('roi')
             for each_roi in rois:
-                condition_1 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] - 2)
-                condition_2 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] - 1)
-                condition_3 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'])
-                condition_4 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] + 1)
-                condition_5 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] + 2)
+                condition__5 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] - 5)
+                condition__4 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] - 4)
+                condition__3 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] - 3)
+                condition__2 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] - 2)
+                condition__1 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] - 1)
+                condition_0 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'])
+                condition_1 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] + 1)
+                condition_2 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] + 2)
+                condition_3 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] + 3)
+                condition_4 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] + 4)
+                condition_5 = int(float(each_roi.imageZposition.text)) == int(each_annotation['coordZ'] + 5)
 
-                if condition_1 or condition_2 or condition_3 or condition_4 or condition_5: # 应该有一个允许范围
+                if condition__1 or condition__2 or condition__3 or condition__4 or condition__5 or condition_0 or condition_1 or condition_2 or condition_3 or condition_4 or condition_5: # 应该有一个允许范围
                     if nodule.characteristics:
                         characteristics_dic = {
                             'subtlety': int(nodule.characteristics.subtlety.text),
@@ -209,4 +217,4 @@ for index, each_annotation in pd_annotation_1.iterrows():
         writer = csv.writer(f)
         writer.writerow(writer_row)
 
-print(count_small_nodule)
+print(count_no_file) # 共有88个样本找不到xml文件

@@ -1,5 +1,7 @@
 path_annotation = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui.csv'
-root_luna16 = '/Volumes/shirui_WD_2/lung_image/all_LUNA16/LUNA16'
+# root_luna16 = '/Volumes/shirui_WD_2/lung_image/all_LUNA16/LUNA16'
+root_luna16 = 'E:/lung_image/all_LUNA16/LUNA16'
+
 root_save_npy = 'data/dataset_deep_lung/data_sample/npy'
 root_save_png = 'data/dataset_deep_lung/data_sample/png'
 
@@ -89,14 +91,35 @@ for index, each_annotation in annotation_pd.iterrows():
         )
     z = int(z + 0.5)
     
-    location_nodule = ct_scan[z][y - s: y + s, x - s: x + s]
+    location_nodule = ct_scan[z][y - s: y + s, x - s: x + s] * 255
+    whole_image = np.zeros((512, 512, 3))
+    whole_image[:,:,0] = ct_scan[z] * 255
+    whole_image[:,:,1] = ct_scan[z] * 255
+    whole_image[:,:,2] = ct_scan[z] * 255
 
+    # save the whole image
+    # whole_name_png = '{index}.png'.format(index=index)
+    whole_name_png = 'whole.png'
+    whole_path_png = os.path.join('test', whole_name_png)
+
+    point_left_up = (x -s, y - s)
+    point_right_down = (x + s, y + s)
+    cv2.rectangle(whole_image, point_left_up, point_right_down, (0, 0, 255), 1)
+    cv2.imwrite(whole_path_png, whole_image)
+
+    # save the cutting image
+    # cutting_name_png = '{index}_cutting.png'.format(index=index)
+    cutting_name_png = 'cutting.png'
+    cutting_path_png = os.path.join('test', cutting_name_png)
+    cv2.imwrite(cutting_path_png, location_nodule)
+
+    print(offset_x, offset_y, offset_z, spacing_x, spacing_y, spacing_z)
     # save .png
-    name_png = '{index}.png'.format(index=index)
-    path_png = os.path.join(root_save_png, name_png)
-    cv2.imwrite(path_png, location_nodule * 255)
+    # name_png = '{index}.png'.format(index=index)
+    # path_png = os.path.join(root_save_png, name_png)
+    # cv2.imwrite(path_png, location_nodule * 255)
 
-    # save .numpy
-    name_npy = '{index}.npy'.format(index=index)
-    path_png = os.path.join(root_save_npy, name_npy)
-    np.save(path_png, location_nodule)
+    # # save .numpy
+    # name_npy = '{index}.npy'.format(index=index)
+    # path_png = os.path.join(root_save_npy, name_npy)
+    # np.save(path_png, location_nodule)

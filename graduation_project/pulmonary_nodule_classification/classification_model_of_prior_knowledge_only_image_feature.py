@@ -342,7 +342,7 @@ class DataTesting(data.Dataset):
         image_original = cv2.imread(path_image, flags=2)
         image_copy_1 = image_original.copy()
         image_copy_2 = image_original.copy()
-        cv2.imwrite('image_oririnal.png', image_original)
+        # cv2.imwrite('image_oririnal.png', image_original)
         image_original = torch.Tensor(image_original)
         image_original = torch.unsqueeze(image_original, 0)
 
@@ -739,7 +739,7 @@ for epoch in range(1, EPOCHS + 1):
             writer_row.append(tpr_testing)
             writer_row.append(tnr_testing)
             writer_row.append(roc_auc_testing)
-            path_performance_csv = 'only_image_{use_cross}.csv'.format(use_cross=args.use_cross)
+            path_performance_csv = 'only_image_feature_{use_cross}.csv'.format(use_cross=args.use_cross)
             with open(path_performance_csv, 'a') as f:
                 writer = csv.writer(f)
                 writer.writerow([
@@ -759,7 +759,7 @@ for epoch in range(1, EPOCHS + 1):
             writer_row.append(tpr_testing)
             writer_row.append(tnr_testing)
             writer_row.append(roc_auc_testing)
-            path_performance_csv = 'normal_{use_cross}.csv'.format(use_cross=args.use_cross)
+            path_performance_csv = 'only_image_feature_{use_cross}.csv'.format(use_cross=args.use_cross)
             with open(path_performance_csv, 'a') as f:
                 writer = csv.writer(f)
                 writer.writerow([

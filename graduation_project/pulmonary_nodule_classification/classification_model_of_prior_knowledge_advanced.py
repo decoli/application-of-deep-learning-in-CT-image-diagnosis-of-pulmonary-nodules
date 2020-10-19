@@ -154,7 +154,6 @@ class DataTraining(data.Dataset):
         ### torchvision transforms
         image_original = transform_to_pil_image(image_original)
         image_original = transform_random_affine(image_original)
-        # image_original.save('tranform.png', quality=100)
         image_original = transform_to_tensor(image_original)
 
         image_1 = transform_to_pil_image(image_1)
@@ -166,8 +165,6 @@ class DataTraining(data.Dataset):
         image_2 = transform_to_tensor(image_2)
 
         image_original = image_original * 255
-        # image_original = transform_to_pil_image(image_original)
-        # image_original.save('image_original_.png', quality=100)
         image_1 = image_1 * 255
         image_2 = image_2 * 255
 
@@ -221,18 +218,18 @@ class DataTesting(data.Dataset):
         return_label = np.array(label)
 
         ### torchvision transforms
-        image_original = transform_to_pil_image(image_original)
-        image_original = transform_to_tensor(image_original)
+        # image_original = transform_to_pil_image(image_original)
+        # image_original = transform_to_tensor(image_original)
         
-        image_1 = transform_to_pil_image(image_1)
-        image_1 = transform_to_tensor(image_1)
+        # image_1 = transform_to_pil_image(image_1)
+        # image_1 = transform_to_tensor(image_1)
 
-        image_2 = transform_to_pil_image(image_2)
-        image_2 = transform_to_tensor(image_2)
+        # image_2 = transform_to_pil_image(image_2)
+        # image_2 = transform_to_tensor(image_2)
 
-        image_original = image_original * 255
-        image_1 = image_1 * 255
-        image_2 = image_2 * 255
+        # image_original = image_original * 255
+        # image_1 = image_1 * 255
+        # image_2 = image_2 * 255
 
         return image_original, image_1, image_2, return_label
 

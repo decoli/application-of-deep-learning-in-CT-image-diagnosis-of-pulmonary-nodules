@@ -20,6 +20,7 @@ import torch.utils.data as data
 from sklearn.metrics import auc, confusion_matrix, roc_curve
 from torch.utils.data import DataLoader
 from visdom import Visdom
+from torchvision import transforms
 
 # append sys.path
 sys.path.append(os.getcwd())
@@ -35,6 +36,10 @@ root_image = 'data/dataset_deep_lung/data_sample/png'
 path_annotation_v2 = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui_v2.csv'
 pd_annotation = pd.read_csv(path_annotation_v2)
 list_data = []
+
+transform_to_pil_image = transforms.ToPILImage()
+transform_random_affine = transforms.RandomAffine([-30, 30], scale=(0.8, 1.2))
+transform_to_tensor = transforms.ToTensor()
 
 class Point(object):
     def __init__(self,x,y):
@@ -220,6 +225,23 @@ class DataTraining(data.Dataset):
         # label
         label = current_item['malignant']
         return_label = np.array(label)
+
+        ### torchvision transforms
+        # image_original = transform_to_pil_image(image_original)
+        # image_original = transform_random_affine(image_original)
+        # image_original = transform_to_tensor(image_original)
+
+        # image_1 = transform_to_pil_image(image_1)
+        # image_1 = transform_random_affine(image_1)
+        # image_1 = transform_to_tensor(image_1)
+
+        # image_2 = transform_to_pil_image(image_2)
+        # image_2 = transform_random_affine(image_2)
+        # image_2 = transform_to_tensor(image_2)
+
+        # image_original = image_original * 255
+        # image_1 = image_1 * 255
+        # image_2 = image_2 * 255
 
         return return_characteristics, image_original, image_1, image_2, return_label
 
@@ -717,7 +739,7 @@ for epoch in range(1, EPOCHS + 1):
             writer_row.append(tpr_testing)
             writer_row.append(tnr_testing)
             writer_row.append(roc_auc_testing)
-            path_performance_csv = 'normal_{use_cross}.csv'.format(use_cross=args.use_cross)
+            path_performance_csv = 'only_image_{use_cross}.csv'.format(use_cross=args.use_cross)
             with open(path_performance_csv, 'a') as f:
                 writer = csv.writer(f)
                 writer.writerow([

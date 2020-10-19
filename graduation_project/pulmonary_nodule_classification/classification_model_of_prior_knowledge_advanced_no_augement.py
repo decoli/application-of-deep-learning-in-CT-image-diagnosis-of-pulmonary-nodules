@@ -581,7 +581,7 @@ optimizer = optim.SGD(model.parameters(), lr=0.01)
 ##
 # if args.visdom:
 visdom = Visdom(
-    env='prior_knowledge_advanced')
+    env='prior_knowledge_advanced_no_augement')
 
 # get best performance
 best_acc = 0

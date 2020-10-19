@@ -730,48 +730,78 @@ for epoch in range(1, EPOCHS + 1):
     visdom_roc_auc(
         visdom, epoch, roc_auc_testing, win='auc', name='testing')
 
-    # save the best performance
-    if not (args.use_cross == 1):
-        if (acc_testing >= 0.82) and (tpr_testing >= 0.77) and (tnr_testing >= 0.77):
-            writer_row = []
-            writer_row.append(epoch)
-            writer_row.append(acc_testing)
-            writer_row.append(tpr_testing)
-            writer_row.append(tnr_testing)
-            writer_row.append(roc_auc_testing)
-            path_performance_csv = 'only_image_feature_{use_cross}.csv'.format(use_cross=args.use_cross)
-            with open(path_performance_csv, 'a') as f:
-                writer = csv.writer(f)
-                writer.writerow([
-                    'epoch',
-                    'acc',
-                    'se',
-                    'sp',
-                    'auc',
-                ])
-                writer.writerow(writer_row)
+    # get best performance
+    if (acc_testing == best_acc) and (roc_auc_testing > best_auc):
+        best_se = tpr_testing
+        best_sp = tnr_testing
+        best_auc = roc_auc_testing
 
-    if (args.use_cross == 1):
-        if (acc_testing >= 0.80):
-            writer_row = []
-            writer_row.append(epoch)
-            writer_row.append(acc_testing)
-            writer_row.append(tpr_testing)
-            writer_row.append(tnr_testing)
-            writer_row.append(roc_auc_testing)
-            path_performance_csv = 'only_image_feature_{use_cross}.csv'.format(use_cross=args.use_cross)
-            with open(path_performance_csv, 'a') as f:
-                writer = csv.writer(f)
-                writer.writerow([
-                    'epoch',
-                    'acc',
-                    'se',
-                    'sp',
-                    'auc',
-                ])
-                writer.writerow(writer_row)
+    if acc_testing > best_acc:
+        best_acc = acc_testing
+        best_se = tpr_testing
+        best_sp = tnr_testing
+        best_auc = roc_auc_testing
+
+    # save the best performance
+    # if not (args.use_cross == 1):
+    #     if (acc_testing >= 0.82) and (tpr_testing >= 0.77) and (tnr_testing >= 0.77):
+    #         writer_row = []
+    #         writer_row.append(epoch)
+    #         writer_row.append(acc_testing)
+    #         writer_row.append(tpr_testing)
+    #         writer_row.append(tnr_testing)
+    #         writer_row.append(roc_auc_testing)
+    #         path_performance_csv = 'only_image_feature_{use_cross}.csv'.format(use_cross=args.use_cross)
+    #         with open(path_performance_csv, 'a') as f:
+    #             writer = csv.writer(f)
+    #             writer.writerow([
+    #                 'epoch',
+    #                 'acc',
+    #                 'se',
+    #                 'sp',
+    #                 'auc',
+    #             ])
+    #             writer.writerow(writer_row)
+
+    # if (args.use_cross == 1):
+    #     if (acc_testing >= 0.80):
+    #         writer_row = []
+    #         writer_row.append(epoch)
+    #         writer_row.append(acc_testing)
+    #         writer_row.append(tpr_testing)
+    #         writer_row.append(tnr_testing)
+    #         writer_row.append(roc_auc_testing)
+    #         path_performance_csv = 'only_image_feature_{use_cross}.csv'.format(use_cross=args.use_cross)
+    #         with open(path_performance_csv, 'a') as f:
+    #             writer = csv.writer(f)
+    #             writer.writerow([
+    #                 'epoch',
+    #                 'acc',
+    #                 'se',
+    #                 'sp',
+    #                 'auc',
+    #             ])
+    #             writer.writerow(writer_row)
 
     print('testing loss:')
     print(loss_testing)
     print('testing acc:')
     print(acc_testing)
+
+# save the best performance
+writer_row = []
+writer_row.append(best_acc)
+writer_row.append(best_se)
+writer_row.append(best_sp)
+writer_row.append(best_auc)
+
+path_best_csv = 'only_image_feature_{use_cross}.csv'.format(use_cross=args.use_cross)
+with open(path_best_csv, 'a') as f:
+    writer = csv.writer(f)
+    writer.writerow([
+        'acc',
+        'se',
+        'sp',
+        'auc',
+    ])
+    writer.writerow(writer_row)

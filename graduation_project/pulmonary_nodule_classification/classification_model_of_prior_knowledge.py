@@ -20,6 +20,7 @@ import torch.utils.data as data
 from sklearn.metrics import auc, confusion_matrix, roc_curve
 from torch.utils.data import DataLoader
 from visdom import Visdom
+from torchvision import transforms
 
 # append sys.path
 sys.path.append(os.getcwd())
@@ -35,6 +36,10 @@ root_image = 'data/dataset_deep_lung/data_sample/png'
 path_annotation_v2 = 'data/dataset_deep_lung/annotationdetclssgm_doctor_shirui_v2.csv'
 pd_annotation = pd.read_csv(path_annotation_v2)
 list_data = []
+
+transform_to_pil_image = transforms.ToPILImage()
+transform_random_affine = transforms.RandomAffine([-30, 30], scale=(0.8, 1.2))
+transform_to_tensor = transforms.ToTensor()
 
 class Point(object):
     def __init__(self,x,y):
@@ -195,7 +200,7 @@ class DataTraining(data.Dataset):
         image_original = cv2.imread(path_image, flags=2)
         image_copy_1 = image_original.copy()
         image_copy_2 = image_original.copy()
-        cv2.imwrite('image_oririnal.png', image_original)
+        # cv2.imwrite('image_oririnal.png', image_original)
         image_original = torch.Tensor(image_original)
         image_original = torch.unsqueeze(image_original, 0)
 
@@ -203,23 +208,40 @@ class DataTraining(data.Dataset):
         seeds = [Point(15,15), Point(16,15), Point(15,16), Point(16,16)]
         mask_1 = regionGrow(image_copy_1, seeds, 10)
         mask_2 = regionGrow(image_copy_2, seeds, 20)
-        cv2.imwrite('mask_1.png', mask_1 * 255)
-        cv2.imwrite('mask_2.png', mask_2 * 255)
+        # cv2.imwrite('mask_1.png', mask_1 * 255)
+        # cv2.imwrite('mask_2.png', mask_2 * 255)
 
         # get image masked (and transfered to Tensor)
         image_copy_1[mask_1==0] = [0]
-        cv2.imwrite('image_copy_1.png', np.array(image_copy_1))
+        # cv2.imwrite('image_copy_1.png', np.array(image_copy_1))
         image_1 = torch.Tensor(image_copy_1)
         image_1 = torch.unsqueeze(image_1, 0)
 
         image_copy_2[mask_2==0] = [0]
-        cv2.imwrite('image_copy_2.png', np.array(image_copy_2))
+        # cv2.imwrite('image_copy_2.png', np.array(image_copy_2))
         image_2 = torch.Tensor(image_copy_2)
         image_2 = torch.unsqueeze(image_2, 0)
 
         # label
         label = current_item['malignant']
         return_label = np.array(label)
+
+        ### torchvision transforms
+        image_original = transform_to_pil_image(image_original)
+        image_original = transform_random_affine(image_original)
+        image_original = transform_to_tensor(image_original)
+
+        image_1 = transform_to_pil_image(image_1)
+        image_1 = transform_random_affine(image_1)
+        image_1 = transform_to_tensor(image_1)
+
+        image_2 = transform_to_pil_image(image_2)
+        image_2 = transform_random_affine(image_2)
+        image_2 = transform_to_tensor(image_2)
+
+        image_original = image_original * 255
+        image_1 = image_1 * 255
+        image_2 = image_2 * 255
 
         return return_characteristics, image_original, image_1, image_2, return_label
 
@@ -328,17 +350,17 @@ class DataTesting(data.Dataset):
         seeds = [Point(15,15), Point(16,15), Point(15,16), Point(16,16)]
         mask_1 = regionGrow(image_copy_1, seeds, 10)
         mask_2 = regionGrow(image_copy_2, seeds, 20)
-        cv2.imwrite('mask_1.png', mask_1 * 255)
-        cv2.imwrite('mask_2.png', mask_2 * 255)
+        # cv2.imwrite('mask_1.png', mask_1 * 255)
+        # cv2.imwrite('mask_2.png', mask_2 * 255)
 
         # get image masked (and transfered to Tensor)
         image_copy_1[mask_1==0] = [0]
-        cv2.imwrite('image_copy_1.png', np.array(image_copy_1))
+        # cv2.imwrite('image_copy_1.png', np.array(image_copy_1))
         image_1 = torch.Tensor(image_copy_1)
         image_1 = torch.unsqueeze(image_1, 0)
 
         image_copy_2[mask_2==0] = [0]
-        cv2.imwrite('image_copy_2.png', np.array(image_copy_2))
+        # cv2.imwrite('image_copy_2.png', np.array(image_copy_2))
         image_2 = torch.Tensor(image_copy_2)
         image_2 = torch.unsqueeze(image_2, 0)
 
@@ -542,7 +564,7 @@ optimizer = optim.SGD(model.parameters(), lr=0.01)
 ##
 # if args.visdom:
 visdom = Visdom(
-    env='prior_knowledge')
+    env='prior_knowledge_normal')
 
 ####
 for epoch in range(1, EPOCHS + 1):

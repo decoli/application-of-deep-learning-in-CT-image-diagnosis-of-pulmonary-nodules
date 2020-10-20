@@ -28,8 +28,9 @@ from utility.pre_processing import cross_validation
 from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
                             visdom_sp)
 
+
 BATCH_SIZE=256
-EPOCHS=150
+EPOCHS=300
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 RATE_TRAIN = 0.8
 root_image = 'data/dataset_deep_lung/data_sample/png'
@@ -88,17 +89,7 @@ def regionGrow(img,seeds,thresh,p = 1):
 for index, each_annotation in pd_annotation.iterrows():
     characteristics_dic = {
         # 'diameter_mm': each_annotation['diameter_mm'],
-        ##
         'index': each_annotation['index'],
-        'subtlety': each_annotation['subtlety'],
-        'internalStructure': each_annotation['internalStructure'],
-        'calcification': each_annotation['calcification'],
-        'sphericity': each_annotation['sphericity'],
-        'margin': each_annotation['margin'],
-        'lobulation': each_annotation['lobulation'],
-        'spiculation': each_annotation['spiculation'],
-        'texture': each_annotation['texture'],
-        ##
         'malignant': each_annotation['malignant'],
     }
     list_data.append(characteristics_dic)
@@ -106,90 +97,12 @@ for index, each_annotation in pd_annotation.iterrows():
 class DataTraining(data.Dataset):
     def __init__(self, list_data):
         self.list_data = list_data
-    
+
     def __len__(self):
         return len(self.list_data)
     
     def __getitem__(self, idx):
         current_item = self.list_data[idx]
-
-        # Annotation Net
-        ## subtlety
-        list_subtlety = [0] * 5
-        fractional, integer = math.modf(current_item['subtlety'])
-        list_subtlety[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_subtlety[int(integer)] = 1
-
-        ## internalStructure
-        list_internalStructure = [0] * 4
-        fractional, integer = math.modf(current_item['internalStructure'])
-        list_internalStructure[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_internalStructure[int(integer)] = 1
-
-        ## calcification
-        list_calcification = [0] * 6
-        fractional, integer = math.modf(current_item['calcification'])
-        list_calcification[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_calcification[int(integer)] = 1
-
-        ## sphericity
-        list_sphericity = [0] * 5
-        fractional, integer = math.modf(current_item['sphericity'])
-        list_sphericity[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_sphericity[int(integer)] = 1
-
-        ## margin
-        list_margin = [0] * 5
-        fractional, integer = math.modf(current_item['margin'])
-        list_margin[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_margin[int(integer)] = 1
- 
-        ## lobulation
-        list_lobulation = [0] * 5
-        fractional, integer = math.modf(current_item['lobulation'])
-        list_lobulation[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_lobulation[int(integer)] = 1
-
-        ## spiculation
-        list_spiculation = [0] * 5
-        fractional, integer = math.modf(current_item['spiculation'])
-        list_spiculation[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_spiculation[int(integer)] = 1
-
-        ## texture
-        list_texture = [0] * 5
-        fractional, integer = math.modf(current_item['texture'])
-        list_texture[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_texture[int(integer)] = 1
-
-        ## return
-        list_characteristics = []
-        # list_characteristics.append(diameter_mm) # 长度不是语义特征
-        list_characteristics.extend(list_subtlety)
-        list_characteristics.extend(list_internalStructure)
-        list_characteristics.extend(list_calcification)
-        list_characteristics.extend(list_sphericity)
-        list_characteristics.extend(list_margin)
-        list_characteristics.extend(list_lobulation)
-        list_characteristics.extend(list_spiculation)
-        list_characteristics.extend(list_texture)
-        return_characteristics = np.array(list_characteristics)
 
         # CNN
         # image
@@ -198,8 +111,10 @@ class DataTraining(data.Dataset):
             '{index}{image_format}'.format(
                 index=current_item['index'], image_format='.png'))
         image_original = cv2.imread(path_image, flags=2)
+
         image_copy_1 = image_original.copy()
         image_copy_2 = image_original.copy()
+
         # cv2.imwrite('image_oririnal.png', image_original)
         image_original = torch.Tensor(image_original)
         image_original = torch.unsqueeze(image_original, 0)
@@ -226,24 +141,7 @@ class DataTraining(data.Dataset):
         label = current_item['malignant']
         return_label = np.array(label)
 
-        ### torchvision transforms
-        # image_original = transform_to_pil_image(image_original)
-        # image_original = transform_random_affine(image_original)
-        # image_original = transform_to_tensor(image_original)
-
-        # image_1 = transform_to_pil_image(image_1)
-        # image_1 = transform_random_affine(image_1)
-        # image_1 = transform_to_tensor(image_1)
-
-        # image_2 = transform_to_pil_image(image_2)
-        # image_2 = transform_random_affine(image_2)
-        # image_2 = transform_to_tensor(image_2)
-
-        # image_original = image_original * 255
-        # image_1 = image_1 * 255
-        # image_2 = image_2 * 255
-
-        return return_characteristics, image_original, image_1, image_2, return_label
+        return image_original, image_1, image_2, return_label
 
 class DataTesting(data.Dataset):
     def __init__(self, list_data):
@@ -255,84 +153,6 @@ class DataTesting(data.Dataset):
     def __getitem__(self, idx):
         current_item = self.list_data[idx]
 
-        # Annotation Net
-        ## subtlety
-        list_subtlety = [0] * 5
-        fractional, integer = math.modf(current_item['subtlety'])
-        list_subtlety[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_subtlety[int(integer)] = 1
-
-        ## internalStructure
-        list_internalStructure = [0] * 4
-        fractional, integer = math.modf(current_item['internalStructure'])
-        list_internalStructure[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_internalStructure[int(integer)] = 1
-
-        ## calcification
-        list_calcification = [0] * 6
-        fractional, integer = math.modf(current_item['calcification'])
-        list_calcification[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_calcification[int(integer)] = 1
-
-        ## sphericity
-        list_sphericity = [0] * 5
-        fractional, integer = math.modf(current_item['sphericity'])
-        list_sphericity[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_sphericity[int(integer)] = 1
-
-        ## margin
-        list_margin = [0] * 5
-        fractional, integer = math.modf(current_item['margin'])
-        list_margin[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_margin[int(integer)] = 1
- 
-        ## lobulation
-        list_lobulation = [0] * 5
-        fractional, integer = math.modf(current_item['lobulation'])
-        list_lobulation[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_lobulation[int(integer)] = 1
-
-        ## spiculation
-        list_spiculation = [0] * 5
-        fractional, integer = math.modf(current_item['spiculation'])
-        list_spiculation[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_spiculation[int(integer)] = 1
-
-        ## texture
-        list_texture = [0] * 5
-        fractional, integer = math.modf(current_item['texture'])
-        list_texture[int(integer) - 1] = 1
-
-        if fractional > 0:
-            list_texture[int(integer)] = 1
-
-        ## return
-        list_characteristics = []
-        # list_characteristics.append(diameter_mm) # 长度不是语义特征
-        list_characteristics.extend(list_subtlety)
-        list_characteristics.extend(list_internalStructure)
-        list_characteristics.extend(list_calcification)
-        list_characteristics.extend(list_sphericity)
-        list_characteristics.extend(list_margin)
-        list_characteristics.extend(list_lobulation)
-        list_characteristics.extend(list_spiculation)
-        list_characteristics.extend(list_texture)
-        return_characteristics = np.array(list_characteristics)
-
         # CNN
         # image
         path_image = os.path.join(
@@ -340,8 +160,10 @@ class DataTesting(data.Dataset):
             '{index}{image_format}'.format(
                 index=current_item['index'], image_format='.png'))
         image_original = cv2.imread(path_image, flags=2)
+
         image_copy_1 = image_original.copy()
         image_copy_2 = image_original.copy()
+
         # cv2.imwrite('image_oririnal.png', image_original)
         image_original = torch.Tensor(image_original)
         image_original = torch.unsqueeze(image_original, 0)
@@ -368,21 +190,11 @@ class DataTesting(data.Dataset):
         label = current_item['malignant']
         return_label = np.array(label)
 
-        return return_characteristics, image_original, image_1, image_2, return_label
+        return image_original, image_1, image_2, return_label
 
 class PriorKnowledgeNet(nn.Module):
     def __init__(self):
         super(PriorKnowledgeNet, self).__init__()
-
-        ## Annotation Net
-        # full connettion
-        self.fc_1 = nn.Linear(40, 128)
-        self.fc_2 = nn.Linear(128, 128)
-        self.fc_3 = nn.Linear(128, 128)
-        self.fc_4 = nn.Linear(128, 128)
-        self.fc_5 = nn.Linear(128, 128)
-        self.fc_6 = nn.Linear(128, 2)
-
         ## CNN
         ## kernel = 3*3
         self.conv_3_1 = nn.Conv2d(1, 32, 3, padding=1)
@@ -429,23 +241,8 @@ class PriorKnowledgeNet(nn.Module):
         self.fc_fusion_1 = nn.Linear(384, 128)
         self.fc_fusion_2 = nn.Linear(128, 2)
 
-    def forward(self, x, x_1, x_2, x_3):
+    def forward(self, x_1, x_2, x_3):
         size_in = x_1.size(0)
-
-        # # Annotation Net
-        # out_ano = self.fc_1(x)
-        # out_ano = F.relu(out_ano)
-        # out_ano = self.fc_2(out_ano)
-        # out_ano = F.relu(out_ano)
-
-        # out_ano = self.fc_3(out_ano)
-        # out_ano = F.relu(out_ano)
-
-        # out_ano = self.fc_4(out_ano)
-        # out_ano = F.relu(out_ano)
-
-        # out_ano = F.dropout(out_ano)
-
         ## CNN
         ## kernel=3*3
         out_3 = self.conv_3_1(x_1)
@@ -524,13 +321,6 @@ class PriorKnowledgeNet(nn.Module):
         out_cnn = F.relu(out_cnn)
 
         out_cnn = self.fc_all_3(out_cnn)
-
-        # fusion
-        # out_fusion = torch.cat([out_ano, out_cnn], dim=1)
-        # out_fusion = self.fc_fusion_1(out_fusion)
-        # out_fusion = F.relu(out_fusion)
-        # out_fusion = self.fc_fusion_2(out_fusion)
-
         # return out
         return out_cnn
 
@@ -543,10 +333,7 @@ def argument():
     return args
 
 print('ddd')
-# get train and test data
-# num_training = int(len(list_data) * RATE_TRAIN)
-# list_data_training = list_data[: num_training]
-# list_data_testing = list_data[num_training: ]
+
 args = argument()
 list_data_training, list_data_testing = cross_validation(args, list_data)
 
@@ -558,6 +345,7 @@ data_loader_testing = DataLoader(data_testing, batch_size=BATCH_SIZE, shuffle=Tr
 
 # get model
 model = PriorKnowledgeNet().to(DEVICE)
+
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
@@ -565,6 +353,12 @@ optimizer = optim.SGD(model.parameters(), lr=0.01)
 # if args.visdom:
 visdom = Visdom(
     env='prior_knowledge_only_image_feature')
+
+# get best performance
+best_acc = 0
+best_se = 0
+best_sp = 0
+best_auc = 0
 
 ####
 for epoch in range(1, EPOCHS + 1):
@@ -581,13 +375,13 @@ for epoch in range(1, EPOCHS + 1):
     count_train = 0
     list_output_softmax = []
     list_label = []
-    for x, x_1, x_2, x_3, label in data_loader_training:
+
+    for x_1, x_2, x_3, label in data_loader_training:
 
         count_train += 1
         print(count_train)
 
         # input data
-        input_data = x.to(dtype=torch.float, device=DEVICE)
         input_data_1 = x_1.to(dtype=torch.float, device=DEVICE)
         input_data_2 = x_2.to(dtype=torch.float, device=DEVICE)
         input_data_3 = x_3.to(dtype=torch.float, device=DEVICE)
@@ -600,7 +394,7 @@ for epoch in range(1, EPOCHS + 1):
         optimizer.zero_grad()
 
         # model predict
-        output = model(input_data, input_data_1, input_data_2, input_data_3)
+        output = model(input_data_1, input_data_2, input_data_3)
 
         # get loss
         loss = criterion(output, label)
@@ -628,6 +422,7 @@ for epoch in range(1, EPOCHS + 1):
         output_softmax = output_softmax.cpu().detach().numpy()
         for each_output_softmax in output_softmax:
             list_output_softmax.append(each_output_softmax[0])
+
 
     acc_training = total_acc_training / len(list_data_training)
     loss_training = total_loss_training / len(list_data_training)
@@ -666,13 +461,14 @@ for epoch in range(1, EPOCHS + 1):
     count_fp = 0
     count_tn = 0
 
+    count_train = 0
     list_output_softmax = []
     list_label = []
 
     with torch.no_grad():
-        for x, x_1, x_2, x_3, label in data_loader_testing:
+        for x_1, x_2, x_3, label in data_loader_testing:
+
             # input data
-            input_data = x.to(dtype=torch.float, device=DEVICE)
             input_data_1 = x_1.to(dtype=torch.float, device=DEVICE)
             input_data_2 = x_2.to(dtype=torch.float, device=DEVICE)
             input_data_3 = x_3.to(dtype=torch.float, device=DEVICE)
@@ -682,7 +478,7 @@ for epoch in range(1, EPOCHS + 1):
             list_label.extend(list(label.data.cpu().numpy()))
 
             # model predict
-            output = model(input_data, input_data_1, input_data_2, input_data_3)
+            output = model(input_data_1, input_data_2, input_data_3)
 
             # get loss
             loss = criterion(output, label)
@@ -741,47 +537,6 @@ for epoch in range(1, EPOCHS + 1):
         best_se = tpr_testing
         best_sp = tnr_testing
         best_auc = roc_auc_testing
-
-    # save the best performance
-    # if not (args.use_cross == 1):
-    #     if (acc_testing >= 0.82) and (tpr_testing >= 0.77) and (tnr_testing >= 0.77):
-    #         writer_row = []
-    #         writer_row.append(epoch)
-    #         writer_row.append(acc_testing)
-    #         writer_row.append(tpr_testing)
-    #         writer_row.append(tnr_testing)
-    #         writer_row.append(roc_auc_testing)
-    #         path_performance_csv = 'only_image_feature_{use_cross}.csv'.format(use_cross=args.use_cross)
-    #         with open(path_performance_csv, 'a') as f:
-    #             writer = csv.writer(f)
-    #             writer.writerow([
-    #                 'epoch',
-    #                 'acc',
-    #                 'se',
-    #                 'sp',
-    #                 'auc',
-    #             ])
-    #             writer.writerow(writer_row)
-
-    # if (args.use_cross == 1):
-    #     if (acc_testing >= 0.80):
-    #         writer_row = []
-    #         writer_row.append(epoch)
-    #         writer_row.append(acc_testing)
-    #         writer_row.append(tpr_testing)
-    #         writer_row.append(tnr_testing)
-    #         writer_row.append(roc_auc_testing)
-    #         path_performance_csv = 'only_image_feature_{use_cross}.csv'.format(use_cross=args.use_cross)
-    #         with open(path_performance_csv, 'a') as f:
-    #             writer = csv.writer(f)
-    #             writer.writerow([
-    #                 'epoch',
-    #                 'acc',
-    #                 'se',
-    #                 'sp',
-    #                 'auc',
-    #             ])
-    #             writer.writerow(writer_row)
 
     print('testing loss:')
     print(loss_testing)

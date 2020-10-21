@@ -546,4 +546,4 @@ torch.save(
 path_loss_csv = 'loss_modle_extracting_semantics.csv'
 with open(path_loss_csv, 'w') as f:
     writer = csv.writer(f)
-    writer.writerows(list_loss)
+    writer.writerow(list_loss)

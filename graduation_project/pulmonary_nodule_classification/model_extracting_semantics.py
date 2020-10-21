@@ -3,6 +3,7 @@ import math
 import os
 import sys
 
+import csv
 import cv2
 import numpy as np
 import pandas as pd
@@ -21,7 +22,7 @@ from utility.visdom import (
     visdom_acc, visdom_loss, visdom_roc_auc, visdom_se, visdom_sp)
 
 BATCH_SIZE=256
-EPOCHS=150
+EPOCHS=200
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 RATE_TRAIN = 0.8
 root_image = 'data/dataset_deep_lung/data_sample/png'
@@ -492,6 +493,8 @@ data_loader_testing = DataLoader(data_testing, batch_size=BATCH_SIZE, shuffle=Tr
 criterion = nn.BCELoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
+list_loss = []
+
 ####
 for epoch in range(1, EPOCHS + 1):
 
@@ -533,8 +536,14 @@ for epoch in range(1, EPOCHS + 1):
         visdom, epoch, loss_training, win='loss', name='training')
     print('training loss:')
     print(loss_training)
+    list_loss.append(loss_training)
 
 torch.save(
     model.state_dict(),
     'model_extracting_semantics_{use_cross}.pt'.format(
     use_cross=args.use_cross))
+
+path_loss_csv = 'loss_modle_extracting_semantics.csv'
+with open(path_loss_csv, 'w') as f:
+    writer = csv.writer(f)
+    writer.writerows(list_loss)

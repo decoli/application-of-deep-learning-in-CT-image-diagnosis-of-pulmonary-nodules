@@ -91,14 +91,6 @@ for index, each_annotation in pd_annotation.iterrows():
         # 'diameter_mm': each_annotation['diameter_mm'],
         ##
         'index': each_annotation['index'],
-        'subtlety': each_annotation['subtlety'],
-        'internalStructure': each_annotation['internalStructure'],
-        'calcification': each_annotation['calcification'],
-        'sphericity': each_annotation['sphericity'],
-        'margin': each_annotation['margin'],
-        'lobulation': each_annotation['lobulation'],
-        'spiculation': each_annotation['spiculation'],
-        'texture': each_annotation['texture'],
         ##
         'malignant': each_annotation['malignant'],
     }
@@ -216,20 +208,6 @@ class DataTesting(data.Dataset):
         # label
         label = current_item['malignant']
         return_label = np.array(label)
-
-        ### torchvision transforms
-        # image_original = transform_to_pil_image(image_original)
-        # image_original = transform_to_tensor(image_original)
-        
-        # image_1 = transform_to_pil_image(image_1)
-        # image_1 = transform_to_tensor(image_1)
-
-        # image_2 = transform_to_pil_image(image_2)
-        # image_2 = transform_to_tensor(image_2)
-
-        # image_original = image_original * 255
-        # image_1 = image_1 * 255
-        # image_2 = image_2 * 255
 
         return image_original, image_1, image_2, return_label
 
@@ -589,6 +567,16 @@ best_se = 0
 best_sp = 0
 best_auc = 0
 
+best_fpr = 0
+best_tpr = 0
+
+# get performance data
+list_train_acc = []
+list_train_loss = []
+
+list_test_acc = []
+list_test_loss = []
+
 ####
 for epoch in range(1, EPOCHS + 1):
 
@@ -665,8 +653,12 @@ for epoch in range(1, EPOCHS + 1):
     # visdom
     visdom_acc(
         visdom, epoch, acc_training, win='acc', name='training')
+    list_train_acc.append(acc_training)
+
     visdom_loss(
         visdom, epoch, loss_training, win='loss', name='training')
+    list_train_loss.append(loss_training)
+
     visdom_se(
         visdom, epoch, tpr_training, win='se', name='training')
     visdom_sp(
@@ -740,73 +732,40 @@ for epoch in range(1, EPOCHS + 1):
     tnr_testing = count_tn / (count_tn + count_fp)
 
     fpr, tpr, thresholds = roc_curve(list_label, list_output_softmax, pos_label=0)
-    roc_auc_testing = auc(fpr, tpr)
-    print(roc_auc_testing)
+    roc_auc_test = auc(fpr, tpr)
+    print(roc_auc_test)
 
     # visdom
     visdom_acc(
         visdom, epoch, acc_testing, win='acc', name='testing')
+    list_test_acc.append(acc_testing)
+
     visdom_loss(
         visdom, epoch, loss_testing, win='loss', name='testing')
+    list_test_loss.append(loss_testing)
+
     visdom_se(
         visdom, epoch, tpr_testing, win='se', name='testing')
     visdom_sp(
         visdom, epoch, tnr_testing, win='sp', name='testing')
     visdom_roc_auc(
-        visdom, epoch, roc_auc_testing, win='auc', name='testing')
+        visdom, epoch, roc_auc_test, win='auc', name='testing')
 
     # get best performance
-    if (acc_testing == best_acc) and (roc_auc_testing > best_auc):
+    if (acc_testing == best_acc) and (roc_auc_test > best_auc):
         best_se = tpr_testing
         best_sp = tnr_testing
-        best_auc = roc_auc_testing
+        best_auc = roc_auc_test
+        best_fpr = fpr
+        best_tpr = tpr
 
     if acc_testing > best_acc:
         best_acc = acc_testing
         best_se = tpr_testing
         best_sp = tnr_testing
-        best_auc = roc_auc_testing
-
-    # # save the best performance
-    # if not (args.use_cross == 1):
-    #     if (acc_testing >= 0.82) and (tpr_testing >= 0.77) and (tnr_testing >= 0.77):
-    #         writer_row = []
-    #         writer_row.append(epoch)
-    #         writer_row.append(acc_testing)
-    #         writer_row.append(tpr_testing)
-    #         writer_row.append(tnr_testing)
-    #         writer_row.append(roc_auc_testing)
-    #         path_performance_csv = 'advanced_{use_cross}.csv'.format(use_cross=args.use_cross)
-    #         with open(path_performance_csv, 'a') as f:
-    #             writer = csv.writer(f)
-    #             writer.writerow([
-    #                 'epoch',
-    #                 'acc',
-    #                 'se',
-    #                 'sp',
-    #                 'auc',
-    #             ])
-    #             writer.writerow(writer_row)
-
-    # if (args.use_cross == 1):
-    #     if (acc_testing >= 0.80):
-    #         writer_row = []
-    #         writer_row.append(epoch)
-    #         writer_row.append(acc_testing)
-    #         writer_row.append(tpr_testing)
-    #         writer_row.append(tnr_testing)
-    #         writer_row.append(roc_auc_testing)
-    #         path_performance_csv = 'advanced_{use_cross}.csv'.format(use_cross=args.use_cross)
-    #         with open(path_performance_csv, 'a') as f:
-    #             writer = csv.writer(f)
-    #             writer.writerow([
-    #                 'epoch',
-    #                 'acc',
-    #                 'se',
-    #                 'sp',
-    #                 'auc',
-    #             ])
-    #             writer.writerow(writer_row)
+        best_auc = roc_auc_test
+        best_fpr = fpr
+        best_tpr = tpr
 
     print('testing loss:')
     print(loss_testing)
@@ -830,3 +789,42 @@ with open(path_best_csv, 'a') as f:
         'auc',
     ])
     writer.writerow(writer_row)
+
+path_best_fpr_tpr = 'performance_data\\roc\\roc_advanced_no_augement.csv'
+with open(path_best_fpr_tpr, 'a') as f:
+    writer = csv.writer(f)
+
+    writer.writerow([
+        'acc',
+        'se',
+        'sp',
+        'auc',
+    ])
+    writer.writerow(writer_row)
+
+    writer.writerow(['fpr'])
+    writer.writerow(best_fpr)
+    writer.writerow(['tpr'])
+    writer.writerow(best_tpr)
+
+path_best_fpr_tpr = 'performance_data\\acc_loss\\acc_loss_advanced_no_augement.csv'
+with open(path_best_fpr_tpr, 'a') as f:
+    writer = csv.writer(f)
+
+    writer.writerow([
+        'acc',
+        'se',
+        'sp',
+        'auc',
+    ])
+    writer.writerow(writer_row)
+
+    writer.writerow(['train_acc'])
+    writer.writerow(list_train_acc)
+    writer.writerow(['train_loss'])
+    writer.writerow(list_train_loss)
+
+    writer.writerow(['test_acc'])
+    writer.writerow(list_test_acc)
+    writer.writerow(['test_loss'])
+    writer.writerow(list_test_loss)

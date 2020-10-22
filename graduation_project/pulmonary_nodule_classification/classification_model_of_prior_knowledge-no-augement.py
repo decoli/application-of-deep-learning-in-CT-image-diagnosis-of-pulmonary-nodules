@@ -28,7 +28,6 @@ from utility.pre_processing import cross_validation
 from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
                             visdom_sp)
 
-
 BATCH_SIZE=256
 EPOCHS=300
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
@@ -91,6 +90,14 @@ for index, each_annotation in pd_annotation.iterrows():
         # 'diameter_mm': each_annotation['diameter_mm'],
         ##
         'index': each_annotation['index'],
+        'subtlety': each_annotation['subtlety'],
+        'internalStructure': each_annotation['internalStructure'],
+        'calcification': each_annotation['calcification'],
+        'sphericity': each_annotation['sphericity'],
+        'margin': each_annotation['margin'],
+        'lobulation': each_annotation['lobulation'],
+        'spiculation': each_annotation['spiculation'],
+        'texture': each_annotation['texture'],
         ##
         'malignant': each_annotation['malignant'],
     }
@@ -99,12 +106,90 @@ for index, each_annotation in pd_annotation.iterrows():
 class DataTraining(data.Dataset):
     def __init__(self, list_data):
         self.list_data = list_data
-
+    
     def __len__(self):
         return len(self.list_data)
     
     def __getitem__(self, idx):
         current_item = self.list_data[idx]
+
+        # Annotation Net
+        ## subtlety
+        list_subtlety = [0] * 5
+        fractional, integer = math.modf(current_item['subtlety'])
+        list_subtlety[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_subtlety[int(integer)] = 1
+
+        ## internalStructure
+        list_internalStructure = [0] * 4
+        fractional, integer = math.modf(current_item['internalStructure'])
+        list_internalStructure[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_internalStructure[int(integer)] = 1
+
+        ## calcification
+        list_calcification = [0] * 6
+        fractional, integer = math.modf(current_item['calcification'])
+        list_calcification[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_calcification[int(integer)] = 1
+
+        ## sphericity
+        list_sphericity = [0] * 5
+        fractional, integer = math.modf(current_item['sphericity'])
+        list_sphericity[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_sphericity[int(integer)] = 1
+
+        ## margin
+        list_margin = [0] * 5
+        fractional, integer = math.modf(current_item['margin'])
+        list_margin[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_margin[int(integer)] = 1
+ 
+        ## lobulation
+        list_lobulation = [0] * 5
+        fractional, integer = math.modf(current_item['lobulation'])
+        list_lobulation[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_lobulation[int(integer)] = 1
+
+        ## spiculation
+        list_spiculation = [0] * 5
+        fractional, integer = math.modf(current_item['spiculation'])
+        list_spiculation[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_spiculation[int(integer)] = 1
+
+        ## texture
+        list_texture = [0] * 5
+        fractional, integer = math.modf(current_item['texture'])
+        list_texture[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_texture[int(integer)] = 1
+
+        ## return
+        list_characteristics = []
+        # list_characteristics.append(diameter_mm) # 长度不是语义特征
+        list_characteristics.extend(list_subtlety)
+        list_characteristics.extend(list_internalStructure)
+        list_characteristics.extend(list_calcification)
+        list_characteristics.extend(list_sphericity)
+        list_characteristics.extend(list_margin)
+        list_characteristics.extend(list_lobulation)
+        list_characteristics.extend(list_spiculation)
+        list_characteristics.extend(list_texture)
+        return_characteristics = np.array(list_characteristics)
 
         # CNN
         # image
@@ -113,10 +198,8 @@ class DataTraining(data.Dataset):
             '{index}{image_format}'.format(
                 index=current_item['index'], image_format='.png'))
         image_original = cv2.imread(path_image, flags=2)
-
         image_copy_1 = image_original.copy()
         image_copy_2 = image_original.copy()
-
         # cv2.imwrite('image_oririnal.png', image_original)
         image_original = torch.Tensor(image_original)
         image_original = torch.unsqueeze(image_original, 0)
@@ -160,7 +243,7 @@ class DataTraining(data.Dataset):
         # image_1 = image_1 * 255
         # image_2 = image_2 * 255
 
-        return image_original, image_1, image_2, return_label
+        return return_characteristics, image_original, image_1, image_2, return_label
 
 class DataTesting(data.Dataset):
     def __init__(self, list_data):
@@ -172,6 +255,84 @@ class DataTesting(data.Dataset):
     def __getitem__(self, idx):
         current_item = self.list_data[idx]
 
+        # Annotation Net
+        ## subtlety
+        list_subtlety = [0] * 5
+        fractional, integer = math.modf(current_item['subtlety'])
+        list_subtlety[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_subtlety[int(integer)] = 1
+
+        ## internalStructure
+        list_internalStructure = [0] * 4
+        fractional, integer = math.modf(current_item['internalStructure'])
+        list_internalStructure[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_internalStructure[int(integer)] = 1
+
+        ## calcification
+        list_calcification = [0] * 6
+        fractional, integer = math.modf(current_item['calcification'])
+        list_calcification[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_calcification[int(integer)] = 1
+
+        ## sphericity
+        list_sphericity = [0] * 5
+        fractional, integer = math.modf(current_item['sphericity'])
+        list_sphericity[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_sphericity[int(integer)] = 1
+
+        ## margin
+        list_margin = [0] * 5
+        fractional, integer = math.modf(current_item['margin'])
+        list_margin[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_margin[int(integer)] = 1
+ 
+        ## lobulation
+        list_lobulation = [0] * 5
+        fractional, integer = math.modf(current_item['lobulation'])
+        list_lobulation[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_lobulation[int(integer)] = 1
+
+        ## spiculation
+        list_spiculation = [0] * 5
+        fractional, integer = math.modf(current_item['spiculation'])
+        list_spiculation[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_spiculation[int(integer)] = 1
+
+        ## texture
+        list_texture = [0] * 5
+        fractional, integer = math.modf(current_item['texture'])
+        list_texture[int(integer) - 1] = 1
+
+        if fractional > 0:
+            list_texture[int(integer)] = 1
+
+        ## return
+        list_characteristics = []
+        # list_characteristics.append(diameter_mm) # 长度不是语义特征
+        list_characteristics.extend(list_subtlety)
+        list_characteristics.extend(list_internalStructure)
+        list_characteristics.extend(list_calcification)
+        list_characteristics.extend(list_sphericity)
+        list_characteristics.extend(list_margin)
+        list_characteristics.extend(list_lobulation)
+        list_characteristics.extend(list_spiculation)
+        list_characteristics.extend(list_texture)
+        return_characteristics = np.array(list_characteristics)
+
         # CNN
         # image
         path_image = os.path.join(
@@ -179,11 +340,9 @@ class DataTesting(data.Dataset):
             '{index}{image_format}'.format(
                 index=current_item['index'], image_format='.png'))
         image_original = cv2.imread(path_image, flags=2)
-
         image_copy_1 = image_original.copy()
         image_copy_2 = image_original.copy()
-
-        # cv2.imwrite('image_oririnal.png', image_original)
+        cv2.imwrite('image_oririnal.png', image_original)
         image_original = torch.Tensor(image_original)
         image_original = torch.unsqueeze(image_original, 0)
 
@@ -223,14 +382,11 @@ class DataTesting(data.Dataset):
         # image_1 = image_1 * 255
         # image_2 = image_2 * 255
 
-        return image_original, image_1, image_2, return_label
+        return return_characteristics, image_original, image_1, image_2, return_label
 
 class PriorKnowledgeNet(nn.Module):
-    def __init__(self, model_es):
+    def __init__(self):
         super(PriorKnowledgeNet, self).__init__()
-
-        ## Extracting Semantics Model
-        self.model_es = model_es
 
         ## Annotation Net
         # full connettion
@@ -287,14 +443,11 @@ class PriorKnowledgeNet(nn.Module):
         self.fc_fusion_1 = nn.Linear(384, 128)
         self.fc_fusion_2 = nn.Linear(128, 2)
 
-    def forward(self, x_1, x_2, x_3):
+    def forward(self, x, x_1, x_2, x_3):
         size_in = x_1.size(0)
 
-        # Extracting Semantics Model
-        out_es = self.model_es(x_1, x_2, x_3)
-
         # Annotation Net
-        out_ano = self.fc_1(out_es)
+        out_ano = self.fc_1(x)
         out_ano = F.relu(out_ano)
         out_ano = self.fc_2(out_ano)
         out_ano = F.relu(out_ano)
@@ -395,135 +548,6 @@ class PriorKnowledgeNet(nn.Module):
         # return out
         return out_fusion
 
-
-class ExtractingSemanticsModel(nn.Module):
-    def __init__(self):
-        super(ExtractingSemanticsModel, self).__init__()
-
-        # CNN
-        ## kernel = 3*3
-        self.conv_3_1 = nn.Conv2d(1, 32, 3, padding=1)
-        self.conv_3_2 = nn.Conv2d(32, 32, 3, padding=1)
-        #
-        self.conv_3_3 = nn.Conv2d(32, 64, 3, padding=1)
-        self.conv_3_4 = nn.Conv2d(64, 64, 3, padding=1)
-        #
-        self.conv_3_5 = nn.Conv2d(64, 128, 3, padding=1)
-        self.conv_3_6 = nn.Conv2d(128, 128, 3, padding=1)
-        #
-        self.fc_3_1 = nn.Linear(2048, 512)
-
-        ## kernel = 5*5
-        self.conv_5_1 = nn.Conv2d(1, 32, 5, padding=2)
-        self.conv_5_2 = nn.Conv2d(32, 32, 5, padding=2)
-        #
-        self.conv_5_3 = nn.Conv2d(32, 64, 5, padding=2)
-        self.conv_5_4 = nn.Conv2d(64, 64, 5, padding=2)
-        #
-        self.conv_5_5 = nn.Conv2d(64, 128, 5, padding=2)
-        self.conv_5_6 = nn.Conv2d(128, 128, 5, padding=2)
-        #
-        self.fc_5_1 = nn.Linear(2048, 512)
-
-        ## kernel = 7*7
-        self.conv_7_1 = nn.Conv2d(1, 32, 7, padding=3)
-        self.conv_7_2 = nn.Conv2d(32, 32, 7, padding=3)
-        #
-        self.conv_7_3 = nn.Conv2d(32, 64, 7, padding=3)
-        self.conv_7_4 = nn.Conv2d(64, 64, 7, padding=3)
-        #
-        self.conv_7_5 = nn.Conv2d(64, 128, 7, padding=3)
-        self.conv_7_6 = nn.Conv2d(128, 128, 7, padding=3)
-        #
-        self.fc_7_1 = nn.Linear(2048, 512)
-
-        # all
-        self.fc_all_1 = nn.Linear(1536, 1536)
-        self.fc_all_2 = nn.Linear(1536, 256)
-        self.fc_all_3 = nn.Linear(256, 40)
-
-    def forward(self, x_1, x_2, x_3):
-        size_in = x_1.size(0)
-
-        out_3 = self.conv_3_1(x_1)
-        out_3 = self.conv_3_2(out_3)
-        out_3 = F.max_pool2d(out_3, 2, 2)
-        out_3 = F.relu(out_3)
-
-        #
-        out_3 = self.conv_3_3(out_3)
-        out_3 = self.conv_3_4(out_3)
-        out_3 = F.max_pool2d(out_3, 2, 2)
-        out_3 = F.relu(out_3)
-
-        #
-        out_3 = self.conv_3_5(out_3)
-        out_3 = self.conv_3_6(out_3)
-        out_3 = F.max_pool2d(out_3, 2, 2)
-        out_3 = F.relu(out_3)
-
-        #
-        out_3 = out_3.view(size_in, -1)
-        out_3 = F.dropout(out_3)
-        out_3 = self.fc_3_1(out_3)
-
-        ## kernel=5*5
-        out_5 = self.conv_5_1(x_2)
-        out_5 = self.conv_5_2(out_5)
-        out_5 = F.max_pool2d(out_5, 2, 2)
-        out_5 = F.relu(out_5)
-
-        #
-        out_5 = self.conv_5_3(out_5)
-        out_5 = self.conv_5_4(out_5)
-        out_5 = F.max_pool2d(out_5, 2, 2)
-        out_5 = F.relu(out_5)
-
-        #
-        out_5 = self.conv_5_5(out_5)
-        out_5 = self.conv_5_6(out_5)
-        out_5 = F.max_pool2d(out_5, 2, 2)
-        out_5 = F.relu(out_5)
-
-        #
-        out_5 = out_5.view(size_in, -1)
-        out_5 = F.dropout(out_5)
-        out_5 = self.fc_5_1(out_5)
-        
-        ## kernel=7*7
-        out_7 = self.conv_7_1(x_3)
-        out_7 = self.conv_7_2(out_7)
-        out_7 = F.max_pool2d(out_7, 2, 2)
-        out_7 = F.relu(out_7)
-
-        #
-        out_7 = self.conv_7_3(out_7)
-        out_7 = self.conv_7_4(out_7)
-        out_7 = F.max_pool2d(out_7, 2, 2)
-        out_7 = F.relu(out_7)
-
-        #
-        out_7 = self.conv_7_5(out_7)
-        out_7 = self.conv_7_6(out_7)
-        out_7 = F.max_pool2d(out_7, 2, 2)
-        out_7 = F.relu(out_7)
-
-        #
-        out_7 = out_7.view(size_in, -1)
-        out_7 = F.dropout(out_7)
-        out_7 = self.fc_7_1(out_7)
-
-        # all
-        out_all = torch.cat([out_3, out_5, out_7], dim=1)
-        out_all = self.fc_all_1(out_all)
-        out_all = F.dropout(out_all)
-        out_all = self.fc_all_2(out_all)
-        out_all = F.relu(out_all)
-        out_all = self.fc_all_3(out_all)
-
-        return out_all
-
-
 def argument():
     parser = argparse.ArgumentParser()
     parser.add_argument('--num-cross', default=5, type=int)
@@ -533,15 +557,10 @@ def argument():
     return args
 
 print('ddd')
-
-#
-# random.shuffle(list_data)
-
 # get train and test data
 # num_training = int(len(list_data) * RATE_TRAIN)
 # list_data_training = list_data[: num_training]
 # list_data_testing = list_data[num_training: ]
-
 args = argument()
 list_data_training, list_data_testing = cross_validation(args, list_data)
 
@@ -551,29 +570,15 @@ data_testing = DataTesting(list_data_testing)
 data_loader_training = DataLoader(data_training, batch_size=BATCH_SIZE, shuffle=True)
 data_loader_testing = DataLoader(data_testing, batch_size=BATCH_SIZE, shuffle=True)
 
-# get ES model (extracting semantics model)
-model_es = ExtractingSemanticsModel()
-
-path_model_es_para = 'model_extracting_semantics_{use_cross}.pt'.format(use_cross=args.use_cross)
-if torch.cuda.is_available():
-    model_es.load_state_dict(torch.load(path_model_es_para))
-else:
-    model_es.load_state_dict(torch.load(path_model_es_para, map_location=torch.device('cpu')))
-
 # get model
-model = PriorKnowledgeNet(model_es).to(DEVICE)
-
-# freeze the specific layers
-for param in model.model_es.parameters():
-    param.requires_grad = False
-
+model = PriorKnowledgeNet().to(DEVICE)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
 ##
 # if args.visdom:
 visdom = Visdom(
-    env='prior_knowledge_advanced_no_augement')
+    env='prior_knowledge_normal')
 
 # get best performance
 best_acc = 0
@@ -606,13 +611,13 @@ for epoch in range(1, EPOCHS + 1):
     count_train = 0
     list_output_softmax = []
     list_label = []
-
-    for x_1, x_2, x_3, label in data_loader_training:
+    for x, x_1, x_2, x_3, label in data_loader_training:
 
         count_train += 1
         print(count_train)
 
         # input data
+        input_data = x.to(dtype=torch.float, device=DEVICE)
         input_data_1 = x_1.to(dtype=torch.float, device=DEVICE)
         input_data_2 = x_2.to(dtype=torch.float, device=DEVICE)
         input_data_3 = x_3.to(dtype=torch.float, device=DEVICE)
@@ -625,7 +630,7 @@ for epoch in range(1, EPOCHS + 1):
         optimizer.zero_grad()
 
         # model predict
-        output = model(input_data_1, input_data_2, input_data_3)
+        output = model(input_data, input_data_1, input_data_2, input_data_3)
 
         # get loss
         loss = criterion(output, label)
@@ -653,7 +658,6 @@ for epoch in range(1, EPOCHS + 1):
         output_softmax = output_softmax.cpu().detach().numpy()
         for each_output_softmax in output_softmax:
             list_output_softmax.append(each_output_softmax[0])
-
 
     acc_training = total_acc_training / len(list_data_training)
     loss_training = total_loss_training / len(list_data_training)
@@ -696,14 +700,13 @@ for epoch in range(1, EPOCHS + 1):
     count_fp = 0
     count_tn = 0
 
-    count_train = 0
     list_output_softmax = []
     list_label = []
 
     with torch.no_grad():
-        for x_1, x_2, x_3, label in data_loader_testing:
-
+        for x, x_1, x_2, x_3, label in data_loader_testing:
             # input data
+            input_data = x.to(dtype=torch.float, device=DEVICE)
             input_data_1 = x_1.to(dtype=torch.float, device=DEVICE)
             input_data_2 = x_2.to(dtype=torch.float, device=DEVICE)
             input_data_3 = x_3.to(dtype=torch.float, device=DEVICE)
@@ -713,7 +716,7 @@ for epoch in range(1, EPOCHS + 1):
             list_label.extend(list(label.data.cpu().numpy()))
 
             # model predict
-            output = model(input_data_1, input_data_2, input_data_3)
+            output = model(input_data, input_data_1, input_data_2, input_data_3)
 
             # get loss
             loss = criterion(output, label)
@@ -785,7 +788,6 @@ for epoch in range(1, EPOCHS + 1):
     print(loss_testing)
     print('testing acc:')
     print(acc_testing)
-
 # save the best performance
 writer_row = []
 writer_row.append(best_acc)
@@ -793,7 +795,7 @@ writer_row.append(best_se)
 writer_row.append(best_sp)
 writer_row.append(best_auc)
 
-path_best_csv = 'advanced_best_no_augement_{use_cross}.csv'.format(use_cross=args.use_cross)
+path_best_csv = 'normal_best{use_cross}.csv'.format(use_cross=args.use_cross)
 with open(path_best_csv, 'a') as f:
     writer = csv.writer(f)
     writer.writerow([
@@ -804,7 +806,7 @@ with open(path_best_csv, 'a') as f:
     ])
     writer.writerow(writer_row)
 
-path_best_fpr_tpr = 'performance_data\\roc\\roc_advanced_no_augement.csv'
+path_best_fpr_tpr = 'performance_data\\roc\\roc_normal.csv'
 with open(path_best_fpr_tpr, 'a') as f:
     writer = csv.writer(f)
 
@@ -821,7 +823,7 @@ with open(path_best_fpr_tpr, 'a') as f:
     writer.writerow(['tpr'])
     writer.writerow(best_tpr)
 
-path_best_fpr_tpr = 'performance_data\\acc_loss\\acc_loss_advanced_no_augement.csv'
+path_best_fpr_tpr = 'performance_data\\acc_loss\\acc_loss_normal.csv'
 with open(path_best_fpr_tpr, 'a') as f:
     writer = csv.writer(f)
 

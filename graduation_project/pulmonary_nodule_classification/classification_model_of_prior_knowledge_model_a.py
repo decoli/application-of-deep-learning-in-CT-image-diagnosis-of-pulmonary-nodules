@@ -244,8 +244,8 @@ class PriorKnowledgeNet(nn.Module):
         # self.fc_fusion_1 = nn.Linear(384, 128)
         # self.fc_fusion_2 = nn.Linear(128, 2)
 
-    def forward(self, x_1, x_2, x_3):
-        size_in = x_1.size(0)
+    def forward(self, x_2):
+        size_in = x_2.size(0)
         ## CNN
         ## kernel=3*3
         # out_3 = self.conv_3_1(x_1)
@@ -321,6 +321,7 @@ class PriorKnowledgeNet(nn.Module):
         # out_cnn = self.fc_all_1(out_cnn)
         # out_cnn = F.dropout(out_cnn)
         # out_cnn = self.fc_all_2(out_cnn)
+        out_5 = F.relu(out_5)
         out_5 = self.fc_5_2(out_5)
 
         # out_cnn = self.fc_all_3(out_cnn)
@@ -588,7 +589,7 @@ with open(path_best_csv, 'a') as f:
     ])
     writer.writerow(writer_row)
 
-path_best_fpr_tpr = 'performance_data\\only_image_feature.csv'
+path_performance = 'performance_data\\only_image_feature_{use_cross}.csv'.format(use_cross=args.use_cross)
 with open(path_best_fpr_tpr, 'a') as f:
     writer = csv.writer(f)
 
@@ -605,7 +606,6 @@ with open(path_best_fpr_tpr, 'a') as f:
     writer.writerow(['tpr'])
     writer.writerow(best_tpr)
 
-path_best_fpr_tpr = 'performance_data\\only_image_feature.csv'
 with open(path_best_fpr_tpr, 'a') as f:
     writer = csv.writer(f)
 

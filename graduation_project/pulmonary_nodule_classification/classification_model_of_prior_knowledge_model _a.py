@@ -355,7 +355,7 @@ optimizer = optim.SGD(model.parameters(), lr=0.01)
 ##
 # if args.visdom:
 visdom = Visdom(
-    env='prior_knowledge_only_image_feature——model_a')
+    env='prior_knowledge_only_image_feature_model_a')
 
 # get best performance
 best_acc = 0

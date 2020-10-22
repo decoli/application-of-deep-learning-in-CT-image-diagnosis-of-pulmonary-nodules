@@ -226,23 +226,6 @@ class DataTraining(data.Dataset):
         label = current_item['malignant']
         return_label = np.array(label)
 
-        ### torchvision transforms
-        # image_original = transform_to_pil_image(image_original)
-        # image_original = transform_random_affine(image_original)
-        # image_original = transform_to_tensor(image_original)
-
-        # image_1 = transform_to_pil_image(image_1)
-        # image_1 = transform_random_affine(image_1)
-        # image_1 = transform_to_tensor(image_1)
-
-        # image_2 = transform_to_pil_image(image_2)
-        # image_2 = transform_random_affine(image_2)
-        # image_2 = transform_to_tensor(image_2)
-
-        # image_original = image_original * 255
-        # image_1 = image_1 * 255
-        # image_2 = image_2 * 255
-
         return return_characteristics, image_original, image_1, image_2, return_label
 
 class DataTesting(data.Dataset):
@@ -367,20 +350,6 @@ class DataTesting(data.Dataset):
         # label
         label = current_item['malignant']
         return_label = np.array(label)
-
-        ### torchvision transforms
-        # image_original = transform_to_pil_image(image_original)
-        # image_original = transform_to_tensor(image_original)
-        
-        # image_1 = transform_to_pil_image(image_1)
-        # image_1 = transform_to_tensor(image_1)
-
-        # image_2 = transform_to_pil_image(image_2)
-        # image_2 = transform_to_tensor(image_2)
-
-        # image_original = image_original * 255
-        # image_1 = image_1 * 255
-        # image_2 = image_2 * 255
 
         return return_characteristics, image_original, image_1, image_2, return_label
 
@@ -806,8 +775,8 @@ with open(path_best_csv, 'a') as f:
     ])
     writer.writerow(writer_row)
 
-path_best_fpr_tpr = 'performance_data\\roc\\roc_normal_no_augement.csv'
-with open(path_best_fpr_tpr, 'a') as f:
+path_performance = 'performance_data\\normal_no_augement.csv'
+with open(path_performance, 'a') as f:
     writer = csv.writer(f)
 
     writer.writerow([
@@ -823,17 +792,8 @@ with open(path_best_fpr_tpr, 'a') as f:
     writer.writerow(['tpr'])
     writer.writerow(best_tpr)
 
-path_best_fpr_tpr = 'performance_data\\acc_loss\\acc_loss_normal_no_augement.csv'
-with open(path_best_fpr_tpr, 'a') as f:
+with open(path_performance, 'a') as f:
     writer = csv.writer(f)
-
-    writer.writerow([
-        'acc',
-        'se',
-        'sp',
-        'auc',
-    ])
-    writer.writerow(writer_row)
 
     writer.writerow(['train_acc'])
     writer.writerow(list_train_acc)

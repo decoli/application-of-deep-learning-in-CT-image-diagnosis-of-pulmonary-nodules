@@ -764,7 +764,7 @@ writer_row.append(best_se)
 writer_row.append(best_sp)
 writer_row.append(best_auc)
 
-path_best_csv = 'normal_no_augement_best{use_cross}.csv'.format(use_cross=args.use_cross)
+path_best_csv = 'normal_no_augement_best_{use_cross}.csv'.format(use_cross=args.use_cross)
 with open(path_best_csv, 'a') as f:
     writer = csv.writer(f)
     writer.writerow([
@@ -775,7 +775,7 @@ with open(path_best_csv, 'a') as f:
     ])
     writer.writerow(writer_row)
 
-path_performance = 'performance_data\\normal_no_augement.csv'
+path_performance = 'performance_data\\normal_no_augement_{use_cross}.csv'.format(use_cross=args.use_cross)
 with open(path_performance, 'a') as f:
     writer = csv.writer(f)
 

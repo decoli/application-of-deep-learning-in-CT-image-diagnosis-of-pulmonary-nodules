@@ -31,8 +31,7 @@ from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
 
 
 BATCH_SIZE=256
-# EPOCHS=300
-EPOCHS=3
+EPOCHS=300
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 RATE_TRAIN = 0.8
 root_image = 'data/dataset_deep_lung/data_sample/png'
@@ -337,7 +336,7 @@ def argument():
     args = parser.parse_args()
     return args
 
-print('ddd')
+# print('ddd')
 
 args = argument()
 list_data_training, list_data_testing = cross_validation(args, list_data)
@@ -394,7 +393,7 @@ for epoch in range(1, EPOCHS + 1):
     for x_2, label in data_loader_training:
 
         count_train += 1
-        print(count_train)
+        # print(count_train)
 
         # input data
         # input_data_1 = x_1.to(dtype=torch.float, device=DEVICE)
@@ -447,7 +446,7 @@ for epoch in range(1, EPOCHS + 1):
 
     fpr, tpr, thresholds = roc_curve(list_label, list_output_softmax, pos_label=0)
     roc_auc_training = auc(fpr, tpr)
-    print(roc_auc_training)
+    # print(roc_auc_training)
 
     # visdom
     visdom_acc(
@@ -465,11 +464,11 @@ for epoch in range(1, EPOCHS + 1):
     visdom_roc_auc(
         visdom, epoch, roc_auc_training, win='auc', name='training')
 
-    print('training loss:')
-    print(loss_training)
+    # print('training loss:')
+    # print(loss_training)
 
-    print('training acc')
-    print(acc_training)
+    # print('training acc')
+    # print(acc_training)
 
     # 模型测试
     total_loss_testing = 0
@@ -533,7 +532,7 @@ for epoch in range(1, EPOCHS + 1):
 
     fpr, tpr, thresholds = roc_curve(list_label, list_output_softmax, pos_label=0)
     roc_auc_testing = auc(fpr, tpr)
-    print(roc_auc_testing)
+    # print(roc_auc_testing)
 
     # visdom
     visdom_acc(
@@ -567,10 +566,10 @@ for epoch in range(1, EPOCHS + 1):
         best_fpr = fpr
         best_tpr = tpr
 
-    print('testing loss:')
-    print(loss_testing)
-    print('testing acc:')
-    print(acc_testing)
+    # print('testing loss:')
+    # print(loss_testing)
+    # print('testing acc:')
+    # print(acc_testing)
 
 # save the best performance
 writer_row = []

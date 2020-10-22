@@ -578,7 +578,7 @@ optimizer = optim.SGD(model.parameters(), lr=0.01)
 ##
 # if args.visdom:
 visdom = Visdom(
-    env='prior_knowledge_normal')
+    env='prior_knowledge_normal_no_augement')
 
 # get best performance
 best_acc = 0
@@ -795,7 +795,7 @@ writer_row.append(best_se)
 writer_row.append(best_sp)
 writer_row.append(best_auc)
 
-path_best_csv = 'normal_best{use_cross}.csv'.format(use_cross=args.use_cross)
+path_best_csv = 'normal_no_augement_best{use_cross}.csv'.format(use_cross=args.use_cross)
 with open(path_best_csv, 'a') as f:
     writer = csv.writer(f)
     writer.writerow([
@@ -806,7 +806,7 @@ with open(path_best_csv, 'a') as f:
     ])
     writer.writerow(writer_row)
 
-path_best_fpr_tpr = 'performance_data\\roc\\roc_normal.csv'
+path_best_fpr_tpr = 'performance_data\\roc\\roc_normal_no_augement.csv'
 with open(path_best_fpr_tpr, 'a') as f:
     writer = csv.writer(f)
 
@@ -823,7 +823,7 @@ with open(path_best_fpr_tpr, 'a') as f:
     writer.writerow(['tpr'])
     writer.writerow(best_tpr)
 
-path_best_fpr_tpr = 'performance_data\\acc_loss\\acc_loss_normal.csv'
+path_best_fpr_tpr = 'performance_data\\acc_loss\\acc_loss_normal_no_augement.csv'
 with open(path_best_fpr_tpr, 'a') as f:
     writer = csv.writer(f)
 

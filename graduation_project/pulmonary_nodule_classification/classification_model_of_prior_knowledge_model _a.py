@@ -113,36 +113,36 @@ class DataTraining(data.Dataset):
                 index=current_item['index'], image_format='.png'))
         image_original = cv2.imread(path_image, flags=2)
 
-        image_copy_1 = image_original.copy()
-        image_copy_2 = image_original.copy()
+        # image_copy_1 = image_original.copy()
+        # image_copy_2 = image_original.copy()
 
         # cv2.imwrite('image_oririnal.png', image_original)
         image_original = torch.Tensor(image_original)
         image_original = torch.unsqueeze(image_original, 0)
 
-        # region grow
-        seeds = [Point(15,15), Point(16,15), Point(15,16), Point(16,16)]
-        mask_1 = regionGrow(image_copy_1, seeds, 10)
-        mask_2 = regionGrow(image_copy_2, seeds, 20)
-        # cv2.imwrite('mask_1.png', mask_1 * 255)
-        # cv2.imwrite('mask_2.png', mask_2 * 255)
+        # # region grow
+        # seeds = [Point(15,15), Point(16,15), Point(15,16), Point(16,16)]
+        # mask_1 = regionGrow(image_copy_1, seeds, 10)
+        # mask_2 = regionGrow(image_copy_2, seeds, 20)
+        # # cv2.imwrite('mask_1.png', mask_1 * 255)
+        # # cv2.imwrite('mask_2.png', mask_2 * 255)
 
-        # get image masked (and transfered to Tensor)
-        image_copy_1[mask_1==0] = [0]
-        # cv2.imwrite('image_copy_1.png', np.array(image_copy_1))
-        image_1 = torch.Tensor(image_copy_1)
-        image_1 = torch.unsqueeze(image_1, 0)
+        # # get image masked (and transfered to Tensor)
+        # image_copy_1[mask_1==0] = [0]
+        # # cv2.imwrite('image_copy_1.png', np.array(image_copy_1))
+        # image_1 = torch.Tensor(image_copy_1)
+        # image_1 = torch.unsqueeze(image_1, 0)
 
-        image_copy_2[mask_2==0] = [0]
-        # cv2.imwrite('image_copy_2.png', np.array(image_copy_2))
-        image_2 = torch.Tensor(image_copy_2)
-        image_2 = torch.unsqueeze(image_2, 0)
+        # image_copy_2[mask_2==0] = [0]
+        # # cv2.imwrite('image_copy_2.png', np.array(image_copy_2))
+        # image_2 = torch.Tensor(image_copy_2)
+        # image_2 = torch.unsqueeze(image_2, 0)
 
         # label
         label = current_item['malignant']
         return_label = np.array(label)
 
-        return image_original, image_1, image_2, return_label
+        return image_original, return_label
 
 class DataTesting(data.Dataset):
     def __init__(self, list_data):
@@ -162,52 +162,52 @@ class DataTesting(data.Dataset):
                 index=current_item['index'], image_format='.png'))
         image_original = cv2.imread(path_image, flags=2)
 
-        image_copy_1 = image_original.copy()
-        image_copy_2 = image_original.copy()
+        # image_copy_1 = image_original.copy()
+        # image_copy_2 = image_original.copy()
 
         # cv2.imwrite('image_oririnal.png', image_original)
         image_original = torch.Tensor(image_original)
         image_original = torch.unsqueeze(image_original, 0)
 
-        # region grow
-        seeds = [Point(15,15), Point(16,15), Point(15,16), Point(16,16)]
-        mask_1 = regionGrow(image_copy_1, seeds, 10)
-        mask_2 = regionGrow(image_copy_2, seeds, 20)
-        # cv2.imwrite('mask_1.png', mask_1 * 255)
-        # cv2.imwrite('mask_2.png', mask_2 * 255)
+        # # region grow
+        # seeds = [Point(15,15), Point(16,15), Point(15,16), Point(16,16)]
+        # mask_1 = regionGrow(image_copy_1, seeds, 10)
+        # mask_2 = regionGrow(image_copy_2, seeds, 20)
+        # # cv2.imwrite('mask_1.png', mask_1 * 255)
+        # # cv2.imwrite('mask_2.png', mask_2 * 255)
 
-        # get image masked (and transfered to Tensor)
-        image_copy_1[mask_1==0] = [0]
-        # cv2.imwrite('image_copy_1.png', np.array(image_copy_1))
-        image_1 = torch.Tensor(image_copy_1)
-        image_1 = torch.unsqueeze(image_1, 0)
+        # # get image masked (and transfered to Tensor)
+        # image_copy_1[mask_1==0] = [0]
+        # # cv2.imwrite('image_copy_1.png', np.array(image_copy_1))
+        # image_1 = torch.Tensor(image_copy_1)
+        # image_1 = torch.unsqueeze(image_1, 0)
 
-        image_copy_2[mask_2==0] = [0]
-        # cv2.imwrite('image_copy_2.png', np.array(image_copy_2))
-        image_2 = torch.Tensor(image_copy_2)
-        image_2 = torch.unsqueeze(image_2, 0)
+        # image_copy_2[mask_2==0] = [0]
+        # # cv2.imwrite('image_copy_2.png', np.array(image_copy_2))
+        # image_2 = torch.Tensor(image_copy_2)
+        # image_2 = torch.unsqueeze(image_2, 0)
 
         # label
         label = current_item['malignant']
         return_label = np.array(label)
 
-        return image_original, image_1, image_2, return_label
+        return image_original, return_label
 
 class PriorKnowledgeNet(nn.Module):
     def __init__(self):
         super(PriorKnowledgeNet, self).__init__()
         ## CNN
         ## kernel = 3*3
-        self.conv_3_1 = nn.Conv2d(1, 32, 3, padding=1)
-        self.conv_3_2 = nn.Conv2d(32, 32, 3, padding=1)
-        #
-        self.conv_3_3 = nn.Conv2d(32, 64, 3, padding=1)
-        self.conv_3_4 = nn.Conv2d(64, 64, 3, padding=1)
-        #
-        self.conv_3_5 = nn.Conv2d(64, 128, 3, padding=1)
-        self.conv_3_6 = nn.Conv2d(128, 128, 3, padding=1)
-        #
-        self.fc_3_1 = nn.Linear(2048, 512)
+        # self.conv_3_1 = nn.Conv2d(1, 32, 3, padding=1)
+        # self.conv_3_2 = nn.Conv2d(32, 32, 3, padding=1)
+        # #
+        # self.conv_3_3 = nn.Conv2d(32, 64, 3, padding=1)
+        # self.conv_3_4 = nn.Conv2d(64, 64, 3, padding=1)
+        # #
+        # self.conv_3_5 = nn.Conv2d(64, 128, 3, padding=1)
+        # self.conv_3_6 = nn.Conv2d(128, 128, 3, padding=1)
+        # #
+        # self.fc_3_1 = nn.Linear(2048, 512)
 
         ## kernel = 5*5
         self.conv_5_1 = nn.Conv2d(1, 32, 5, padding=2)
@@ -220,53 +220,55 @@ class PriorKnowledgeNet(nn.Module):
         self.conv_5_6 = nn.Conv2d(128, 128, 5, padding=2)
         #
         self.fc_5_1 = nn.Linear(2048, 512)
+        self.fc_5_2 = nn.Linear(512, 2)
+
 
         ## kernel = 7*7
-        self.conv_7_1 = nn.Conv2d(1, 32, 7, padding=3)
-        self.conv_7_2 = nn.Conv2d(32, 32, 7, padding=3)
-        #
-        self.conv_7_3 = nn.Conv2d(32, 64, 7, padding=3)
-        self.conv_7_4 = nn.Conv2d(64, 64, 7, padding=3)
-        #
-        self.conv_7_5 = nn.Conv2d(64, 128, 7, padding=3)
-        self.conv_7_6 = nn.Conv2d(128, 128, 7, padding=3)
-        #
-        self.fc_7_1 = nn.Linear(2048, 512)
+        # self.conv_7_1 = nn.Conv2d(1, 32, 7, padding=3)
+        # self.conv_7_2 = nn.Conv2d(32, 32, 7, padding=3)
+        # #
+        # self.conv_7_3 = nn.Conv2d(32, 64, 7, padding=3)
+        # self.conv_7_4 = nn.Conv2d(64, 64, 7, padding=3)
+        # #
+        # self.conv_7_5 = nn.Conv2d(64, 128, 7, padding=3)
+        # self.conv_7_6 = nn.Conv2d(128, 128, 7, padding=3)
+        # #
+        # self.fc_7_1 = nn.Linear(2048, 512)
 
         # all
-        self.fc_all_1 = nn.Linear(1536, 1536)
-        self.fc_all_2 = nn.Linear(1536, 256)
-        self.fc_all_3 = nn.Linear(256, 2)
+        # self.fc_all_1 = nn.Linear(1536, 1536)
+        # self.fc_all_2 = nn.Linear(1536, 256)
+        # self.fc_all_3 = nn.Linear(256, 2)
 
         # fusion
-        self.fc_fusion_1 = nn.Linear(384, 128)
-        self.fc_fusion_2 = nn.Linear(128, 2)
+        # self.fc_fusion_1 = nn.Linear(384, 128)
+        # self.fc_fusion_2 = nn.Linear(128, 2)
 
     def forward(self, x_1, x_2, x_3):
         size_in = x_1.size(0)
         ## CNN
         ## kernel=3*3
-        out_3 = self.conv_3_1(x_1)
-        out_3 = self.conv_3_2(out_3)
-        out_3 = F.max_pool2d(out_3, 2, 2)
-        out_3 = F.relu(out_3)
+        # out_3 = self.conv_3_1(x_1)
+        # out_3 = self.conv_3_2(out_3)
+        # out_3 = F.max_pool2d(out_3, 2, 2)
+        # out_3 = F.relu(out_3)
 
-        #
-        out_3 = self.conv_3_3(out_3)
-        out_3 = self.conv_3_4(out_3)
-        out_3 = F.max_pool2d(out_3, 2, 2)
-        out_3 = F.relu(out_3)
+        # #
+        # out_3 = self.conv_3_3(out_3)
+        # out_3 = self.conv_3_4(out_3)
+        # out_3 = F.max_pool2d(out_3, 2, 2)
+        # out_3 = F.relu(out_3)
 
-        #
-        out_3 = self.conv_3_5(out_3)
-        out_3 = self.conv_3_6(out_3)
-        out_3 = F.max_pool2d(out_3, 2, 2)
-        out_3 = F.relu(out_3)
+        # #
+        # out_3 = self.conv_3_5(out_3)
+        # out_3 = self.conv_3_6(out_3)
+        # out_3 = F.max_pool2d(out_3, 2, 2)
+        # out_3 = F.relu(out_3)
 
-        #
-        out_3 = out_3.view(size_in, -1)
-        out_3 = F.dropout(out_3)
-        out_3 = self.fc_3_1(out_3)
+        # #
+        # out_3 = out_3.view(size_in, -1)
+        # out_3 = F.dropout(out_3)
+        # out_3 = self.fc_3_1(out_3)
 
         ## kernel=5*5
         out_5 = self.conv_5_1(x_2)
@@ -292,38 +294,38 @@ class PriorKnowledgeNet(nn.Module):
         out_5 = self.fc_5_1(out_5)
         
         ## kernel=7*7
-        out_7 = self.conv_7_1(x_3)
-        out_7 = self.conv_7_2(out_7)
-        out_7 = F.max_pool2d(out_7, 2, 2)
-        out_7 = F.relu(out_7)
+        # out_7 = self.conv_7_1(x_3)
+        # out_7 = self.conv_7_2(out_7)
+        # out_7 = F.max_pool2d(out_7, 2, 2)
+        # out_7 = F.relu(out_7)
 
-        #
-        out_7 = self.conv_7_3(out_7)
-        out_7 = self.conv_7_4(out_7)
-        out_7 = F.max_pool2d(out_7, 2, 2)
-        out_7 = F.relu(out_7)
+        # #
+        # out_7 = self.conv_7_3(out_7)
+        # out_7 = self.conv_7_4(out_7)
+        # out_7 = F.max_pool2d(out_7, 2, 2)
+        # out_7 = F.relu(out_7)
 
-        #
-        out_7 = self.conv_7_5(out_7)
-        out_7 = self.conv_7_6(out_7)
-        out_7 = F.max_pool2d(out_7, 2, 2)
-        out_7 = F.relu(out_7)
+        # #
+        # out_7 = self.conv_7_5(out_7)
+        # out_7 = self.conv_7_6(out_7)
+        # out_7 = F.max_pool2d(out_7, 2, 2)
+        # out_7 = F.relu(out_7)
 
-        #
-        out_7 = out_7.view(size_in, -1)
-        out_7 = F.dropout(out_7)
-        out_7 = self.fc_7_1(out_7)
+        # #
+        # out_7 = out_7.view(size_in, -1)
+        # out_7 = F.dropout(out_7)
+        # out_7 = self.fc_7_1(out_7)
 
         # out cnn
-        out_cnn = torch.cat([out_3, out_5, out_7], dim=1)
-        out_cnn = self.fc_all_1(out_cnn)
-        out_cnn = F.dropout(out_cnn)
-        out_cnn = self.fc_all_2(out_cnn)
-        out_cnn = F.relu(out_cnn)
+        # out_cnn = torch.cat([out_3, out_5, out_7], dim=1)
+        # out_cnn = self.fc_all_1(out_cnn)
+        # out_cnn = F.dropout(out_cnn)
+        # out_cnn = self.fc_all_2(out_cnn)
+        out_5 = self.fc_5_2(out_5)
 
-        out_cnn = self.fc_all_3(out_cnn)
+        # out_cnn = self.fc_all_3(out_cnn)
         # return out
-        return out_cnn
+        return out_5
 
 def argument():
     parser = argparse.ArgumentParser()
@@ -353,7 +355,7 @@ optimizer = optim.SGD(model.parameters(), lr=0.01)
 ##
 # if args.visdom:
 visdom = Visdom(
-    env='prior_knowledge_only_image_feature')
+    env='prior_knowledge_only_image_feature——model_a')
 
 # get best performance
 best_acc = 0
@@ -387,15 +389,15 @@ for epoch in range(1, EPOCHS + 1):
     list_output_softmax = []
     list_label = []
 
-    for x_1, x_2, x_3, label in data_loader_training:
+    for x_2, label in data_loader_training:
 
         count_train += 1
         print(count_train)
 
         # input data
-        input_data_1 = x_1.to(dtype=torch.float, device=DEVICE)
+        # input_data_1 = x_1.to(dtype=torch.float, device=DEVICE)
         input_data_2 = x_2.to(dtype=torch.float, device=DEVICE)
-        input_data_3 = x_3.to(dtype=torch.float, device=DEVICE)
+        # input_data_3 = x_3.to(dtype=torch.float, device=DEVICE)
 
         # label
         label = label.to(dtype=torch.long, device=DEVICE)
@@ -405,7 +407,8 @@ for epoch in range(1, EPOCHS + 1):
         optimizer.zero_grad()
 
         # model predict
-        output = model(input_data_1, input_data_2, input_data_3)
+        # output = model(input_data_1, input_data_2, input_data_3)
+        output = model(input_data_2)
 
         # get loss
         loss = criterion(output, label)
@@ -481,19 +484,20 @@ for epoch in range(1, EPOCHS + 1):
     list_label = []
 
     with torch.no_grad():
-        for x_1, x_2, x_3, label in data_loader_testing:
+        for x_2, label in data_loader_testing:
 
             # input data
-            input_data_1 = x_1.to(dtype=torch.float, device=DEVICE)
+            # input_data_1 = x_1.to(dtype=torch.float, device=DEVICE)
             input_data_2 = x_2.to(dtype=torch.float, device=DEVICE)
-            input_data_3 = x_3.to(dtype=torch.float, device=DEVICE)
+            # input_data_3 = x_3.to(dtype=torch.float, device=DEVICE)
 
             # label
             label = label.to(dtype=torch.long, device=DEVICE)
             list_label.extend(list(label.data.cpu().numpy()))
 
             # model predict
-            output = model(input_data_1, input_data_2, input_data_3)
+            # output = model(input_data_1, input_data_2, input_data_3)
+            output = model(input_data_2)
 
             # get loss
             loss = criterion(output, label)
@@ -584,7 +588,7 @@ with open(path_best_csv, 'a') as f:
     ])
     writer.writerow(writer_row)
 
-path_best_fpr_tpr = 'performance_data\\roc\\roc_only_image_feature.csv'
+path_best_fpr_tpr = 'performance_data\\only_image_feature.csv'
 with open(path_best_fpr_tpr, 'a') as f:
     writer = csv.writer(f)
 
@@ -601,17 +605,9 @@ with open(path_best_fpr_tpr, 'a') as f:
     writer.writerow(['tpr'])
     writer.writerow(best_tpr)
 
-path_best_fpr_tpr = 'performance_data\\acc_loss\\acc_loss_only_image_feature.csv'
+path_best_fpr_tpr = 'performance_data\\only_image_feature.csv'
 with open(path_best_fpr_tpr, 'a') as f:
     writer = csv.writer(f)
-
-    writer.writerow([
-        'acc',
-        'se',
-        'sp',
-        'auc',
-    ])
-    writer.writerow(writer_row)
 
     writer.writerow(['train_acc'])
     writer.writerow(list_train_acc)

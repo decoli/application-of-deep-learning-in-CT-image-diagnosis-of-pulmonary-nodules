@@ -31,7 +31,8 @@ from utility.visdom import (visdom_acc, visdom_loss, visdom_roc_auc, visdom_se,
 
 
 BATCH_SIZE=256
-EPOCHS=300
+# EPOCHS=300
+EPOCHS=3
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 RATE_TRAIN = 0.8
 root_image = 'data/dataset_deep_lung/data_sample/png'
@@ -590,7 +591,7 @@ with open(path_best_csv, 'a') as f:
     writer.writerow(writer_row)
 
 path_performance = 'performance_data\\only_image_feature_{use_cross}.csv'.format(use_cross=args.use_cross)
-with open(path_best_fpr_tpr, 'a') as f:
+with open(path_performance, 'a') as f:
     writer = csv.writer(f)
 
     writer.writerow([
@@ -606,7 +607,7 @@ with open(path_best_fpr_tpr, 'a') as f:
     writer.writerow(['tpr'])
     writer.writerow(best_tpr)
 
-with open(path_best_fpr_tpr, 'a') as f:
+with open(path_performance, 'a') as f:
     writer = csv.writer(f)
 
     writer.writerow(['train_acc'])
